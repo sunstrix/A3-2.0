@@ -46,7 +46,6 @@ public class Usuario {
     @Column(nullable = false)
     private Boolean ativo = true;
 
-    // Enum Perfis
     public enum Perfil {
         ADMINISTRADOR("Administrador"),
         GERENTE("Gerente"),
@@ -63,7 +62,6 @@ public class Usuario {
         }
     }
 
-    // Construtores
     public Usuario() {}
 
     public Usuario(String nome, String cpf, String email, String cargo, String login, String senha, Perfil perfil) {
