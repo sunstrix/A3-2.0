@@ -26,7 +26,7 @@ public class ProjetoService {
         return projetoRepository.findById(id);
     }
 
-    // ✅ Filtrar projetos por status (ex: EM_ANDAMENTO, CONCLUIDO)
+    // ✅ Filtrar projetos por status (ex: PLANEJAMENTO, EM_ANDAMENTO, CONCLUIDO)
     public List<Projeto> findByStatus(Projeto.StatusProjeto status) {
         return projetoRepository.findByStatus(status);
     }
