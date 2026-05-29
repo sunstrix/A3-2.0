@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:text="${projeto.id} != null ? 'Editar Projeto' : 'Novo Projeto'">Formulário de Projeto</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .page-header { background: #4f46e5; color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px; }
+        .form-container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-3">
+        <div class="container">
+            <a class="navbar-brand fw-bold text-primary" href="/projetos">🔙 Voltar para Lista</a>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header px-4">
+            <h2 class="mb-0" th:text="${projeto.id} != null ? '✏️ Editar Projeto' : '➕ Novo Projeto'"></h2>
+        </div>
+
+        <div class="form-container">
+            <form th:action="${projeto.id} != null ? @{/projetos/atualizar/{id}(id=${projeto.id})} : @{/projetos}"
+                  th:object="${projeto}" method="post">
+
+                <div class="row g-3">
+                    <div class="col-12">
+                        <label for="nome" class="form-label">Nome do Projeto</label>
+                        <input type="text" class="form-control" id="nome" th:field="*{nome}" 
+                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
+                    </div>
+
+                    <div class="col-12">
+                        <label for="descricao" class="form-label">Descrição</label>
+                        <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="3"></textarea>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="dataInicio" class="form-label">Data de Início</label>
+                        <input type="date" class="form-control" id="dataInicio" th:field="*{dataInicio}" 
+                               th:classappend="${#fields.hasErrors('dataInicio')} ? 'is-invalid'" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="dataTerminoPrevista" class="form-label">Previsão de Término</label>
+                        <input type="date" class="form-control" id="dataTerminoPrevista" th:field="*{dataTerminoPrevista}" 
+                               th:classappend="${#fields.hasErrors('dataTerminoPrevista')} ? 'is-invalid'" required>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dataTerminoPrevista')}" th:errors="*{dataTerminoPrevista}"></div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="status" class="form-label">Status</label>
+                        <select class="form-select" id="status" th:field="*{status}" required>
+                            <option value="PLANEJAMENTO">Em Planejamento</option>
+                            <option value="EM_ANDAMENTO">Em Andamento</option>
+                            <option value="CONCLUIDO">Concluído</option>
+                            <option value="CANCELADO">Cancelado</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label for="gerente" class="form-label">Gerente Responsável</label>
+                        <select class="form-select" id="gerente" th:field="*{gerente.id}" required>
+                            <option value="">Selecione um gerente...</option>
+                            <option th:each="user : ${gerentes}" th:value="${user.id}" th:text="${user.nome} + ' (' + ${user.login} + ')'"></option>
+                        </select>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('gerente')}" th:errors="*{gerente}"></div>
+                    </div>
+                </div>
+
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">💾 Salvar Projeto</button>
+                    <a href="/projetos" class="btn btn-secondary">Cancelar</a>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
