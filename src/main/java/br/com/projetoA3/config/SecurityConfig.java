@@ -15,21 +15,20 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            // Desabilitar CSRF para simplificar o desenvolvimento
+            // Desabilita CSRF para simplificar o desenvolvimento acadêmico
             .csrf(csrf -> csrf.disable())
-            // Configurar permissões de acesso
+            // Configura permissões de acesso
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/", "/error").permitAll()
+                .requestMatchers("/login", "/css/**", "/js/**", "/images/**", "/").permitAll()
                 .anyRequest().authenticated()
             )
-            // Configurar formulário de login nativo do Spring Security
+            // Configura formulário de login nativo do Spring
             .formLogin(form -> form
                 .loginPage("/login")
                 .defaultSuccessUrl("/menu", true)
-                .failureUrl("/login?error=true")
                 .permitAll()
             )
-            // Configurar logout
+            // Configura logout
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login")
@@ -43,8 +42,8 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        // ⚠️ APENAS PARA DESENVOLVIMENTO: permite senhas em texto puro
-        // Para produção, substitua por: return new BCryptPasswordEncoder();
+        // ⚠️ APENAS PARA DESENVOLVIMENTO ACADÊMICO
+        // Permite salvar e comparar senhas em texto puro no SQLite
         return NoOpPasswordEncoder.getInstance();
     }
 }
