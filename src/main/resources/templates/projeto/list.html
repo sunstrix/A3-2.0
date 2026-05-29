@@ -62,15 +62,15 @@
                     <tr th:each="projeto : ${projetos}">
                         <td th:text="${projeto.id}"></td>
                         <td class="fw-bold" th:text="${projeto.nome}"></td>
-                        <!-- ✅ Alterado: exibe equipe em vez de gerente -->
                         <td th:text="${projeto.equipe?.nome ?: 'Não definida'}"></td>
                         <td th:text="${#temporals.format(projeto.dataInicio, 'dd/MM/yyyy')}"></td>
                         <td th:text="${#temporals.format(projeto.dataTerminoPrevista, 'dd/MM/yyyy')}"></td>
                         <td>
-                            <span th:class="'badge ' + 
-                                (${projeto.status.name() == 'PLANEJAMENTO'} ? 'bg-secondary' : 
-                                 ${projeto.status.name() == 'EM_ANDAMENTO'} ? 'bg-primary' : 
-                                 ${projeto.status.name() == 'CONCLUIDO'} ? 'bg-success' : 'bg-danger')"
+                            <!-- ✅ CORREÇÃO: Usar th:classappend com expressão Thymeleaf válida -->
+                            <span class="badge"
+                                  th:classappend="${projeto.status.name() == 'PLANEJAMENTO'} ? 'bg-secondary' : 
+                                                  ${projeto.status.name() == 'EM_ANDAMENTO'} ? 'bg-primary' : 
+                                                  ${projeto.status.name() == 'CONCLUIDO'} ? 'bg-success' : 'bg-danger'"
                                   th:text="${projeto.status.descricao}">
                             </span>
                         </td>
