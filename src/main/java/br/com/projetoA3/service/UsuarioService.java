@@ -12,12 +12,12 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
 
-    // Injeção de dependência via construtor
+    // Injeção de dependência via construtor (padrão Spring moderno)
     public UsuarioService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
 
-    // ✅ Buscar todos os usuários
+    // ✅ Listar todos os usuários
     public List<Usuario> findAll() {
         return usuarioRepository.findAll();
     }
@@ -27,7 +27,7 @@ public class UsuarioService {
         return usuarioRepository.findById(id);
     }
 
-    // ✅ Buscar usuário pelo campo "login" (usado na autenticação)
+    // ✅ Buscar usuário pelo login (usado na autenticação)
     public Optional<Usuario> findByLogin(String login) {
         return usuarioRepository.findByLogin(login);
     }
