@@ -25,53 +25,55 @@ public class EquipeMembroController {
         this.usuarioService = usuarioService;
     }
 
-    // ✅ Listar todos os membros
     @GetMapping
     public String listar(Model model) {
         model.addAttribute("membros", membroService.findAll());
         return "equipeMembro/list";
     }
 
-    // ✅ Formulário para adicionar membro a uma equipe específica
     @GetMapping("/novo")
-    public String novo(@RequestParam Long equipeId, Model model) {
+    public String novo(@RequestParam(required = false) Long equipeId, Model model) {
         EquipeMembro membro = new EquipeMembro();
-        membro.setEquipe(equipeService.findById(equipeId).orElse(null));
+        if (equipeId != null) {
+            membro.setEquipe(equipeService.findById(equipeId).orElse(null));
+        }
         model.addAttribute("membro", membro);
+        model.addAttribute("equipes", equipeService.findAll());
         model.addAttribute("usuarios", usuarioService.findAll());
         return "equipeMembro/form";
     }
 
-    // ✅ Salvar novo membro na equipe
     @PostMapping
     public String salvar(@Valid @ModelAttribute EquipeMembro membro, 
                          BindingResult result, 
                          Model model,
                          RedirectAttributes attributes) {
         if (result.hasErrors()) {
+            model.addAttribute("equipes", equipeService.findAll());
             model.addAttribute("usuarios", usuarioService.findAll());
             return "equipeMembro/form";
         }
         try {
             membroService.save(membro);
             attributes.addFlashAttribute("sucesso", "Membro adicionado à equipe!");
-            return "redirect:/equipes";
+            return "redirect:/equipes/" + membro.getEquipe().getId();
         } catch (Exception e) {
-            model.addAttribute("erro", "Erro ao adicionar: " + e.getMessage());
+            model.addAttribute("erro", "Erro ao salvar: " + e.getMessage());
+            model.addAttribute("equipes", equipeService.findAll());
             model.addAttribute("usuarios", usuarioService.findAll());
             return "equipeMembro/form";
         }
     }
 
-    // ✅ Remover membro da equipe
     @GetMapping("/deletar/{id}")
     public String deletar(@PathVariable Long id, RedirectAttributes attributes) {
         try {
             EquipeMembro membro = membroService.findById(id).orElse(null);
-            if (membro != null) {
-                membroService.deleteById(id);
-                attributes.addFlashAttribute("sucesso", "Membro removido da equipe!");
-                return "redirect:/equipes";
+            Long equipeId = membro != null ? membro.getEquipe().getId() : null;
+            membroService.deleteById(id);
+            attributes.addFlashAttribute("sucesso", "Membro removido da equipe!");
+            if (equipeId != null) {
+                return "redirect:/equipes/" + equipeId;
             }
         } catch (Exception e) {
             attributes.addFlashAttribute("erro", "Erro ao remover: " + e.getMessage());
