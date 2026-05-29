@@ -6,9 +6,10 @@ import java.util.List;
 
 public interface EquipeMembroRepository extends JpaRepository<EquipeMembro, Long> {
     
-    // ✅ Buscar todos os membros de uma equipe específica
+    // ✅ Métodos existentes (NÃO REMOVER)
     List<EquipeMembro> findByEquipeId(Long equipeId);
-
-    // ✅ Buscar todas as equipes que um determinado usuário participa
     List<EquipeMembro> findByUsuarioId(Long usuarioId);
+    
+    // ✅ NOVO: Deleta todos os membros de uma equipe (usado na sincronização)
+    void deleteByEquipeId(Long equipeId);
 }
