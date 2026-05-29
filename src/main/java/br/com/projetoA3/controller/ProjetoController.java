@@ -3,6 +3,7 @@ package br.com.projetoA3.controller;
 import br.com.projetoA3.model.Projeto;
 import br.com.projetoA3.service.ProjetoService;
 import br.com.projetoA3.service.UsuarioService;
+import br.com.projetoA3.service.EquipeService;
 import jakarta.validation.Valid;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,35 +17,36 @@ public class ProjetoController {
 
     private final ProjetoService projetoService;
     private final UsuarioService usuarioService;
+    private final EquipeService equipeService; // ✅ Novo: injetado via construtor
 
-    public ProjetoController(ProjetoService projetoService, UsuarioService usuarioService) {
+    public ProjetoController(ProjetoService projetoService, UsuarioService usuarioService, EquipeService equipeService) {
         this.projetoService = projetoService;
         this.usuarioService = usuarioService;
+        this.equipeService = equipeService;
     }
 
-    // ✅ Listar todos os projetos
     @GetMapping
     public String listar(Model model) {
         model.addAttribute("projetos", projetoService.findAll());
         return "projeto/list";
     }
 
-    // ✅ Mostrar formulário para novo projeto
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("projeto", new Projeto());
-        model.addAttribute("gerentes", usuarioService.findAll());
+        model.addAttribute("gerentes", usuarioService.findAll()); // Mantido para compatibilidade
+        model.addAttribute("equipes", equipeService.findAll());   // ✅ Novo: lista de equipes para o form
         return "projeto/form";
     }
 
-    // ✅ Salvar novo projeto
     @PostMapping
-    public String salvar(@Valid @ModelAttribute Projeto projeto,
-                         BindingResult result,
+    public String salvar(@Valid @ModelAttribute Projeto projeto, 
+                         BindingResult result, 
                          Model model,
                          RedirectAttributes attributes) {
         if (result.hasErrors()) {
             model.addAttribute("gerentes", usuarioService.findAll());
+            model.addAttribute("equipes", equipeService.findAll()); // ✅ Mantido para re-renderizar form com erro
             return "projeto/form";
         }
         try {
@@ -54,29 +56,30 @@ public class ProjetoController {
         } catch (Exception e) {
             model.addAttribute("erro", "Erro ao salvar: " + e.getMessage());
             model.addAttribute("gerentes", usuarioService.findAll());
+            model.addAttribute("equipes", equipeService.findAll());
             return "projeto/form";
         }
     }
 
-    // ✅ Mostrar formulário de edição
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         Projeto projeto = projetoService.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Projeto não encontrado"));
         model.addAttribute("projeto", projeto);
         model.addAttribute("gerentes", usuarioService.findAll());
+        model.addAttribute("equipes", equipeService.findAll()); // ✅ Novo: lista de equipes para edição
         return "projeto/form";
     }
 
-    // ✅ Atualizar projeto existente
     @PostMapping("/atualizar/{id}")
-    public String atualizar(@PathVariable Long id,
-                            @Valid @ModelAttribute Projeto projeto,
-                            BindingResult result,
+    public String atualizar(@PathVariable Long id, 
+                            @Valid @ModelAttribute Projeto projeto, 
+                            BindingResult result, 
                             Model model,
                             RedirectAttributes attributes) {
         if (result.hasErrors()) {
             model.addAttribute("gerentes", usuarioService.findAll());
+            model.addAttribute("equipes", equipeService.findAll());
             return "projeto/form";
         }
         try {
@@ -87,11 +90,11 @@ public class ProjetoController {
         } catch (Exception e) {
             model.addAttribute("erro", "Erro ao atualizar: " + e.getMessage());
             model.addAttribute("gerentes", usuarioService.findAll());
+            model.addAttribute("equipes", equipeService.findAll());
             return "projeto/form";
         }
     }
 
-    // ✅ Deletar projeto
     @GetMapping("/deletar/{id}")
     public String deletar(@PathVariable Long id, RedirectAttributes attributes) {
         try {
