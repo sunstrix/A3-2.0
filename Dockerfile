@@ -1,5 +1,5 @@
-# 1. Etapa de Construção (Usando Java 21 JDK)
-FROM eclipse-temurin:21-jdk-jammy AS builder
+# 1. Etapa de Construção (Usando Maven com Java 21)
+FROM maven:3.9-eclipse-temurin-21-jdk AS builder
 WORKDIR /workspace/app
 COPY pom.xml .
 COPY src ./src
