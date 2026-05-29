@@ -64,13 +64,18 @@
                         </select>
                     </div>
 
+                    <!-- ✅ NOVO: Campo Equipe Responsável (substitui Gerente no form) -->
                     <div class="col-md-6">
-                        <label for="gerente" class="form-label">Gerente Responsável</label>
-                        <select class="form-select" id="gerente" th:field="*{gerente.id}" required>
-                            <option value="">Selecione um gerente...</option>
-                            <option th:each="user : ${gerentes}" th:value="${user.id}" th:text="${user.nome} + ' (' + ${user.login} + ')'"></option>
+                        <label for="equipe" class="form-label fw-semibold">Equipe Responsável <span class="text-danger">*</span></label>
+                        <select class="form-select" id="equipe" th:field="*{equipe.id}" required>
+                            <option value="">Selecione uma equipe...</option>
+                            <option th:each="equipe : ${equipes}"
+                                    th:value="${equipe.id}"
+                                    th:text="${equipe.nome} + (${equipe.lider} != null ? ' — Líder: ' + ${equipe.lider.nome} : '')">
+                            </option>
                         </select>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('gerente')}" th:errors="*{gerente}"></div>
+                        <div class="form-text text-muted">Selecione a equipe que será responsável por este projeto.</div>
+                        <div class="invalid-feedback" th:if="${#fields.hasErrors('equipe')}" th:errors="*{equipe}"></div>
                     </div>
                 </div>
 
