@@ -51,7 +51,7 @@
                     <tr>
                         <th>ID</th>
                         <th>Nome</th>
-                        <th>Gerente</th>
+                        <th>Equipe</th>
                         <th>Início</th>
                         <th>Previsão Término</th>
                         <th>Status</th>
@@ -62,7 +62,8 @@
                     <tr th:each="projeto : ${projetos}">
                         <td th:text="${projeto.id}"></td>
                         <td class="fw-bold" th:text="${projeto.nome}"></td>
-                        <td th:text="${projeto.gerente?.nome ?: 'Não definido'}"></td>
+                        <!-- ✅ Alterado: exibe equipe em vez de gerente -->
+                        <td th:text="${projeto.equipe?.nome ?: 'Não definida'}"></td>
                         <td th:text="${#temporals.format(projeto.dataInicio, 'dd/MM/yyyy')}"></td>
                         <td th:text="${#temporals.format(projeto.dataTerminoPrevista, 'dd/MM/yyyy')}"></td>
                         <td>
