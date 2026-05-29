@@ -12,6 +12,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,11 +39,19 @@ public class EquipeController {
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("equipe", new Equipe());
-        // ✅ FILTRO: Apenas Admin e Gerente podem ser líderes
+        
+        // ✅ Líderes: apenas ADMIN e GERENTE
         List<Usuario> lideres = usuarioService.findAll().stream()
             .filter(u -> u.getPerfil().name().equals("ADMINISTRADOR") || u.getPerfil().name().equals("GERENTE"))
             .collect(Collectors.toList());
         model.addAttribute("lideres", lideres);
+        
+        // ✅ Todos os usuários para o select de membros
+        model.addAttribute("todosUsuarios", usuarioService.findAll());
+        
+        // ✅ IDs de membros (vazio para criação)
+        model.addAttribute("membrosIds", Collections.emptyList());
+        
         return "equipe/form";
     }
 
@@ -50,16 +59,23 @@ public class EquipeController {
     public String salvar(@Valid @ModelAttribute Equipe equipe, 
                          BindingResult result, 
                          Model model,
-                         RedirectAttributes attributes) {
+                         RedirectAttributes attributes,
+                         @RequestParam(value = "membroIds", required = false) List<Long> membroIds) {
         if (result.hasErrors()) {
             List<Usuario> lideres = usuarioService.findAll().stream()
                 .filter(u -> u.getPerfil().name().equals("ADMINISTRADOR") || u.getPerfil().name().equals("GERENTE"))
                 .collect(Collectors.toList());
             model.addAttribute("lideres", lideres);
+            model.addAttribute("todosUsuarios", usuarioService.findAll());
+            model.addAttribute("membrosIds", membroIds != null ? membroIds : Collections.emptyList());
             return "equipe/form";
         }
         try {
-            equipeService.save(equipe);
+            Equipe equipeSalva = equipeService.save(equipe);
+            
+            // ✅ Sincronizar membros após salvar a equipe
+            membroService.sincronizarMembros(equipeSalva, membroIds);
+            
             attributes.addFlashAttribute("sucesso", "Equipe criada com sucesso!");
             return "redirect:/equipes";
         } catch (Exception e) {
@@ -68,18 +84,33 @@ public class EquipeController {
                 .filter(u -> u.getPerfil().name().equals("ADMINISTRADOR") || u.getPerfil().name().equals("GERENTE"))
                 .collect(Collectors.toList());
             model.addAttribute("lideres", lideres);
+            model.addAttribute("todosUsuarios", usuarioService.findAll());
+            model.addAttribute("membrosIds", membroIds != null ? membroIds : Collections.emptyList());
             return "equipe/form";
         }
     }
 
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
-        Equipe equipe = equipeService.findById(id).orElseThrow();
+        Equipe equipe = equipeService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Equipe não encontrada"));
         model.addAttribute("equipe", equipe);
+        
+        // ✅ Líderes: apenas ADMIN e GERENTE
         List<Usuario> lideres = usuarioService.findAll().stream()
             .filter(u -> u.getPerfil().name().equals("ADMINISTRADOR") || u.getPerfil().name().equals("GERENTE"))
             .collect(Collectors.toList());
         model.addAttribute("lideres", lideres);
+        
+        // ✅ Todos os usuários para o select de membros
+        model.addAttribute("todosUsuarios", usuarioService.findAll());
+        
+        // ✅ IDs dos membros já associados à equipe (para edição)
+        List<Long> membrosIds = membroService.findByEquipeId(id).stream()
+            .map(m -> m.getUsuario().getId())
+            .collect(Collectors.toList());
+        model.addAttribute("membrosIds", membrosIds);
+        
         return "equipe/form";
     }
 
@@ -88,17 +119,24 @@ public class EquipeController {
                             @Valid @ModelAttribute Equipe equipe, 
                             BindingResult result, 
                             Model model,
-                            RedirectAttributes attributes) {
+                            RedirectAttributes attributes,
+                            @RequestParam(value = "membroIds", required = false) List<Long> membroIds) {
         if (result.hasErrors()) {
             List<Usuario> lideres = usuarioService.findAll().stream()
                 .filter(u -> u.getPerfil().name().equals("ADMINISTRADOR") || u.getPerfil().name().equals("GERENTE"))
                 .collect(Collectors.toList());
             model.addAttribute("lideres", lideres);
+            model.addAttribute("todosUsuarios", usuarioService.findAll());
+            model.addAttribute("membrosIds", membroIds != null ? membroIds : Collections.emptyList());
             return "equipe/form";
         }
         try {
             equipe.setId(id);
-            equipeService.save(equipe);
+            Equipe equipeSalva = equipeService.save(equipe);
+            
+            // ✅ Sincronizar membros após atualizar a equipe
+            membroService.sincronizarMembros(equipeSalva, membroIds);
+            
             attributes.addFlashAttribute("sucesso", "Equipe atualizada com sucesso!");
             return "redirect:/equipes";
         } catch (Exception e) {
@@ -107,6 +145,8 @@ public class EquipeController {
                 .filter(u -> u.getPerfil().name().equals("ADMINISTRADOR") || u.getPerfil().name().equals("GERENTE"))
                 .collect(Collectors.toList());
             model.addAttribute("lideres", lideres);
+            model.addAttribute("todosUsuarios", usuarioService.findAll());
+            model.addAttribute("membrosIds", membroIds != null ? membroIds : Collections.emptyList());
             return "equipe/form";
         }
     }
@@ -122,12 +162,14 @@ public class EquipeController {
         return "redirect:/equipes";
     }
 
-    // ✅ Tela de Detalhes para Gerenciar Membros
+    // ✅ Método existente: detalhes da equipe com membros (NÃO ALTERAR)
     @GetMapping("/{id}")
     public String detalhes(@PathVariable Long id, Model model) {
-        model.addAttribute("equipe", equipeService.findById(id).orElseThrow());
+        Equipe equipe = equipeService.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Equipe não encontrada"));
+        model.addAttribute("equipe", equipe);
         model.addAttribute("membros", membroService.findByEquipeId(id));
-        model.addAttribute("usuariosDisponiveis", usuarioService.findAll()); // Todos os funcionários
+        model.addAttribute("usuariosDisponiveis", usuarioService.findAll());
         return "equipe/detalhes";
     }
 }
