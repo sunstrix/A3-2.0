@@ -15,4 +15,5 @@ public class LoginController {
     public String loginPage() {
         return "login";
     }
+    // ✅ Método /menu removido daqui para evitar conflito com MenuController
 }
