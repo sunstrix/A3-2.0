@@ -17,7 +17,7 @@ public class ProjetoController {
 
     private final ProjetoService projetoService;
     private final UsuarioService usuarioService;
-    private final EquipeService equipeService; // ✅ Novo: injetado via construtor
+    private final EquipeService equipeService;
 
     public ProjetoController(ProjetoService projetoService, UsuarioService usuarioService, EquipeService equipeService) {
         this.projetoService = projetoService;
@@ -34,8 +34,8 @@ public class ProjetoController {
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("projeto", new Projeto());
-        model.addAttribute("gerentes", usuarioService.findAll()); // Mantido para compatibilidade
-        model.addAttribute("equipes", equipeService.findAll());   // ✅ Novo: lista de equipes para o form
+        model.addAttribute("gerentes", usuarioService.findAll());
+        model.addAttribute("equipes", equipeService.findAll());
         return "projeto/form";
     }
 
@@ -46,10 +46,12 @@ public class ProjetoController {
                          RedirectAttributes attributes) {
         if (result.hasErrors()) {
             model.addAttribute("gerentes", usuarioService.findAll());
-            model.addAttribute("equipes", equipeService.findAll()); // ✅ Mantido para re-renderizar form com erro
+            model.addAttribute("equipes", equipeService.findAll());
             return "projeto/form";
         }
         try {
+            // ✅ CORREÇÃO: Remove o gerente para evitar erro NOT NULL no SQLite
+            projeto.setGerente(null);
             projetoService.save(projeto);
             attributes.addFlashAttribute("sucesso", "Projeto criado com sucesso!");
             return "redirect:/projetos";
@@ -67,7 +69,7 @@ public class ProjetoController {
                 .orElseThrow(() -> new IllegalArgumentException("Projeto não encontrado"));
         model.addAttribute("projeto", projeto);
         model.addAttribute("gerentes", usuarioService.findAll());
-        model.addAttribute("equipes", equipeService.findAll()); // ✅ Novo: lista de equipes para edição
+        model.addAttribute("equipes", equipeService.findAll());
         return "projeto/form";
     }
 
@@ -84,6 +86,8 @@ public class ProjetoController {
         }
         try {
             projeto.setId(id);
+            // ✅ CORREÇÃO: Remove o gerente para evitar erro NOT NULL no SQLite
+            projeto.setGerente(null);
             projetoService.save(projeto);
             attributes.addFlashAttribute("sucesso", "Projeto atualizado com sucesso!");
             return "redirect:/projetos";
