@@ -13,7 +13,7 @@ public class Projeto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Nome do projeto é obrigatório")
+    @NotBlank(message = "Nome é obrigatório")
     @Column(nullable = false)
     private String nome;
 
@@ -21,49 +21,37 @@ public class Projeto {
     private String descricao;
 
     @NotNull(message = "Data de início é obrigatória")
-    @Column(nullable = false)
+    @Column(name = "data_inicio", nullable = false)
     private LocalDate dataInicio;
 
     @NotNull(message = "Data de término prevista é obrigatória")
-    @Column(nullable = false)
+    @Column(name = "data_termino_prevista", nullable = false)
     private LocalDate dataTerminoPrevista;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private StatusProjeto status = StatusProjeto.PLANEJAMENTO;
 
-    // ✅ Relacionamento N:1 com Usuario (Gerente Responsável)
+    // ✅ Gerente: mantido no model/banco, mas opcional no formulário
     @ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "gerente_id", nullable = false)
+    @JoinColumn(name = "gerente_id", nullable = true)
     private Usuario gerente;
 
-    // Enum de Status do Projeto
-    public enum StatusProjeto {
-        PLANEJAMENTO("Em Planejamento"),
-        EM_ANDAMENTO("Em Andamento"),
-        CONCLUIDO("Concluído"),
-        CANCELADO("Cancelado");
-
-        private final String descricao;
-
-        StatusProjeto(String descricao) {
-            this.descricao = descricao;
-        }
-
-        public String getDescricao() {
-            return descricao;
-        }
-    }
+    // ✅ NOVO: Equipe responsável (obrigatória no formulário)
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "equipe_id", nullable = false)
+    @NotNull(message = "Equipe responsável é obrigatória")
+    private Equipe equipe;
 
     // Construtores
     public Projeto() {}
 
-    public Projeto(String nome, String descricao, LocalDate dataInicio, LocalDate dataTerminoPrevista, Usuario gerente) {
+    public Projeto(String nome, String descricao, LocalDate dataInicio, LocalDate dataTerminoPrevista, StatusProjeto status) {
         this.nome = nome;
         this.descricao = descricao;
         this.dataInicio = dataInicio;
         this.dataTerminoPrevista = dataTerminoPrevista;
-        this.gerente = gerente;
+        this.status = status;
     }
 
     // Getters e Setters
@@ -81,4 +69,20 @@ public class Projeto {
     public void setStatus(StatusProjeto status) { this.status = status; }
     public Usuario getGerente() { return gerente; }
     public void setGerente(Usuario gerente) { this.gerente = gerente; }
+    
+    // ✅ Getter e Setter do novo campo equipe
+    public Equipe getEquipe() { return equipe; }
+    public void setEquipe(Equipe equipe) { this.equipe = equipe; }
+
+    // Enum para status do projeto
+    public enum StatusProjeto {
+        PLANEJAMENTO("Em Planejamento"),
+        EM_ANDAMENTO("Em Andamento"),
+        CONCLUIDO("Concluído"),
+        CANCELADO("Cancelado");
+
+        private final String descricao;
+        StatusProjeto(String descricao) { this.descricao = descricao; }
+        public String getDescricao() { return descricao; }
+    }
 }
