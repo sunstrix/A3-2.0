@@ -46,6 +46,7 @@ public class Usuario {
     @Column(nullable = false)
     private Boolean ativo = true;
 
+    // Enum de Perfis de Acesso
     public enum Perfil {
         ADMINISTRADOR("Administrador"),
         GERENTE("Gerente"),
@@ -62,7 +63,9 @@ public class Usuario {
         }
     }
 
-    public Usuario() {}
+    // Construtores
+    public Usuario() {
+    }
 
     public Usuario(String nome, String cpf, String email, String cargo, String login, String senha, Perfil perfil) {
         this.nome = nome;
@@ -81,16 +84,3 @@ public class Usuario {
     public void setNome(String nome) { this.nome = nome; }
     public String getCpf() { return cpf; }
     public void setCpf(String cpf) { this.cpf = cpf; }
-    public String getEmail() { return email; }
-    public void setEmail(String email) { this.email = email; }
-    public String getCargo() { return cargo; }
-    public void setCargo(String cargo) { this.cargo = cargo; }
-    public String getLogin() { return login; }
-    public void setLogin(String login) { this.login = login; }
-    public String getSenha() { return senha; }
-    public void setSenha(String senha) { this.senha = senha; }
-    public Perfil getPerfil() { return perfil; }
-    public void setPerfil(Perfil perfil) { this.perfil = perfil; }
-    public Boolean getAtivo() { return ativo; }
-    public void setAtivo(Boolean ativo) { this.ativo = ativo; }
-}
