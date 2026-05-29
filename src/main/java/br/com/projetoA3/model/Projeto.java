@@ -79,3 +79,6 @@ public class Projeto {
     public void setDataTerminoPrevista(LocalDate dataTerminoPrevista) { this.dataTerminoPrevista = dataTerminoPrevista; }
     public StatusProjeto getStatus() { return status; }
     public void setStatus(StatusProjeto status) { this.status = status; }
+    public Usuario getGerente() { return gerente; }
+    public void setGerente(Usuario gerente) { this.gerente = gerente; }
+}
