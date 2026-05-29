@@ -65,8 +65,8 @@
                             <span class="badge bg-info text-dark" th:text="${#lists.size(equipe.membros)} + ' membros'"></span>
                         </td>
                         <td class="text-center">
-                            <a th:href="@{/membros/novo?equipeId=${equipe.id}}" class="btn btn-sm btn-success me-1" title="Adicionar Membro">
-                                <i class="bi bi-person-plus"></i>
+                            <a th:href="@{/equipes/{id}(id=${equipe.id})}" class="btn btn-sm btn-success me-1" title="Ver Detalhes e Membros">
+                                <i class="bi bi-eye"></i>
                             </a>
                             <a th:href="@{/equipes/editar/{id}(id=${equipe.id})}" class="btn btn-sm btn-warning me-1" title="Editar">
                                 <i class="bi bi-pencil"></i>
