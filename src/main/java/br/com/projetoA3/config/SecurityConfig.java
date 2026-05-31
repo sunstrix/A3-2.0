@@ -1,7 +1,11 @@
 package br.com.projetoA3.config;
 
+import br.com.projetoA3.service.CustomUserDetailsService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -11,26 +15,21 @@ import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Configuração moderna do Spring Security para Spring Boot 3.x / Spring Security 6.x
- * 
- * Substitui o antigo WebSecurityConfigurerAdapter (removido no Spring Security 5.7+).
- * Utiliza a nova API lambda-based e expõe o SecurityFilterChain como @Bean.
- * 
- * Características:
- * - Autenticação baseada em formulário personalizado
- * - Autorização por URL e por método (@PreAuthorize)
- * - Proteção CSRF ativa (padrão seguro)
- * - Gerenciamento de sessão com máximo de 1 sessão por usuário
- * - BCrypt com fator de custo 12 para hashing de senhas
- * - Logout com invalidação de sessão e limpeza de cookies
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // Permite uso de @PreAuthorize em controllers e services
+@EnableMethodSecurity
 public class SecurityConfig {
+
+    private final CustomUserDetailsService userDetailsService;
+
+    // ✅ Injeção do nosso UserDetailsService personalizado
+    public SecurityConfig(CustomUserDetailsService userDetailsService) {
+        this.userDetailsService = userDetailsService;
+    }
 
     /**
      * Configuração principal da cadeia de filtros de segurança.
-     * Define regras de autenticação, autorização, login, logout e sessões.
      */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -39,19 +38,10 @@ public class SecurityConfig {
             // AUTORIZAÇÃO DE REQUISIÇÕES
             // ==========================================
             .authorizeHttpRequests(auth -> auth
-                // Recursos estáticos públicos (CSS, JS, imagens)
                 .requestMatchers("/css/**", "/js/**", "/img/**", "/webjars/**").permitAll()
-                
-                // Páginas de autenticação públicas
                 .requestMatchers("/login", "/registro", "/erro/**").permitAll()
-                
-                // Área administrativa restrita ao perfil ADMINISTRADOR
                 .requestMatchers("/configuracoes/**").hasRole("ADMINISTRADOR")
-                
-                // Relatórios disponíveis para ADMIN e GERENTE
                 .requestMatchers("/relatorios/**").hasAnyRole("ADMINISTRADOR", "GERENTE")
-                
-                // Demais endpoints exigem autenticação
                 .anyRequest().authenticated()
             )
             
@@ -63,8 +53,8 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/menu", true)
                 .failureUrl("/login?error=true")
-                .usernameParameter("login")
-                .passwordParameter("senha")
+                .usernameParameter("login")    // Campo do formulário HTML
+                .passwordParameter("senha")    // Campo do formulário HTML
                 .permitAll()
             )
             
@@ -89,35 +79,46 @@ public class SecurityConfig {
             )
             
             // ==========================================
-            // PROTEÇÃO CSRF (mantida ativa por padrão)
+            // PROTEÇÃO CSRF
             // ==========================================
-            // O CSRF é essencial para aplicações web com formulários e sessões.
-            // Para requisições AJAX (ex: mover tarefas no Kanban), o token CSRF
-            // deve ser incluído no header da requisição via csrf-meta.html.
             .csrf(csrf -> {})
             
             // ==========================================
             // HEADERS DE SEGURANÇA
             // ==========================================
-            // ✅ CORREÇÃO: Removidos lambdas vazios incompatíveis com Spring Security 6
-            // Os headers padrão (X-Content-Type-Options, X-XSS-Protection, etc.)
-            // já são aplicados automaticamente pelo Spring Security.
-            // Apenas configuramos o frameOptions explicitamente.
             .headers(headers -> headers
-                .frameOptions(frame -> frame.deny()) // Previne clickjacking
+                .frameOptions(frame -> frame.deny())
             )
+            
+            // ✅ USA NOSSO AUTHENTICATION PROVIDER PERSONALIZADO
+            .authenticationProvider(authenticationProvider())
             
             .build();
     }
 
     /**
-     * Encoder de senhas usando BCrypt.
-     * 
-     * Fator de custo 12 oferece bom equilíbrio entre segurança e performance.
-     * Cada incremento dobra o tempo de hashing (13 = 2x mais lento que 12).
-     * 
-     * IMPORTANTE: Senhas nunca devem ser armazenadas em texto plano.
-     * Sempre use passwordEncoder.encode(senha) antes de salvar no banco.
+     * ✅ CRÍTICO: Configura o DaoAuthenticationProvider que conecta:
+     * - Nosso CustomUserDetailsService (busca usuário no banco)
+     * - Nosso PasswordEncoder (BCrypt para validar a senha)
+     */
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
+        return authProvider;
+    }
+
+    /**
+     * AuthenticationManager usado em alguns casos de teste ou login programático.
+     */
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
+    }
+
+    /**
+     * Encoder de senhas usando BCrypt com fator de custo 12.
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
