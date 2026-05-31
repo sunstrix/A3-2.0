@@ -85,7 +85,7 @@ public class SecurityConfig {
             .sessionManagement(session -> session
                 .maximumSessions(1)
                 .expiredUrl("/login?expired=true")
-                .maxSessionsPreventsLogin(false) // Nova sessão expulsa a antiga
+                .maxSessionsPreventsLogin(false)
             )
             
             // ==========================================
@@ -93,19 +93,18 @@ public class SecurityConfig {
             // ==========================================
             // O CSRF é essencial para aplicações web com formulários e sessões.
             // Para requisições AJAX (ex: mover tarefas no Kanban), o token CSRF
-            // deve ser incluído no header da requisição. Veja csrf-meta.html.
-            .csrf(csrf -> csrf
-                // Se houver endpoints de API REST pura no futuro, excluí-los aqui:
-                // .ignoringRequestMatchers("/api/**")
-            )
+            // deve ser incluído no header da requisição via csrf-meta.html.
+            .csrf(csrf -> {})
             
             // ==========================================
             // HEADERS DE SEGURANÇA
             // ==========================================
+            // ✅ CORREÇÃO: Removidos lambdas vazios incompatíveis com Spring Security 6
+            // Os headers padrão (X-Content-Type-Options, X-XSS-Protection, etc.)
+            // já são aplicados automaticamente pelo Spring Security.
+            // Apenas configuramos o frameOptions explicitamente.
             .headers(headers -> headers
                 .frameOptions(frame -> frame.deny()) // Previne clickjacking
-                .contentTypeOptions(content -> {}) // X-Content-Type-Options: nosniff
-                .xssProtection(xss -> {}) // X-XSS-Protection
             )
             
             .build();
