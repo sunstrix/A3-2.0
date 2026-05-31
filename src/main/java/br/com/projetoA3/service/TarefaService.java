@@ -7,7 +7,6 @@ import br.com.projetoA3.exception.RegraDeNegocioException;
 import br.com.projetoA3.mapper.TarefaMapper;
 import br.com.projetoA3.model.Projeto;
 import br.com.projetoA3.model.Tarefa;
-import br.com.projetoA3.model.Usuario;
 import br.com.projetoA3.repository.ProjetoRepository;
 import br.com.projetoA3.repository.TarefaRepository;
 import br.com.projetoA3.repository.UsuarioRepository;
@@ -16,7 +15,6 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -59,8 +57,20 @@ public class TarefaService {
     // CONSULTAS (READ-ONLY) - herdado readOnly = true da classe
     // ==========================================
 
+    /**
+     * Retorna todas as tarefas como DTOs (para listagem geral na UI).
+     */
     public List<TarefaDTO> findAll() {
         return tarefaMapper.toDTOList(tarefaRepository.findAll());
+    }
+
+    /**
+     * ✅ Retorna todas as tarefas como entidades JPA (uso interno para relatórios).
+     * Necessário porque o RelatorioService precisa dos objetos completos com
+     * associações carregadas (Projeto, Responsável) para gerar Excel/PDF.
+     */
+    public List<Tarefa> findAllEntities() {
+        return tarefaRepository.findAll();
     }
 
     public Optional<Tarefa> findById(Long id) {
@@ -76,7 +86,7 @@ public class TarefaService {
     }
 
     /**
-     * ✅ Busca tarefas por ID do responsável (usado para "Minhas Tarefas")
+     * Busca tarefas por ID do responsável (usado para "Minhas Tarefas")
      */
     public List<TarefaDTO> findByResponsavelId(Long usuarioId) {
         return tarefaMapper.toDTOList(tarefaRepository.findByResponsavelId(usuarioId));
