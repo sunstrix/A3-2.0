@@ -75,6 +75,9 @@ public class TarefaService {
         return tarefaMapper.toDTOList(tarefaRepository.findByProjetoId(projetoId));
     }
 
+    /**
+     * ✅ Busca tarefas por ID do responsável (usado para "Minhas Tarefas")
+     */
     public List<TarefaDTO> findByResponsavelId(Long usuarioId) {
         return tarefaMapper.toDTOList(tarefaRepository.findByResponsavelId(usuarioId));
     }
@@ -235,6 +238,9 @@ public class TarefaService {
     // MÉTODOS AUXILIARES PRIVADOS
     // ==========================================
 
+    /**
+     * Filtra tarefas por status e converte para DTO
+     */
     private List<TarefaDTO> filtrarPorStatus(List<Tarefa> tarefas, StatusTarefa status) {
         return tarefas.stream()
                 .filter(t -> t.getStatus() == status)
