@@ -10,7 +10,6 @@
         body { background-color: #f8f9fa; }
         .page-header { background: #4f46e5; color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px; }
         .table-container { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .badge-status { font-size: 0.85rem; padding: 0.4em 0.75em; }
     </style>
 </head>
 <body>
@@ -53,9 +52,10 @@
                     <tr>
                         <th>ID</th>
                         <th>Título</th>
-                        <th>Descrição</th>
                         <th>Projeto</th>
                         <th>Responsável</th>
+                        <th>Prioridade</th>
+                        <th>Vencimento</th>
                         <th>Status</th>
                         <th class="text-center">Ações</th>
                     </tr>
@@ -64,14 +64,27 @@
                     <tr th:each="tarefa : ${tarefas}">
                         <td th:text="${tarefa.id}"></td>
                         <td class="fw-bold" th:text="${tarefa.titulo}"></td>
-                        <td th:text="${tarefa.descricao != null ? (tarefa.descricao.length() > 50 ? #strings.substring(tarefa.descricao, 0, 50) + '...' : tarefa.descricao) : '-'}"></td>
-                        <td th:text="${tarefa.projeto?.nome ?: 'Não definido'}"></td>
+                        <td th:text="${tarefa.projeto?.nome ?: '-'}"></td>
                         <td th:text="${tarefa.responsavel?.nome ?: 'Não atribuído'}"></td>
                         <td>
-                            <span th:class="'badge ' + 
-                                (${tarefa.status.name() == 'A_FAZER'} ? 'bg-secondary' : 
-                                 ${tarefa.status.name() == 'EM_PROGRESSO'} ? 'bg-primary' : 'bg-success')"
-                                  th:text="${tarefa.status.descricao}">
+                            <span class="badge" 
+                                  th:classappend="${tarefa.prioridade?.name() == 'ALTA'} ? 'bg-danger' : 
+                                                  ${tarefa.prioridade?.name() == 'MEDIA'} ? 'bg-warning text-dark' : 'bg-success'"
+                                  th:text="${tarefa.prioridade?.descricao ?: 'Média'}">
+                            </span>
+                        </td>
+                        <td>
+                            <span th:if="${tarefa.dataVencimento}" 
+                                  th:class="${tarefa.dataVencimento.isBefore(T(java.time.LocalDate).now()) and tarefa.status?.name() != 'CONCLUIDA'} ? 'text-danger fw-bold' : ''"
+                                  th:text="${#temporals.format(tarefa.dataVencimento, 'dd/MM/yyyy')}">
+                            </span>
+                            <span th:unless="${tarefa.dataVencimento}" class="text-muted">-</span>
+                        </td>
+                        <td>
+                            <span class="badge" 
+                                  th:classappend="${tarefa.status?.name() == 'A_FAZER'} ? 'bg-secondary' : 
+                                                  ${tarefa.status?.name() == 'EM_PROGRESSO'} ? 'bg-primary' : 'bg-success'"
+                                  th:text="${tarefa.status?.descricao}">
                             </span>
                         </td>
                         <td class="text-center">
