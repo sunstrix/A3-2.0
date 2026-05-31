@@ -40,7 +40,7 @@ public class DataInitializer {
                 "admin@projetoA3.com",
                 "000.000.000-00",
                 "Administrador do Sistema",
-                "ADMINISTRADOR",
+                Usuario.Perfil.ADMINISTRADOR,
                 "admin123"
             );
 
@@ -52,7 +52,7 @@ public class DataInitializer {
                 "gerente@projetoA3.com",
                 "111.111.111-11",
                 "Gerente de Projetos",
-                "GERENTE",
+                Usuario.Perfil.GERENTE,
                 "gerente123"
             );
 
@@ -64,7 +64,7 @@ public class DataInitializer {
                 "colaborador@projetoA3.com",
                 "222.222.222-22",
                 "Desenvolvedor",
-                "COLABORADOR",
+                Usuario.Perfil.COLABORADOR,
                 "colab123"
             );
 
@@ -89,7 +89,7 @@ public class DataInitializer {
                                            String email,
                                            String cpf,
                                            String cargo,
-                                           String perfil,
+                                           Usuario.Perfil perfil,
                                            String senhaPlana) {
         // Verifica se já existe um usuário com esse login
         if (repository.findByLogin(login).isEmpty()) {
