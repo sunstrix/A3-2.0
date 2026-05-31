@@ -4,99 +4,95 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - A3 2.0</title>
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8f9fa; }
-        .dashboard-header { background: #4f46e5; color: white; padding: 1.5rem 0; margin-bottom: 2rem; }
-        .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); transition: transform 0.2s; }
-        .stat-card:hover { transform: translateY(-5px); }
-        .stat-icon { font-size: 2.5rem; opacity: 0.8; }
-        .nav-link { color: #333; font-weight: 500; }
-        .nav-link:hover { color: #4f46e5; }
-    </style>
+    
+    <!-- ✅ Novo: CSS Global do Projeto (Temas, Responsividade) -->
+    <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-    <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-4">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/menu">A3 2.0</a>
-            <div class="collapse navbar-collapse">
-                <ul class="navbar-nav ms-auto align-items-center">
-                    <li class="nav-item"><a class="nav-link" href="/usuarios"><i class="bi bi-people"></i> Usuários</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/projetos"><i class="bi bi-folder"></i> Projetos</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/equipes"><i class="bi bi-person-badge"></i> Equipes</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/tarefas"><i class="bi bi-kanban"></i> Tarefas</a></li>
-                    <li class="nav-item ms-3">
-                        <form th:action="@{/logout}" method="post" class="d-inline">
-                            <button type="submit" class="btn btn-outline-danger btn-sm">Sair</button>
-                        </form>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container">
-        <div class="dashboard-header rounded-3 mb-4 p-4">
-            <h2 class="mb-1">Bem-vindo ao Sistema de Gestão</h2>
-            <p class="mb-0 opacity-75">Gerencie projetos, equipes e tarefas em um só lugar.</p>
-        </div>
+    <!-- ✅ Novo: Navbar Global (Fragmento) -->
+    <div th:replace="~{common/navbar :: navbar}"></div>
 
-        <!-- Cards de Métricas -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-4">
-                <div class="card stat-card p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Total de Projetos</h6>
-                            <h2 class="mb-0 fw-bold" th:text="${totalProjetos}">0</h2>
-                        </div>
-                        <i class="bi bi-folder2-open stat-icon text-primary"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card stat-card p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Total de Tarefas</h6>
-                            <h2 class="mb-0 fw-bold" th:text="${totalTarefas}">0</h2>
-                        </div>
-                        <i class="bi bi-check2-square stat-icon text-success"></i>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card stat-card p-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="text-muted mb-2">Usuários Ativos</h6>
-                            <h2 class="mb-0 fw-bold" th:text="${totalUsuarios}">0</h2>
-                        </div>
-                        <i class="bi bi-person-check stat-icon text-warning"></i>
-                    </div>
-                </div>
+    <div class="container fade-in">
+        <!-- Cabeçalho de Boas-vindas -->
+        <div class="row mt-4 mb-4">
+            <div class="col-12 text-center">
+                <h1 class="display-5 fw-bold mb-2">Bem-vindo ao A3 2.0</h1>
+                <p class="lead text-muted">Sistema de Gestão de Projetos e Equipes</p>
             </div>
         </div>
 
-        <!-- Ações Rápidas -->
-        <div class="row g-3 mb-4">
-            <div class="col-12">
-                <div class="card shadow-sm">
+        <!-- Cards de Acesso Rápido -->
+        <div class="row g-4 mb-5 justify-content-center">
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 text-center py-4 hover-shadow">
                     <div class="card-body">
-                        <h5 class="card-title mb-3">Ações Rápidas</h5>
-                        <div class="d-flex gap-2 flex-wrap">
-                            <a href="/projetos/novo" class="btn btn-outline-primary"><i class="bi bi-plus-lg"></i> Novo Projeto</a>
-                            <a href="/equipes/novo" class="btn btn-outline-success"><i class="bi bi-plus-lg"></i> Nova Equipe</a>
-                            <a href="/usuarios/novo" class="btn btn-outline-info"><i class="bi bi-plus-lg"></i> Novo Usuário</a>
-                        </div>
+                        <i class="bi bi-people-fill fs-1 text-primary mb-3"></i>
+                        <h5 class="card-title fw-bold">Equipes</h5>
+                        <p class="card-text text-muted">Gerencie suas equipes e membros.</p>
+                        <a href="/equipes" class="btn btn-primary stretched-link">Acessar</a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 text-center py-4 hover-shadow">
+                    <div class="card-body">
+                        <i class="bi bi-folder-fill fs-1 text-success mb-3"></i>
+                        <h5 class="card-title fw-bold">Projetos</h5>
+                        <p class="card-text text-muted">Acompanhe o status dos projetos.</p>
+                        <a href="/projetos" class="btn btn-success stretched-link">Acessar</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 text-center py-4 hover-shadow">
+                    <div class="card-body">
+                        <i class="bi bi-kanban-fill fs-1 text-warning mb-3"></i>
+                        <h5 class="card-title fw-bold">Kanban</h5>
+                        <p class="card-text text-muted">Visualize tarefas em colunas.</p>
+                        <a href="/tarefas" class="btn btn-warning stretched-link text-dark">Acessar</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6 col-lg-3">
+                <div class="card h-100 text-center py-4 hover-shadow">
+                    <div class="card-body">
+                        <i class="bi bi-gear-fill fs-1 text-info mb-3"></i>
+                        <h5 class="card-title fw-bold">Configurações</h5>
+                        <p class="card-text text-muted">Ajuste parâmetros do sistema.</p>
+                        <a href="/configuracoes" class="btn btn-info stretched-link text-white">Acessar</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Estatísticas (Placeholder para Futuro Dashboard) -->
+        <div class="row g-4 mb-5">
+            <div class="col-md-8 mx-auto">
+                <div class="card text-center py-5">
+                    <div class="card-body">
+                        <i class="bi bi-graph-up-arrow fs-1 text-secondary mb-3"></i>
+                        <h5 class="card-title">Módulo de Dashboard</h5>
+                        <p class="card-text text-muted">Gráficos e estatísticas detalhadas serão adicionados em breve.</p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- ✅ Novo: Footer Global (Fragmento) -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- ✅ Novo: JavaScript de UX (Tema, Toasts, Loading) -->
+    <script src="/js/ux.js"></script>
 </body>
 </html>
