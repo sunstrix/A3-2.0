@@ -5,49 +5,167 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login - A3 2.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/main.css">
     <style>
-        body { 
-            background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); 
-            display: flex; align-items: center; justify-content: center; 
-            height: 100vh; margin: 0; font-family: 'Segoe UI', sans-serif;
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', system-ui, sans-serif;
         }
-        .login-card { 
-            max-width: 400px; width: 100%; padding: 2.5rem; 
-            border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.2); 
+        .login-container {
+            max-width: 420px;
+            width: 100%;
+            padding: 1rem;
+        }
+        .login-card {
             background: white;
+            border-radius: 16px;
+            padding: 2.5rem 2rem;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
-        .btn-login { 
-            width: 100%; padding: 0.8rem; font-size: 1rem; font-weight: 500; 
-            background-color: #4f46e5; border: none; transition: 0.3s;
+        .login-header {
+            text-align: center;
+            margin-bottom: 2rem;
         }
-        .btn-login:hover { background-color: #4338ca; }
-        .alert-error { margin-top: 1rem; font-size: 0.9rem; }
+        .login-header i {
+            font-size: 3.5rem;
+            color: #4f46e5;
+            margin-bottom: 1rem;
+        }
+        .login-header h2 {
+            font-weight: 700;
+            color: #1e293b;
+        }
+        .form-label {
+            font-weight: 600;
+            color: #475569;
+            font-size: 0.9rem;
+        }
+        .form-control {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        .form-control:focus {
+            border-color: #4f46e5;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+        }
+        .btn-login {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border: none;
+            padding: 0.85rem;
+            font-weight: 600;
+            font-size: 1rem;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+        }
+        .input-group-text {
+            background: #f8fafc;
+            border: 2px solid #e2e8f0;
+            border-right: none;
+            color: #64748b;
+        }
+        .input-group .form-control {
+            border-left: none;
+        }
+        .credentials-hint {
+            background: #f1f5f9;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1.5rem;
+            font-size: 0.85rem;
+        }
+        .credentials-hint strong {
+            color: #4f46e5;
+        }
     </style>
 </head>
 <body>
-    <div class="login-card">
-        <h3 class="text-center mb-4 text-primary">🔐 Acesso ao Sistema</h3>
-        
-        <div th:if="${param.error}" class="alert alert-danger alert-error text-center" role="alert">
-            ⚠️ Login ou senha inválidos. Tente novamente.
+    <div class="login-container">
+        <div class="login-card">
+            <div class="login-header">
+                <i class="bi bi-kanban-fill"></i>
+                <h2>A3 2.0</h2>
+                <p class="text-muted mb-0">Sistema de Gestão de Projetos</p>
+            </div>
+
+            <!-- Mensagem de Erro -->
+            <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <div>
+                    <strong>⚠️ Login ou senha inválidos.</strong><br>
+                    <small>Verifique suas credenciais e tente novamente.</small>
+                </div>
+            </div>
+
+            <!-- Mensagem de Logout -->
+            <div th:if="${param.logout}" class="alert alert-info d-flex align-items-center" role="alert">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <div>Você saiu do sistema com sucesso.</div>
+            </div>
+
+            <!-- ✅ FORMULÁRIO DE LOGIN -->
+            <!-- IMPORTANTE: O action DEVE apontar para /login (processado pelo Spring Security) -->
+            <!-- Os names dos campos DEVEM corresponder ao configurado no SecurityConfig -->
+            <form th:action="@{/login}" method="post">
+                
+                <!-- ✅ Campo LOGIN - name="login" (igual ao usernameParameter do SecurityConfig) -->
+                <div class="mb-3">
+                    <label for="login" class="form-label">Usuário</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                        <input type="text" 
+                               class="form-control" 
+                               id="login" 
+                               name="login" 
+                               placeholder="Digite seu usuário"
+                               autocomplete="username"
+                               required 
+                               autofocus>
+                    </div>
+                </div>
+
+                <!-- ✅ Campo SENHA - name="senha" (igual ao passwordParameter do SecurityConfig) -->
+                <div class="mb-4">
+                    <label for="senha" class="form-label">Senha</label>
+                    <div class="input-group">
+                        <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                        <input type="password" 
+                               class="form-control" 
+                               id="senha" 
+                               name="senha" 
+                               placeholder="Digite sua senha"
+                               autocomplete="current-password"
+                               required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-login w-100">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Entrar no Sistema
+                </button>
+            </form>
+
+            <!-- Credenciais de Teste -->
+            <div class="credentials-hint">
+                <strong>🔑 Usuários de teste:</strong>
+                <div class="mt-2">
+                    <div><code>admin</code> / <code>admin123</code> (Administrador)</div>
+                    <div><code>gerente</code> / <code>gerente123</code> (Gerente)</div>
+                    <div><code>colaborador</code> / <code>colab123</code> (Colaborador)</div>
+                </div>
+            </div>
         </div>
-
-        <!-- Os nomes "username" e "password" são os padrões esperados pelo Spring Security -->
-        <form th:action="@{/login}" method="post">
-            <div class="mb-3">
-                <label for="username" class="form-label">Login</label>
-                <input type="text" class="form-control" id="username" name="username" 
-                       required placeholder="Ex: admin">
-            </div>
-            <div class="mb-3">
-                <label for="password" class="form-label">Senha</label>
-                <input type="password" class="form-control" id="password" name="password" 
-                       required placeholder="Digite sua senha">
-            </div>
-            <button type="submit" class="btn btn-primary btn-login">Entrar</button>
-        </form>
-
-        <p class="text-center mt-4 text-muted small">Projeto A3 2.0 - Gestão de Projetos & Equipes</p>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
