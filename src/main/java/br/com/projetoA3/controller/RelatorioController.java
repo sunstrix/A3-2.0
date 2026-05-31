@@ -1,12 +1,20 @@
 package br.com.projetoA3.controller;
 
-import br.com.projetoA3.service.*;
+import br.com.projetoA3.service.ConfiguracaoService;
+import br.com.projetoA3.service.EmailService;
+import br.com.projetoA3.service.EquipeService;
+import br.com.projetoA3.service.ProjetoService;
+import br.com.projetoA3.service.RelatorioService;
+import br.com.projetoA3.service.TarefaService;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.io.IOException;
 
 @Controller
 @RequestMapping("/relatorios")
@@ -16,98 +24,97 @@ public class RelatorioController {
     private final EquipeService equipeService;
     private final ProjetoService projetoService;
     private final TarefaService tarefaService;
-    private final EmailService emailService;
+    private final ConfiguracaoService configuracaoService;
+    private final EmailService emailService; 
 
-    public RelatorioController(RelatorioService relatorioService, EquipeService equipeService,
-                               ProjetoService projetoService, TarefaService tarefaService, EmailService emailService) {
+    public RelatorioController(RelatorioService relatorioService, EquipeService equipeService, 
+                               ProjetoService projetoService, TarefaService tarefaService, 
+                               ConfiguracaoService configuracaoService, EmailService emailService) {
         this.relatorioService = relatorioService;
         this.equipeService = equipeService;
         this.projetoService = projetoService;
         this.tarefaService = tarefaService;
+        this.configuracaoService = configuracaoService;
         this.emailService = emailService;
     }
 
     // ==========================================
-    // 📥 DOWNLOAD EXCEL
+    // 📥 DOWNLOADS DE RELATÓRIOS (EXCEL / PDF)
     // ==========================================
 
     @GetMapping("/equipes/excel")
-    public ResponseEntity<byte[]> baixarEquipesExcel() throws Exception {
-        byte[] bytes = relatorioService.gerarRelatorioEquipesExcel(equipeService.findAll());
+    public ResponseEntity<byte[]> baixarEquipesExcel() throws IOException {
+        byte[] excelBytes = relatorioService.gerarRelatorioEquipesExcel(equipeService.findAll());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_equipes.xlsx")
                 .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(bytes);
+                .body(excelBytes);
     }
-
-    @GetMapping("/projetos/excel")
-    public ResponseEntity<byte[]> baixarProjetosExcel() throws Exception {
-        byte[] bytes = relatorioService.gerarRelatorioProjetosExcel(projetoService.findAll());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_projetos.xlsx")
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(bytes);
-    }
-
-    @GetMapping("/tarefas/excel")
-    public ResponseEntity<byte[]> baixarTarefasExcel() throws Exception {
-        byte[] bytes = relatorioService.gerarRelatorioTarefasExcel(tarefaService.findAll());
-        return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_tarefas.xlsx")
-                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(bytes);
-    }
-
-    // ==========================================
-    // 📄 DOWNLOAD PDF
-    // ==========================================
 
     @GetMapping("/equipes/pdf")
     public ResponseEntity<byte[]> baixarEquipesPdf() throws Exception {
-        byte[] bytes = relatorioService.gerarRelatorioEquipesPdf(equipeService.findAll());
+        byte[] pdfBytes = relatorioService.gerarRelatorioEquipesPdf(equipeService.findAll());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_equipes.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
-                .body(bytes);
+                .body(pdfBytes);
+    }
+
+    @GetMapping("/projetos/excel")
+    public ResponseEntity<byte[]> baixarProjetosExcel() throws IOException {
+        byte[] excelBytes = relatorioService.gerarRelatorioProjetosExcel(projetoService.findAll());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_projetos.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelBytes);
     }
 
     @GetMapping("/projetos/pdf")
     public ResponseEntity<byte[]> baixarProjetosPdf() throws Exception {
-        byte[] bytes = relatorioService.gerarRelatorioProjetosPdf(projetoService.findAll());
+        byte[] pdfBytes = relatorioService.gerarRelatorioProjetosPdf(projetoService.findAll());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_projetos.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
-                .body(bytes);
+                .body(pdfBytes);
+    }
+
+    @GetMapping("/tarefas/excel")
+    public ResponseEntity<byte[]> baixarTarefasExcel() throws IOException {
+        // ✅ CORREÇÃO: Usa findAllEntities() para obter List<Tarefa> em vez de List<TarefaDTO>
+        byte[] excelBytes = relatorioService.gerarRelatorioTarefasExcel(tarefaService.findAllEntities());
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_tarefas.xlsx")
+                .contentType(MediaType.parseMediaType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+                .body(excelBytes);
     }
 
     @GetMapping("/tarefas/pdf")
     public ResponseEntity<byte[]> baixarTarefasPdf() throws Exception {
-        byte[] bytes = relatorioService.gerarRelatorioTarefasPdf(tarefaService.findAll());
+        // ✅ CORREÇÃO: Usa findAllEntities() para obter List<Tarefa> em vez de List<TarefaDTO>
+        byte[] pdfBytes = relatorioService.gerarRelatorioTarefasPdf(tarefaService.findAllEntities());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_tarefas.pdf")
                 .contentType(MediaType.APPLICATION_PDF)
-                .body(bytes);
+                .body(pdfBytes);
     }
 
     // ==========================================
-    // 📧 ENVIO DE E-MAIL (TESTE)
+    // 📧 ENVIO POR E-MAIL (COMUNICAÇÃO)
     // ==========================================
-
-    @PostMapping("/enviar-relatorio-equipe")
-    public String enviarRelatorioEquipeEmail(RedirectAttributes attributes) {
+    
+    @PostMapping("/enviar-teste")
+    public String enviarRelatorioTeste(RedirectAttributes attributes) {
         try {
-            // Gera o PDF
             byte[] pdfBytes = relatorioService.gerarRelatorioEquipesPdf(equipeService.findAll());
             
-            // Envia o e-mail
             emailService.enviarRelatorioComAnexo(
-                "Relatório de Equipes - A3 Sistema", 
-                "Segue em anexo o relatório atualizado de equipes.", 
+                "Relatório de Equipes - Teste", 
+                "Segue em anexo o relatório de equipes.", 
                 pdfBytes, 
                 "relatorio_equipes.pdf"
             );
             
-            attributes.addFlashAttribute("sucesso", "Relatório de Equipes enviado com sucesso para o e-mail cadastrado!");
+            attributes.addFlashAttribute("sucesso", "Relatório enviado por e-mail com sucesso!");
         } catch (Exception e) {
             attributes.addFlashAttribute("erro", "Erro ao enviar e-mail: " + e.getMessage());
         }
