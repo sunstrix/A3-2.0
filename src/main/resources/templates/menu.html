@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,90 +9,226 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
-    <!-- ✅ Novo: CSS Global do Projeto (Temas, Responsividade) -->
+    <!-- ✅ CSS Global do Projeto (Temas, Responsividade, Dark Mode) -->
     <link rel="stylesheet" href="/css/main.css">
+    
+    <!-- ✅ Fragmento CSRF para proteção de futuras requisições AJAX -->
+    <div th:replace="~{common/csrf-meta :: csrf}"></div>
+    
+    <style>
+        .welcome-card {
+            background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+            color: white;
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: var(--shadow-lg);
+        }
+        .stat-card {
+            transition: var(--transition);
+            cursor: pointer;
+            height: 100%;
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+        .quick-action {
+            transition: var(--transition);
+            border: 2px dashed var(--border-color);
+        }
+        .quick-action:hover {
+            border-color: var(--primary);
+            background: var(--bg-tertiary);
+        }
+        .user-greeting {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+    </style>
 </head>
 <body>
 
-    <!-- ✅ Novo: Navbar Global (Fragmento) -->
+    <!-- ✅ Navbar Global (Fragmento) -->
     <div th:replace="~{common/navbar :: navbar}"></div>
 
     <div class="container fade-in">
-        <!-- Cabeçalho de Boas-vindas -->
-        <div class="row mt-4 mb-4">
-            <div class="col-12 text-center">
-                <h1 class="display-5 fw-bold mb-2">Bem-vindo ao A3 2.0</h1>
-                <p class="lead text-muted">Sistema de Gestão de Projetos e Equipes</p>
-            </div>
-        </div>
-
-        <!-- Cards de Acesso Rápido -->
-        <div class="row g-4 mb-5 justify-content-center">
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 text-center py-4 hover-shadow">
-                    <div class="card-body">
-                        <i class="bi bi-people-fill fs-1 text-primary mb-3"></i>
-                        <h5 class="card-title fw-bold">Equipes</h5>
-                        <p class="card-text text-muted">Gerencie suas equipes e membros.</p>
-                        <a href="/equipes" class="btn btn-primary stretched-link">Acessar</a>
-                    </div>
+        <!-- Card de Boas-vindas -->
+        <div class="welcome-card">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h1 class="display-5 fw-bold mb-2">Olá, <span sec:authentication="name">Usuário</span>! 👋</h1>
+                    <p class="user-greeting mb-0">Bem-vindo ao seu painel de gestão de projetos e equipes.</p>
                 </div>
-            </div>
-            
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 text-center py-4 hover-shadow">
-                    <div class="card-body">
-                        <i class="bi bi-folder-fill fs-1 text-success mb-3"></i>
-                        <h5 class="card-title fw-bold">Projetos</h5>
-                        <p class="card-text text-muted">Acompanhe o status dos projetos.</p>
-                        <a href="/projetos" class="btn btn-success stretched-link">Acessar</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 text-center py-4 hover-shadow">
-                    <div class="card-body">
-                        <i class="bi bi-kanban-fill fs-1 text-warning mb-3"></i>
-                        <h5 class="card-title fw-bold">Kanban</h5>
-                        <p class="card-text text-muted">Visualize tarefas em colunas.</p>
-                        <a href="/tarefas" class="btn btn-warning stretched-link text-dark">Acessar</a>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6 col-lg-3">
-                <div class="card h-100 text-center py-4 hover-shadow">
-                    <div class="card-body">
-                        <i class="bi bi-gear-fill fs-1 text-info mb-3"></i>
-                        <h5 class="card-title fw-bold">Configurações</h5>
-                        <p class="card-text text-muted">Ajuste parâmetros do sistema.</p>
-                        <a href="/configuracoes" class="btn btn-info stretched-link text-white">Acessar</a>
-                    </div>
+                <div class="d-flex gap-2">
+                    <a href="/projetos/novo" class="btn btn-light btn-lg fw-semibold">
+                        <i class="bi bi-plus-circle"></i> Novo Projeto
+                    </a>
+                    <a href="/configuracoes" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-gear-fill"></i>
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- Área de Estatísticas (Placeholder para Futuro Dashboard) -->
-        <div class="row g-4 mb-5">
-            <div class="col-md-8 mx-auto">
-                <div class="card text-center py-5">
+        <!-- Cards de Estatísticas Rápidas -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-6 col-lg-3">
+                <a href="/equipes" class="text-decoration-none">
+                    <div class="card stat-card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-people-fill stat-icon"></i>
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Equipes Ativas</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a href="/projetos" class="text-decoration-none">
+                    <div class="card stat-card bg-success text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-folder-fill stat-icon"></i>
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Projetos em Andamento</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a href="/tarefas" class="text-decoration-none">
+                    <div class="card stat-card bg-warning text-dark">
+                        <div class="card-body text-center">
+                            <i class="bi bi-kanban-fill stat-icon"></i>
+                            <div class="stat-value">--</div>
+                            <div class="stat-label">Tarefas Pendentes</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <a href="/relatorios" class="text-decoration-none">
+                    <div class="card stat-card bg-info text-white">
+                        <div class="card-body text-center">
+                            <i class="bi bi-graph-up-arrow stat-icon"></i>
+                            <div class="stat-value">📊</div>
+                            <div class="stat-label">Ver Relatórios</div>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <h4 class="fw-bold mb-3">⚡ Ações Rápidas</h4>
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="/projetos" class="text-decoration-none">
+                            <div class="card quick-action p-4 text-center h-100">
+                                <i class="bi bi-folder-plus fs-1 text-primary mb-2"></i>
+                                <h6 class="fw-bold">Acessar Projetos</h6>
+                                <small class="text-muted">Visualize e gerencie todos os projetos</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="/tarefas" class="text-decoration-none">
+                            <div class="card quick-action p-4 text-center h-100">
+                                <i class="bi bi-list-check fs-1 text-success mb-2"></i>
+                                <h6 class="fw-bold">Minhas Tarefas</h6>
+                                <small class="text-muted">Veja suas tarefas atribuídas</small>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4" sec:authorize="hasRole('ADMINISTRADOR')">
+                        <a href="/configuracoes" class="text-decoration-none">
+                            <div class="card quick-action p-4 text-center h-100">
+                                <i class="bi bi-envelope-paper fs-1 text-info mb-2"></i>
+                                <h6 class="fw-bold">Configurar E-mail</h6>
+                                <small class="text-muted">Ajuste SMTP para relatórios</small>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Área de Informações do Sistema -->
+        <div class="row g-3 mb-5">
+            <div class="col-md-8">
+                <div class="card h-100">
                     <div class="card-body">
-                        <i class="bi bi-graph-up-arrow fs-1 text-secondary mb-3"></i>
-                        <h5 class="card-title">Módulo de Dashboard</h5>
-                        <p class="card-text text-muted">Gráficos e estatísticas detalhadas serão adicionados em breve.</p>
+                        <h5 class="card-title fw-bold mb-3">
+                            <i class="bi bi-info-circle text-primary"></i> Sobre o A3 2.0
+                        </h5>
+                        <p class="card-text">
+                            Sistema completo de gestão de projetos com quadro Kanban interativo,
+                            relatórios em PDF/Excel e envio automático por e-mail. Construído com
+                            as melhores práticas de arquitetura Java e Spring Boot 3.3.
+                        </p>
+                        <div class="d-flex gap-2 mt-3 flex-wrap">
+                            <span class="badge bg-primary">Java 21</span>
+                            <span class="badge bg-success">Spring Boot 3.3.5</span>
+                            <span class="badge bg-info">Thymeleaf</span>
+                            <span class="badge bg-warning text-dark">SQLite</span>
+                            <span class="badge bg-secondary">Kanban</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 bg-light">
+                    <div class="card-body text-center d-flex flex-column justify-content-center">
+                        <i class="bi bi-lightbulb fs-1 text-warning mb-2"></i>
+                        <h6 class="fw-bold">Dica do dia</h6>
+                        <p class="small text-muted mb-0">
+                            Use o botão <span class="badge bg-dark">🌙</span> no canto inferior 
+                            direito para alternar entre tema claro e escuro.
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- ✅ Novo: Footer Global (Fragmento) -->
+    <!-- ✅ Footer Global (Fragmento) -->
     <div th:replace="~{common/footer :: footer}"></div>
+
+    <!-- Toast Container para notificações -->
+    <div class="toast-container"></div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- ✅ Novo: JavaScript de UX (Tema, Toasts, Loading) -->
+    <!-- ✅ JavaScript de UX (Tema, Toasts, Loading) -->
     <script src="/js/ux.js"></script>
+    
+    <script>
+        // Exibe mensagens flash como toasts (se houver)
+        document.addEventListener('DOMContentLoaded', () => {
+            const successMsg = document.querySelector('.alert-success');
+            const errorMsg = document.querySelector('.alert-danger');
+            
+            if (successMsg && typeof window.showToast === 'function') {
+                window.showToast(successMsg.textContent.trim(), 'success');
+            }
+            if (errorMsg && typeof window.showToast === 'function') {
+                window.showToast(errorMsg.textContent.trim(), 'error');
+            }
+        });
+    </script>
 </body>
 </html>
