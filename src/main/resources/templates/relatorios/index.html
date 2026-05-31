@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - A3 2.0</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        .report-card {
+            transition: all 0.2s ease;
+            border: none;
+            border-radius: 12px;
+            height: 100%;
+        }
+        .report-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .report-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            margin-bottom: 1rem;
+        }
+        .icon-equipes { background: rgba(79, 70, 229, 0.1); color: #4f46e5; }
+        .icon-projetos { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .icon-tarefas { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .btn-excel {
+            background: #107c41;
+            border: none;
+            color: white;
+        }
+        .btn-excel:hover {
+            background: #0b5a2f;
+            color: white;
+        }
+        .btn-pdf {
+            background: #d32f2f;
+            border: none;
+            color: white;
+        }
+        .btn-pdf:hover {
+            background: #9a0007;
+            color: white;
+        }
+        .badge-format {
+            font-size: 0.7rem;
+            padding: 0.25rem 0.5rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Navbar Global -->
+    <div th:replace="~{common/navbar :: navbar}"></div>
+
+    <div class="container mt-4">
+        
+        <!-- Mensagens Flash -->
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${erro}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${sucesso}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-file-earmark-bar-graph-fill text-primary"></i> Central de Relatórios
+                </h2>
+                <p class="text-muted mb-0">Exporte dados do sistema em PDF ou Excel</p>
+            </div>
+            <a href="/menu" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left me-1"></i> Voltar ao Menu
+            </a>
+        </div>
+
+        <!-- Aviso de Acesso -->
+        <div class="alert alert-info d-flex align-items-center" role="alert">
+            <i class="bi bi-info-circle-fill me-2 fs-5"></i>
+            <div>
+                <strong>Como funciona:</strong> Clique nos botões abaixo para gerar e baixar automaticamente o relatório no formato desejado.
+            </div>
+        </div>
+
+        <!-- Grid de Relatórios -->
+        <div class="row g-4">
+            
+            <!-- Card: Equipes -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card report-card shadow-sm">
+                    <div class="card-body">
+                        <div class="report-icon icon-equipes">
+                            <i class="bi bi-people-fill"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Relatório de Equipes</h5>
+                        <p class="card-text text-muted small">
+                            Lista completa de todas as equipes cadastradas, seus líderes e total de membros.
+                        </p>
+                        <div class="d-flex gap-2 mt-3">
+                            <a th:href="@{/relatorios/equipes/excel}" class="btn btn-excel btn-sm flex-fill">
+                                <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
+                            </a>
+                            <a th:href="@{/relatorios/equipes/pdf}" class="btn btn-pdf btn-sm flex-fill">
+                                <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Projetos -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card report-card shadow-sm">
+                    <div class="card-body">
+                        <div class="report-icon icon-projetos">
+                            <i class="bi bi-folder-fill"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Relatório de Projetos</h5>
+                        <p class="card-text text-muted small">
+                            Todos os projetos com status, datas de início/término e equipes responsáveis.
+                        </p>
+                        <div class="d-flex gap-2 mt-3">
+                            <a th:href="@{/relatorios/projetos/excel}" class="btn btn-excel btn-sm flex-fill">
+                                <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
+                            </a>
+                            <a th:href="@{/relatorios/projetos/pdf}" class="btn btn-pdf btn-sm flex-fill">
+                                <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card: Tarefas -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card report-card shadow-sm">
+                    <div class="card-body">
+                        <div class="report-icon icon-tarefas">
+                            <i class="bi bi-kanban-fill"></i>
+                        </div>
+                        <h5 class="card-title fw-bold">Relatório de Tarefas</h5>
+                        <p class="card-text text-muted small">
+                            Todas as tarefas do sistema com status, prioridade, responsáveis e prazos.
+                        </p>
+                        <div class="d-flex gap-2 mt-3">
+                            <a th:href="@{/relatorios/tarefas/excel}" class="btn btn-excel btn-sm flex-fill">
+                                <i class="bi bi-file-earmark-excel-fill me-1"></i> Excel
+                            </a>
+                            <a th:href="@{/relatorios/tarefas/pdf}" class="btn btn-pdf btn-sm flex-fill">
+                                <i class="bi bi-file-earmark-pdf-fill me-1"></i> PDF
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Seção de Informações -->
+        <div class="row mt-5 g-3">
+            <div class="col-md-4">
+                <div class="card border-0 bg-light-subtle">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-earmark-excel fs-2 text-success"></i>
+                        <h6 class="mt-2 fw-bold">Excel (.xlsx)</h6>
+                        <small class="text-muted">Ideal para análise de dados, filtros e gráficos customizados.</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 bg-light-subtle">
+                    <div class="card-body text-center">
+                        <i class="bi bi-file-earmark-pdf fs-2 text-danger"></i>
+                        <h6 class="mt-2 fw-bold">PDF (.pdf)</h6>
+                        <small class="text-muted">Perfeito para impressão, apresentação e arquivamento.</small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 bg-light-subtle">
+                    <div class="card-body text-center">
+                        <i class="bi bi-shield-check fs-2 text-primary"></i>
+                        <h6 class="mt-2 fw-bold">Acesso Restrito</h6>
+                        <small class="text-muted">Apenas Administradores e Gerentes podem gerar relatórios.</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Footer Global -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ux.js"></script>
+</body>
+</html>
