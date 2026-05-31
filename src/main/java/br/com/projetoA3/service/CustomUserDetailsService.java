@@ -17,8 +17,6 @@ import java.util.Collections;
  * Esta classe é a "ponte" entre o Spring Security e o nosso banco de dados.
  * Quando um usuário tenta fazer login, o Spring Security chama o método
  * loadUserByUsername() para buscar os dados do usuário no repositório.
- * 
- * O username usado aqui é o campo "login" da entidade Usuario.
  */
 @Service
 public class CustomUserDetailsService implements UserDetailsService {
@@ -37,8 +35,13 @@ public class CustomUserDetailsService implements UserDetailsService {
                     "Usuário não encontrado com o login: " + login
                 ));
 
+        // ✅ CORREÇÃO: Usa getAtivo() em vez de isAtivo() e trata nulos
+        // Se o campo for Boolean (wrapper) o getter é getAtivo().
+        // Se for nulo, assumimos true por segurança.
+        boolean usuarioAtivo = usuario.getAtivo() != null ? usuario.getAtivo() : true;
+
         // Verifica se o usuário está ativo
-        if (!usuario.isAtivo()) {
+        if (!usuarioAtivo) {
             throw new UsernameNotFoundException("Usuário está desativado: " + login);
         }
 
@@ -51,7 +54,7 @@ public class CustomUserDetailsService implements UserDetailsService {
         return new User(
                 usuario.getLogin(),           // username (usado para login)
                 usuario.getSenha(),           // senha (já com hash BCrypt)
-                usuario.isAtivo(),            // enabled
+                usuarioAtivo,                 // enabled
                 true,                         // accountNonExpired
                 true,                         // credentialsNonExpired
                 true,                         // accountNonLocked
