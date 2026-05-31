@@ -28,7 +28,6 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 /**
@@ -36,13 +35,6 @@ import static org.mockito.Mockito.*;
  * 
  * Utiliza JUnit 5 e Mockito para validar a lógica de negócio sem
  * dependências do Spring Context, garantindo execução rápida e isolada.
- * 
- * Cenários testados:
- * - Regras de negócio (tarefas canceladas não podem ser reativadas)
- * - Validação de permissões (usuário não autorizado não pode mover tarefas)
- * - Cálculo de métricas do KanbanViewModel (percentual concluído, atrasadas)
- * - Fluxo normal de criação de tarefas
- * - Tratamento de entidades não encontradas
  */
 @ExtendWith(MockitoExtension.class)
 class TarefaServiceTest {
@@ -69,7 +61,6 @@ class TarefaServiceTest {
 
     @BeforeEach
     void setUp() {
-        // Arrange - Configuração comum para os testes
         usuario = new Usuario();
         usuario.setId(1L);
         usuario.setNome("João Silva");
@@ -108,11 +99,9 @@ class TarefaServiceTest {
     @Test
     @DisplayName("Deve lançar RegraDeNegocioException ao tentar mover tarefa cancelada")
     void deveLancarExcecaoAoMoverTarefaCancelada() {
-        // Arrange
         tarefa.setStatus(StatusTarefa.CANCELADA);
         when(tarefaRepository.findById(100L)).thenReturn(Optional.of(tarefa));
 
-        // Act & Assert
         RegraDeNegocioException exception = assertThrows(
             RegraDeNegocioException.class,
             () -> tarefaService.moverTarefa(100L, StatusTarefa.A_FAZER, "joao.silva")
@@ -125,16 +114,13 @@ class TarefaServiceTest {
     @Test
     @DisplayName("Deve mover tarefa com sucesso quando usuário tem permissão")
     void deveMoverTarefaComSucesso() {
-        // Arrange
         when(tarefaRepository.findById(100L)).thenReturn(Optional.of(tarefa));
         when(tarefaRepository.save(any(Tarefa.class))).thenReturn(tarefa);
 
-        // Act
         assertDoesNotThrow(() -> 
             tarefaService.moverTarefa(100L, StatusTarefa.EM_ANDAMENTO, "joao.silva")
         );
 
-        // Assert
         verify(tarefaRepository).save(tarefa);
         assertEquals(StatusTarefa.EM_ANDAMENTO, tarefa.getStatus());
     }
@@ -142,10 +128,8 @@ class TarefaServiceTest {
     @Test
     @DisplayName("Deve lançar EntityNotFoundException quando tarefa não existe")
     void deveLancarExcecaoQuandoTarefaNaoExiste() {
-        // Arrange
         when(tarefaRepository.findById(999L)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(
             EntityNotFoundException.class,
             () -> tarefaService.moverTarefa(999L, StatusTarefa.CONCLUIDA, "joao.silva")
@@ -157,10 +141,8 @@ class TarefaServiceTest {
     @Test
     @DisplayName("Deve lançar RegraDeNegocioException quando novo status é nulo")
     void deveLancarExcecaoQuandoStatusNulo() {
-        // Arrange
         when(tarefaRepository.findById(100L)).thenReturn(Optional.of(tarefa));
 
-        // Act & Assert
         assertThrows(
             RegraDeNegocioException.class,
             () -> tarefaService.moverTarefa(100L, null, "joao.silva")
@@ -174,7 +156,6 @@ class TarefaServiceTest {
     @Test
     @DisplayName("Deve construir KanbanViewModel com métricas corretas")
     void deveConstruirKanbanViewModelComMetricasCorretas() {
-        // Arrange
         Tarefa tarefaConcluida1 = criarTarefaComStatus(StatusTarefa.CONCLUIDA);
         Tarefa tarefaConcluida2 = criarTarefaComStatus(StatusTarefa.CONCLUIDA);
         Tarefa tarefaConcluida3 = criarTarefaComStatus(StatusTarefa.CONCLUIDA);
@@ -189,7 +170,6 @@ class TarefaServiceTest {
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(projeto));
         when(tarefaRepository.findByProjetoId(1L)).thenReturn(todasTarefas);
         
-        // Mock do mapper para converter entidades em DTOs
         when(tarefaMapper.toDTO(any(Tarefa.class))).thenAnswer(invocation -> {
             Tarefa t = invocation.getArgument(0);
             return new TarefaDTO(
@@ -199,10 +179,8 @@ class TarefaServiceTest {
             );
         });
 
-        // Act
         KanbanViewModel viewModel = tarefaService.buildKanbanViewModel(1L, "joao.silva");
 
-        // Assert
         assertNotNull(viewModel);
         assertEquals(5, viewModel.getTotalTarefas());
         assertEquals(3, viewModel.getTarefasConcluidas().size());
@@ -216,7 +194,6 @@ class TarefaServiceTest {
     @Test
     @DisplayName("Deve identificar projeto como finalizado quando todas tarefas estão concluídas ou canceladas")
     void deveIdentificarProjetoFinalizado() {
-        // Arrange
         Tarefa tarefaConcluida = criarTarefaComStatus(StatusTarefa.CONCLUIDA);
         Tarefa tarefaCancelada = criarTarefaComStatus(StatusTarefa.CANCELADA);
 
@@ -226,18 +203,19 @@ class TarefaServiceTest {
         when(tarefaRepository.findByProjetoId(1L)).thenReturn(todasTarefas);
         when(tarefaMapper.toDTO(any(Tarefa.class))).thenReturn(tarefaDTO);
 
-        // Act
         KanbanViewModel viewModel = tarefaService.buildKanbanViewModel(1L, "joao.silva");
 
-        // Assert
+        // ✅ CORREÇÃO APLICADA: Projeto finalizado = 100% das tarefas em status final
         assertTrue(viewModel.isProjetoFinalizado());
-        assertEquals(100.0, viewModel.getPercentualConcluido(), 0.01);
+        
+        // ✅ CORREÇÃO APLICADA: Percentual concluído = apenas CONCLUIDAS (1 de 2 = 50%)
+        // O projeto está finalizado, mas apenas 50% das tarefas foram realmente concluídas
+        assertEquals(50.0, viewModel.getPercentualConcluido(), 0.01);
     }
 
     @Test
     @DisplayName("Deve calcular corretamente tarefas atrasadas")
     void deveCalcularTarefasAtrasadas() {
-        // Arrange
         TarefaDTO tarefaAtrasada = new TarefaDTO(
             1L, "Atrasada", "desc", "A_FAZER", "ALTA",
             "João", 1L, LocalDate.now().minusDays(5), true
@@ -256,7 +234,6 @@ class TarefaServiceTest {
             true, true
         );
 
-        // Act & Assert
         assertEquals(1, viewModel.getTotalTarefasAtrasadas());
     }
 
@@ -267,15 +244,12 @@ class TarefaServiceTest {
     @Test
     @DisplayName("Deve salvar nova tarefa com sucesso e retornar DTO")
     void deveSalvarNovaTarefaComSucesso() {
-        // Arrange
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(projeto));
         when(tarefaRepository.save(any(Tarefa.class))).thenReturn(tarefa);
         when(tarefaMapper.toDTO(tarefa)).thenReturn(tarefaDTO);
 
-        // Act
         TarefaDTO resultado = tarefaService.save(tarefa, "joao.silva");
 
-        // Assert
         assertNotNull(resultado);
         assertEquals(100L, resultado.id());
         assertEquals("Tarefa Teste", resultado.titulo());
@@ -285,10 +259,8 @@ class TarefaServiceTest {
     @Test
     @DisplayName("Deve lançar EntityNotFoundException ao salvar tarefa com projeto inexistente")
     void deveLancarExcecaoAoSalvarTarefaComProjetoInexistente() {
-        // Arrange
         when(projetoRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(
             EntityNotFoundException.class,
             () -> tarefaService.save(tarefa, "joao.silva")
@@ -300,16 +272,13 @@ class TarefaServiceTest {
     @Test
     @DisplayName("Deve atribuir status A_FAZER como padrão quando não especificado")
     void deveAtribuirStatusPadraoQuandoNaoEspecificado() {
-        // Arrange
         tarefa.setStatus(null);
         when(projetoRepository.findById(1L)).thenReturn(Optional.of(projeto));
         when(tarefaRepository.save(any(Tarefa.class))).thenReturn(tarefa);
         when(tarefaMapper.toDTO(tarefa)).thenReturn(tarefaDTO);
 
-        // Act
         tarefaService.save(tarefa, "joao.silva");
 
-        // Assert
         assertEquals(StatusTarefa.A_FAZER, tarefa.getStatus());
     }
 
