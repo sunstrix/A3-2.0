@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- 
+        Fragmento Thymeleaf para inclusão de meta tags CSRF.
+        
+        Este fragmento deve ser incluído no <head> de páginas que fazem
+        requisições AJAX (ex: Drag & Drop no Kanban, envio de formulários
+        assíncronos).
+        
+        O JavaScript lê essas meta tags e inclui o token CSRF no header
+        de cada requisição fetch/XMLHttpRequest, evitando erros 403 Forbidden.
+        
+        Uso no template:
+        <head>
+            ...
+            <div th:replace="~{common/csrf-meta :: csrf}"></div>
+        </head>
+    -->
+    <th:block th:fragment="csrf">
+        <!-- Token CSRF gerado pelo Spring Security -->
+        <meta name="_csrf" th:content="${_csrf.token}"/>
+        
+        <!-- Nome do header HTTP que deve receber o token -->
+        <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+        
+        <!-- 
+            Script auxiliar para facilitar o uso do token CSRF em JavaScript.
+            Expõe funções globais para obter o token e fazer requisições seguras.
+        -->
+        <script th:inline="javascript">
+            /**
+             * Obtém o token CSRF da meta tag.
+             * @returns {string} Token CSRF
+             */
+            window.getCsrfToken = function() {
+                const meta = document.querySelector('meta[name="_csrf"]');
+                return meta ? meta.getAttribute('content') : '';
+            };
+
+            /**
+             * Obtém o nome do header CSRF da meta tag.
+             * @returns {string} Nome do header (ex: "X-CSRF-TOKEN")
+             */
+            window.getCsrfHeader = function() {
+                const meta = document.querySelector('meta[name="_csrf_header"]');
+                return meta ? meta.getAttribute('content') : 'X-CSRF-TOKEN';
+            };
+
+            /**
+             * Wrapper para fetch com CSRF automático.
+             * Use esta função ao invés de fetch() direto para garantir
+             * que o token CSRF seja incluído em requisições POST/PUT/DELETE.
+             * 
+             * @param {string} url URL da requisição
+             * @param {object} options Opções do fetch (method, headers, body, etc.)
+             * @returns {Promise<Response>} Promise da resposta
+             * 
+             * Exemplo de uso:
+             * fetchWithCsrf('/tarefas/mover', {
+             *     method: 'POST',
+             *     headers: { 'Content-Type': 'application/json' },
+             *     body: JSON.stringify({ tarefaId: 1, novoStatus: 'CONCLUIDA' })
+             * });
+             */
+            window.fetchWithCsrf = function(url, options = {}) {
+                const csrfToken = getCsrfToken();
+                const csrfHeader = getCsrfHeader();
+                
+                // Garante que headers existe
+                options.headers = options.headers || {};
+                
+                // Adiciona o token CSRF ao header (apenas para métodos que modificam dados)
+                if (options.method && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(options.method.toUpperCase())) {
+                    options.headers[csrfHeader] = csrfToken;
+                }
+                
+                return fetch(url, options);
+            };
+
+            /**
+             * Configura interceptor global para XMLHttpRequest (fallback para bibliotecas antigas).
+             * Adiciona automaticamente o token CSRF em todas as requisições XHR.
+             */
+            (function() {
+                const originalOpen = XMLHttpRequest.prototype.open;
+                const originalSend = XMLHttpRequest.prototype.send;
+
+                XMLHttpRequest.prototype.open = function(method, url) {
+                    this._csrfMethod = method;
+                    return originalOpen.apply(this, arguments);
+                };
+
+                XMLHttpRequest.prototype.send = function() {
+                    if (this._csrfMethod && ['POST', 'PUT', 'DELETE', 'PATCH'].includes(this._csrfMethod.toUpperCase())) {
+                        this.setRequestHeader(getCsrfHeader(), getCsrfToken());
+                    }
+                    return originalSend.apply(this, arguments);
+                };
+            })();
+        </script>
+    </th:block>
+
+</body>
+</html>
