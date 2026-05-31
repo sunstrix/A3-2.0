@@ -9,12 +9,15 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Configuração moderna do Spring Security para Spring Boot 3.x / Spring Security 6.x
+ * Configuração do Spring Security para Spring Boot 3.x / Spring Security 6.x
+ * 
+ * ⚠️ ATENÇÃO: Usa NoOpPasswordEncoder (senhas em texto puro) apenas para
+ * fins acadêmicos/demonstração. Em produção, SEMPRE use BCrypt ou similar.
  */
 @Configuration
 @EnableWebSecurity
@@ -23,20 +26,13 @@ public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
 
-    // ✅ Injeção do nosso UserDetailsService personalizado
     public SecurityConfig(CustomUserDetailsService userDetailsService) {
         this.userDetailsService = userDetailsService;
     }
 
-    /**
-     * Configuração principal da cadeia de filtros de segurança.
-     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
-            // ==========================================
-            // AUTORIZAÇÃO DE REQUISIÇÕES
-            // ==========================================
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/img/**", "/webjars/**").permitAll()
                 .requestMatchers("/login", "/registro", "/erro/**").permitAll()
@@ -44,23 +40,15 @@ public class SecurityConfig {
                 .requestMatchers("/relatorios/**").hasAnyRole("ADMINISTRADOR", "GERENTE")
                 .anyRequest().authenticated()
             )
-            
-            // ==========================================
-            // FORMULÁRIO DE LOGIN PERSONALIZADO
-            // ==========================================
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
                 .defaultSuccessUrl("/menu", true)
                 .failureUrl("/login?error=true")
-                .usernameParameter("login")    // Campo do formulário HTML
-                .passwordParameter("senha")    // Campo do formulário HTML
+                .usernameParameter("login")
+                .passwordParameter("senha")
                 .permitAll()
             )
-            
-            // ==========================================
-            // LOGOUT SEGURO
-            // ==========================================
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
@@ -68,39 +56,19 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             )
-            
-            // ==========================================
-            // GERENCIAMENTO DE SESSÃO
-            // ==========================================
             .sessionManagement(session -> session
                 .maximumSessions(1)
                 .expiredUrl("/login?expired=true")
                 .maxSessionsPreventsLogin(false)
             )
-            
-            // ==========================================
-            // PROTEÇÃO CSRF
-            // ==========================================
             .csrf(csrf -> {})
-            
-            // ==========================================
-            // HEADERS DE SEGURANÇA
-            // ==========================================
             .headers(headers -> headers
                 .frameOptions(frame -> frame.deny())
             )
-            
-            // ✅ USA NOSSO AUTHENTICATION PROVIDER PERSONALIZADO
             .authenticationProvider(authenticationProvider())
-            
             .build();
     }
 
-    /**
-     * ✅ CRÍTICO: Configura o DaoAuthenticationProvider que conecta:
-     * - Nosso CustomUserDetailsService (busca usuário no banco)
-     * - Nosso PasswordEncoder (BCrypt para validar a senha)
-     */
     @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
@@ -109,19 +77,17 @@ public class SecurityConfig {
         return authProvider;
     }
 
-    /**
-     * AuthenticationManager usado em alguns casos de teste ou login programático.
-     */
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
     }
 
     /**
-     * Encoder de senhas usando BCrypt com fator de custo 12.
+     * ⚠️ NoOpPasswordEncoder - NÃO usar em produção!
+     * Aceita senhas em texto puro para facilitar testes acadêmicos.
      */
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
+        return NoOpPasswordEncoder.getInstance();
     }
 }
