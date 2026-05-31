@@ -42,3 +42,5 @@ buildNumber.properties
 # Banco SQLite local (evita subir dados de teste)
 *.db
 *.db-journal
+data/a3_projeto.db-wal
+data/a3_projeto.db-shm
