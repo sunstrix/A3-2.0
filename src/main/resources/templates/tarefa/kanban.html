@@ -7,11 +7,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        body { background-color: #f0f2f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .kanban-header { background: linear-gradient(135deg, #4f46e5, #3b82f6); color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .kanban-board { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 2rem; min-height: 80vh; }
+        body { background-color: #f0f2f5; font-family: 'Segoe UI', system-ui, sans-serif; }
+        .kanban-header { background: linear-gradient(135deg, #4f46e5, #3b82f6); color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .kanban-board { display: flex; gap: 1.5rem; overflow-x: auto; padding-bottom: 2rem; min-height: 75vh; }
         .kanban-column { flex: 1; min-width: 320px; background: #e2e8f0; border-radius: 12px; padding: 1rem; display: flex; flex-direction: column; }
         .column-header { font-weight: 700; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; color: #334155; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.5px; }
+        
         .task-card { background: white; border-radius: 8px; padding: 1rem; margin-bottom: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.05); cursor: grab; transition: all 0.2s ease; border-left: 4px solid #94a3b8; }
         .task-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
         .task-card:active { cursor: grabbing; }
@@ -27,16 +28,16 @@
         .task-card.overdue .task-title { color: #be123c; }
         
         .task-title { font-weight: 600; margin-bottom: 0.25rem; color: #1e293b; }
-        .task-desc { color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem; }
+        .task-desc { color: #64748b; font-size: 0.85rem; margin-bottom: 0.5rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .task-meta { display: flex; justify-content: space-between; align-items: center; margin-top: 0.75rem; font-size: 0.8rem; color: #94a3b8; }
         .avatar { width: 28px; height: 28px; border-radius: 50%; background: #4f46e5; color: white; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: bold; flex-shrink: 0; }
-        .btn-add-task { width: 100%; margin-top: auto; padding-top: 1rem; }
+        .btn-add-task { width: 100%; margin-top: auto; padding-top: 0.5rem; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-3">
         <div class="container-fluid px-4">
-            <a class="navbar-brand fw-bold text-primary" href="/projetos"> Voltar para Projetos</a>
+            <a class="navbar-brand fw-bold text-primary" href="/projetos">🔙 Voltar para Projetos</a>
             <div class="ms-auto d-flex gap-2 align-items-center">
                 <a th:href="@{/tarefas/novo(projetoId=${projeto.id})}" class="btn btn-primary btn-sm">
                     <i class="bi bi-plus-lg"></i> Nova Tarefa
@@ -64,7 +65,7 @@
             <!-- Coluna: A Fazer -->
             <div class="kanban-column" id="col-a-fazer" ondrop="drop(event)" ondragover="allowDrop(event)" data-status="A_FAZER">
                 <div class="column-header">
-                    <span> A Fazer</span>
+                    <span>📋 A Fazer</span>
                     <span class="badge bg-secondary rounded-pill" th:text="${tarefasAFazer.size()}">0</span>
                 </div>
                 <div th:each="tarefa : ${tarefasAFazer}" class="task-card" 
@@ -72,7 +73,7 @@
                                      ${tarefa.prioridade.name() == 'MEDIA'} ? 'priority-media' : 'priority-baixa'"
                      draggable="true" ondragstart="drag(event)" th:attr="data-id=${tarefa.id}">
                     <div class="task-title" th:text="${tarefa.titulo}">Título da Tarefa</div>
-                    <div class="task-desc" th:text="${tarefa.descricao != null ? (tarefa.descricao.length() > 50 ? #strings.substring(tarefa.descricao, 0, 50) + '...' : tarefa.descricao) : ''}"></div>
+                    <div class="task-desc" th:text="${tarefa.descricao != null ? tarefa.descricao : ''}"></div>
                     
                     <span class="badge" 
                           th:classappend="${tarefa.prioridade.name() == 'ALTA'} ? 'bg-danger' : 
@@ -95,7 +96,7 @@
             <!-- Coluna: Em Progresso -->
             <div class="kanban-column" id="col-em-progresso" ondrop="drop(event)" ondragover="allowDrop(event)" data-status="EM_PROGRESSO">
                 <div class="column-header">
-                    <span> Em Progresso</span>
+                    <span>🔄 Em Progresso</span>
                     <span class="badge bg-primary rounded-pill" th:text="${tarefasEmProgresso.size()}">0</span>
                 </div>
                 <div th:each="tarefa : ${tarefasEmProgresso}" class="task-card" 
@@ -103,7 +104,7 @@
                                      ${tarefa.prioridade.name() == 'MEDIA'} ? 'priority-media' : 'priority-baixa'"
                      draggable="true" ondragstart="drag(event)" th:attr="data-id=${tarefa.id}">
                     <div class="task-title" th:text="${tarefa.titulo}"></div>
-                    <div class="task-desc" th:text="${tarefa.descricao != null ? (tarefa.descricao.length() > 50 ? #strings.substring(tarefa.descricao, 0, 50) + '...' : tarefa.descricao) : ''}"></div>
+                    <div class="task-desc" th:text="${tarefa.descricao != null ? tarefa.descricao : ''}"></div>
                     <span class="badge" th:classappend="${tarefa.prioridade.name() == 'ALTA'} ? 'bg-danger' : ${tarefa.prioridade.name() == 'MEDIA'} ? 'bg-warning text-dark' : 'bg-success'" th:text="${tarefa.prioridade.descricao}"></span>
                     <div th:if="${tarefa.dataVencimento != null and tarefa.dataVencimento.isBefore(T(java.time.LocalDate).now()) and tarefa.status.name() != 'CONCLUIDA'}" class="text-danger small mt-1 fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Prazo vencido!</div>
                     <div class="task-meta">
@@ -125,7 +126,7 @@
                                      ${tarefa.prioridade.name() == 'MEDIA'} ? 'priority-media' : 'priority-baixa'"
                      draggable="true" ondragstart="drag(event)" th:attr="data-id=${tarefa.id}">
                     <div class="task-title" th:text="${tarefa.titulo}"></div>
-                    <div class="task-desc" th:text="${tarefa.descricao != null ? (tarefa.descricao.length() > 50 ? #strings.substring(tarefa.descricao, 0, 50) + '...' : tarefa.descricao) : ''}"></div>
+                    <div class="task-desc" th:text="${tarefa.descricao != null ? tarefa.descricao : ''}"></div>
                     <span class="badge" th:classappend="${tarefa.prioridade.name() == 'ALTA'} ? 'bg-danger' : ${tarefa.prioridade.name() == 'MEDIA'} ? 'bg-warning text-dark' : 'bg-success'" th:text="${tarefa.prioridade.descricao}"></span>
                     <div th:if="${tarefa.dataVencimento != null and tarefa.dataVencimento.isBefore(T(java.time.LocalDate).now()) and tarefa.status.name() != 'CONCLUIDA'}" class="text-danger small mt-1 fw-bold"><i class="bi bi-exclamation-triangle-fill"></i> Prazo vencido!</div>
                     <div class="task-meta">
@@ -138,39 +139,43 @@
     </div>
 
     <script>
-        // Lógica de Drag and Drop
         function allowDrop(ev) { ev.preventDefault(); }
+        
         function drag(ev) { 
-            ev.dataTransfer.setData("text", ev.target.getAttribute('data-id')); 
-            ev.target.classList.add('dragging'); 
+            ev.dataTransfer.setData("text/plain", ev.currentTarget.getAttribute('data-id')); 
+            ev.currentTarget.classList.add('dragging'); 
         }
+        
         function drop(ev) {
             ev.preventDefault();
-            let taskId = ev.dataTransfer.getData("text");
-            let column = ev.target.closest('.kanban-column');
+            const taskId = ev.dataTransfer.getData("text/plain");
+            const column = ev.target.closest('.kanban-column');
             if (!column) return;
-            let newStatus = column.getAttribute('data-status');
-            let card = document.querySelector(`.task-card[data-id="${taskId}"]`);
+            
+            const newStatus = column.getAttribute('data-status');
+            const card = document.querySelector(`.task-card[data-id="${taskId}"]`);
             if (card) card.classList.remove('dragging');
 
-            // Envia a mudança de status para o servidor
+            // Envia a atualização de status via AJAX
             fetch('/tarefas/mover', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 body: `tarefaId=${taskId}&novoStatus=${newStatus}`
             }).then(response => {
-                if (response.ok) window.location.reload();
-                else alert('Erro ao mover tarefa. Tente novamente.');
-            }).catch(err => console.error('Erro:', err));
+                if (response.ok) {
+                    window.location.reload(); // Recarrega para atualizar contadores e posições
+                } else {
+                    alert('Erro ao mover a tarefa. Tente novamente.');
+                }
+            }).catch(err => {
+                console.error('Erro:', err);
+                alert('Falha na comunicação com o servidor.');
+            });
         }
 
-        // Lógica do botão "Meu Kanban" (Filtro simples via JS para demonstração)
         function toggleMeuKanban() {
-            const cards = document.querySelectorAll('.task-card');
-            const currentUser = "[(${#authentication.name})]"; // Nome do usuário logado
-            
-            // Simples toggle visual (em produção idealmente filtrar no controller)
-            alert('Filtro "Meu Kanban" ativado! (Visualização demonstrativa)');
+            // Placeholder para futura implementação de filtro por usuário logado
+            alert('Filtro "Meu Kanban" será ativado em breve!');
         }
     </script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
