@@ -38,7 +38,7 @@ public class DataInitializer {
                 "Administrador",
                 "admin",
                 "admin@projetoA3.com",
-                "000.000.000-00",
+                "00000000000",  // ✅ CPF sem formatação (11 dígitos)
                 "Administrador do Sistema",
                 Usuario.Perfil.ADMINISTRADOR,
                 "admin123"
@@ -50,7 +50,7 @@ public class DataInitializer {
                 "Gerente Silva",
                 "gerente",
                 "gerente@projetoA3.com",
-                "111.111.111-11",
+                "11111111111",  // ✅ CPF sem formatação (11 dígitos)
                 "Gerente de Projetos",
                 Usuario.Perfil.GERENTE,
                 "gerente123"
@@ -62,7 +62,7 @@ public class DataInitializer {
                 "João Colaborador",
                 "colaborador",
                 "colaborador@projetoA3.com",
-                "222.222.222-22",
+                "22222222222",  // ✅ CPF sem formatação (11 dígitos)
                 "Desenvolvedor",
                 Usuario.Perfil.COLABORADOR,
                 "colab123"
