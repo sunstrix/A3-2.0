@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
+
+    <!-- 
+        Fragmento Thymeleaf: Botão flutuante de alternância de tema (claro/escuro)
+        
+        ✅ BUG 3 FIX: Implementa o botão mencionado na "Dica do dia" do menu.
+        
+        Como usar nas páginas:
+        Inclua ANTES do fechamento </body>:
+        <div th:replace="~{common/theme-toggle :: toggle}"></div>
+        
+        Características:
+        - Botão fixo no canto inferior direito (position: fixed)
+        - Ícone 🌙 (lua) no modo claro e ☀️ (sol) no modo escuro
+        - Persiste preferência no localStorage (chave: 'a3-theme')
+        - Compatível com Bootstrap 5.3+ (data-bs-theme="dark")
+        - CSS fallback para componentes customizados
+        - Transições suaves entre temas
+    -->
+    <th:block th:fragment="toggle">
+
+        <!-- CSS para suporte a tema escuro em componentes customizados -->
+        <style>
+            /* Transição suave entre temas */
+            html[data-bs-theme="dark"] body,
+            html[data-bs-theme="dark"] .card,
+            html[data-bs-theme="dark"] .navbar,
+            html[data-bs-theme="dark"] .table,
+            html[data-bs-theme="dark"] .form-control,
+            html[data-bs-theme="dark"] .kanban-column,
+            html[data-bs-theme="dark"] .task-card,
+            html[data-bs-theme="dark"] .login-card {
+                transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+            }
+
+            /* Cores personalizadas para tema escuro */
+            html[data-bs-theme="dark"] body {
+                background-color: #1a1a2e !important;
+                color: #e0e0e0 !important;
+            }
+
+            html[data-bs-theme="dark"] .card {
+                background-color: #16213e !important;
+                color: #e0e0e0 !important;
+                border-color: #0f3460 !important;
+            }
+
+            html[data-bs-theme="dark"] .navbar {
+                background-color: #0f3460 !important;
+            }
+
+            html[data-bs-theme="dark"] .table {
+                color: #e0e0e0 !important;
+                --bs-table-bg: #16213e;
+                --bs-table-color: #e0e0e0;
+            }
+
+            html[data-bs-theme="dark"] .table-light {
+                background-color: #1e293b !important;
+                color: #e0e0e0 !important;
+            }
+
+            html[data-bs-theme="dark"] .kanban-column {
+                background: #1e293b !important;
+            }
+
+            html[data-bs-theme="dark"] .task-card {
+                background: #0f3460 !important;
+                color: #e0e0e0 !important;
+            }
+
+            html[data-bs-theme="dark"] .form-control,
+            html[data-bs-theme="dark"] .form-select {
+                background-color: #0f3460 !important;
+                color: #e0e0e0 !important;
+                border-color: #1e293b !important;
+            }
+
+            html[data-bs-theme="dark"] .text-muted {
+                color: #94a3b8 !important;
+            }
+
+            html[data-bs-theme="dark"] .alert-info {
+                background-color: #0f3460 !important;
+                color: #e0e0e0 !important;
+                border-color: #1e293b !important;
+            }
+
+            html[data-bs-theme="dark"] .bg-light-subtle {
+                background-color: #1e293b !important;
+            }
+
+            html[data-bs-theme="dark"] a {
+                color: #60a5fa;
+            }
+
+            html[data-bs-theme="dark"] a:hover {
+                color: #93c5fd;
+            }
+
+            /* Estilo do botão flutuante de tema */
+            #theme-toggle {
+                position: fixed;
+                bottom: 24px;
+                right: 24px;
+                z-index: 9999;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                border: 2px solid rgba(0,0,0,0.1);
+                cursor: pointer;
+                font-size: 22px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                background: #ffffff;
+                color: #1e293b;
+                transition: all 0.3s ease;
+            }
+
+            #theme-toggle:hover {
+                transform: scale(1.1) rotate(15deg);
+                box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            }
+
+            html[data-bs-theme="dark"] #theme-toggle {
+                background: #1e293b;
+                color: #fbbf24;
+                border-color: rgba(255,255,255,0.1);
+            }
+        </style>
+
+        <!-- Botão flutuante de alternância de tema -->
+        <button id="theme-toggle" 
+                title="Alternar tema claro/escuro" 
+                aria-label="Alternar tema">
+            🌙
+        </button>
+
+        <!-- JavaScript de toggle e persistência -->
+        <script>
+        (function() {
+            'use strict';
+
+            const STORAGE_KEY = 'a3-theme';
+            const HTML = document.documentElement;
+            const btn = document.getElementById('theme-toggle');
+
+            /**
+             * Aplica o tema (dark ou light) e atualiza o ícone do botão
+             */
+            function aplicarTema(tema) {
+                if (tema === 'dark') {
+                    HTML.setAttribute('data-bs-theme', 'dark');
+                    if (btn) btn.textContent = '☀️';
+                } else {
+                    HTML.removeAttribute('data-bs-theme');
+                    if (btn) btn.textContent = '🌙';
+                }
+            }
+
+            /**
+             * Restaura o tema salvo no localStorage ao carregar a página
+             */
+            function restaurarTemaSalvo() {
+                const salvo = localStorage.getItem(STORAGE_KEY);
+                if (salvo === 'dark') {
+                    aplicarTema('dark');
+                } else if (salvo === 'light') {
+                    aplicarTema('light');
+                } else {
+                    // Preferência do sistema operacional como fallback
+                    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+                        aplicarTema('dark');
+                    }
+                }
+            }
+
+            /**
+             * Alterna entre claro e escuro, salvando no localStorage
+             */
+            function alternarTema() {
+                const isDark = HTML.getAttribute('data-bs-theme') === 'dark';
+                const novoTema = isDark ? 'light' : 'dark';
+                aplicarTema(novoTema);
+                try {
+                    localStorage.setItem(STORAGE_KEY, novoTema);
+                } catch (e) {
+                    console.warn('Não foi possível salvar preferência de tema:', e);
+                }
+            }
+
+            // Inicialização
+            if (btn) {
+                btn.addEventListener('click', alternarTema);
+            }
+            restaurarTemaSalvo();
+
+            // Observa mudanças na preferência do sistema operacional
+            if (window.matchMedia) {
+                window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
+                    // Só aplica automaticamente se o usuário não tiver preferência salva
+                    if (!localStorage.getItem(STORAGE_KEY)) {
+                        aplicarTema(e.matches ? 'dark' : 'light');
+                    }
+                });
+            }
+        })();
+        </script>
+
+    </th:block>
+
+</body>
+</html>
