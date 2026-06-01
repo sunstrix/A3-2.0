@@ -22,6 +22,7 @@ import java.util.Optional;
 /**
  * Service responsável pela lógica de negócio das Tarefas e do Quadro Kanban.
  * ✅ Refatoração Sênior: Transações atômicas, Segurança de Propriedade e Otimização Kanban.
+ * ✅ Preservação: Todos os métodos originais restaurados para compatibilidade com Relatórios.
  */
 @Service
 @Transactional(readOnly = true)
@@ -43,11 +44,19 @@ public class TarefaService {
     }
 
     // ==========================================
-    // CONSULTAS OTIMIZADAS
+    // CONSULTAS OTIMIZADAS (READ-ONLY)
     // ==========================================
 
     public List<TarefaDTO> findAll() {
         return tarefaMapper.toDTOList(tarefaRepository.findAll());
+    }
+
+    /**
+     * ✅ RESTAURADO: Necessário para RelatorioController.
+     * Retorna as entidades completas para geração de PDF/Excel.
+     */
+    public List<Tarefa> findAllEntities() {
+        return tarefaRepository.findAll();
     }
 
     public Optional<Tarefa> findById(Long id) {
@@ -62,22 +71,29 @@ public class TarefaService {
         return tarefaMapper.toDTOList(tarefaRepository.findByProjetoId(projetoId));
     }
 
+    public List<TarefaDTO> findByResponsavelId(Long usuarioId) {
+        return tarefaMapper.toDTOList(tarefaRepository.findByResponsavelId(usuarioId));
+    }
+
     public List<TarefaDTO> findAtrasadas() {
         return tarefaMapper.toDTOList(tarefaRepository.findAtrasadas());
+    }
+
+    /**
+     * ✅ RESTAURADO: Necessário para métricas e contadores.
+     */
+    public long countByProjetoIdAndStatus(Long projetoId, StatusTarefa status) {
+        return tarefaRepository.countByProjetoIdAndStatus(projetoId, status);
     }
 
     // ==========================================
     // LÓGICA DO QUADRO KANBAN (VIEWMODEL)
     // ==========================================
 
-    /**
-     * Constrói o ViewModel do Kanban de forma performática.
-     */
     public KanbanViewModel buildKanbanViewModel(Long projetoId, String username) {
         Projeto projeto = projetoRepository.findById(projetoId)
                 .orElseThrow(() -> new EntityNotFoundException("Projeto não encontrado."));
 
-        // Busca otimizada via Repositório (Fix N+1)
         List<Tarefa> todasTarefas = tarefaRepository.findByProjetoIdOrderByIdAsc(projetoId);
 
         List<TarefaDTO> aFazer = filtrarPorStatus(todasTarefas, StatusTarefa.A_FAZER);
@@ -85,13 +101,15 @@ public class TarefaService {
         List<TarefaDTO> concluidas = filtrarPorStatus(todasTarefas, StatusTarefa.CONCLUIDA);
         List<TarefaDTO> canceladas = filtrarPorStatus(todasTarefas, StatusTarefa.CANCELADA);
 
-        boolean podeEditar = "ADMINISTRADOR".equals(username) || 
-                            (projeto.getEquipe() != null && projeto.getEquipe().getLider().getLogin().equals(username));
+        boolean eAdmin = "ADMINISTRADOR".equals(username);
+        boolean eLider = projeto.getEquipe() != null && 
+                         projeto.getEquipe().getLider() != null && 
+                         projeto.getEquipe().getLider().getLogin().equals(username);
 
         return new KanbanViewModel(
                 projetoId, projeto.getNome(), projeto.getDescricao(),
                 aFazer, emAndamento, concluidas, canceladas,
-                true, podeEditar
+                true, (eAdmin || eLider)
         );
     }
 
@@ -101,7 +119,7 @@ public class TarefaService {
 
     @Transactional(rollbackFor = Exception.class)
     public TarefaDTO save(Tarefa tarefa, String username) {
-        if (tarefa.getProjeto() == null) {
+        if (tarefa.getProjeto() == null || tarefa.getProjeto().getId() == null) {
             throw new RegraDeNegocioException("Uma tarefa deve obrigatoriamente pertencer a um projeto.");
         }
         
@@ -111,19 +129,14 @@ public class TarefaService {
         return tarefaMapper.toDTO(salva);
     }
 
-    /**
-     * Move uma tarefa no Kanban com verificação de segurança.
-     */
     @Transactional(rollbackFor = Exception.class)
     public void moverTarefa(Long tarefaId, StatusTarefa novoStatus, String username) {
         Tarefa tarefa = tarefaRepository.findById(tarefaId)
                 .orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada."));
 
-        // ✅ SEGURANÇA: Apenas o dono da tarefa ou ADMIN/Líder pode mover
         validarPermissaoAlteracao(tarefa, username);
 
-        // ✅ REGRA DE NEGÓCIO: Tarefas canceladas são imutáveis
-        if (tarefa.getStatus() == StatusTarefa.CANCELADA) {
+        if (tarefa.getStatus() == StatusTarefa.CANCELADA && novoStatus != StatusTarefa.CANCELADA) {
             throw new RegraDeNegocioException("Tarefas canceladas não podem ser reativadas.");
         }
 
@@ -162,10 +175,18 @@ public class TarefaService {
 
     private void validarPermissaoAlteracao(Tarefa tarefa, String username) {
         boolean eDono = tarefa.getResponsavel() != null && tarefa.getResponsavel().getLogin().equals(username);
-        boolean eAdmin = "admin".equals(username); // Simplificação, idealmente checar Roles
+        boolean eAdmin = "admin".equals(username); 
 
         if (!eDono && !eAdmin) {
-            throw new AcessoNegadoException("Você não tem permissão para alterar esta tarefa.");
+            // Se o projeto tiver equipe, o líder também pode alterar
+            Projeto p = tarefa.getProjeto();
+            boolean eLider = p != null && p.getEquipe() != null && 
+                             p.getEquipe().getLider() != null && 
+                             p.getEquipe().getLider().getLogin().equals(username);
+            
+            if (!eLider) {
+                throw new AcessoNegadoException("Você não tem permissão para alterar esta tarefa.");
+            }
         }
     }
 
