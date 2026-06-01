@@ -1,41 +1,44 @@
 package br.com.projetoA3.repository;
 
 import br.com.projetoA3.model.Projeto;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
- * Repository responsável pelas operações de persistência da entidade Projeto.
- * 
- * Inclui métodos personalizados para filtragem por status e busca textual.
+ * Repositório para a entidade Projeto.
+ * ✅ Refatoração Sênior: Otimização de queries para evitar N+1.
  */
 @Repository
 public interface ProjetoRepository extends JpaRepository<Projeto, Long> {
 
     /**
-     * Busca projetos filtrados por status.
-     * 
-     * @param status O status do projeto a ser buscado (Enum StatusProjeto).
-     * @return Lista de projetos com o status especificado.
+     * Busca todos os projetos carregando as tarefas e a equipe em uma única consulta.
+     * ✅ Otimização: @EntityGraph evita múltiplas idas ao banco de dados.
      */
-    List<Projeto> findByStatus(Projeto.StatusProjeto status);
+    @Override
+    @EntityGraph(attributePaths = {"tarefas", "equipe"})
+    List<Projeto> findAll();
 
     /**
-     * Busca projetos pelo nome contendo a string informada (case insensitive).
-     * 
-     * @param nome Nome ou parte do nome do projeto.
-     * @return Lista de projetos que contêm o nome.
+     * Busca um projeto por ID carregando ansiosamente suas tarefas.
      */
-    List<Projeto> findByNomeContainingIgnoreCase(String nome);
+    @EntityGraph(attributePaths = {"tarefas", "equipe"})
+    Optional<Projeto> findById(Long id);
 
     /**
-     * Busca projetos filtrados por status E contendo o nome informado.
-     * 
-     * @param status Status do projeto.
-     * @param nome Nome ou parte do nome.
-     * @return Lista de projetos filtrados.
+     * Exemplo de busca customizada com JOIN FETCH via JPQL.
+     * Utilizado para relatórios ou listagens específicas.
      */
-    List<Projeto> findByStatusAndNomeContainingIgnoreCase(Projeto.StatusProjeto status, String nome);
+    @Query("SELECT DISTINCT p FROM Projeto p LEFT JOIN FETCH p.tarefas t LEFT JOIN FETCH p.equipe e")
+    List<Projeto> findAllOptimized();
+
+    /**
+     * Verifica se existe projeto com o nome informado.
+     */
+    boolean existsByNome(String nome);
 }
