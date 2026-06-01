@@ -1,72 +1,142 @@
 package br.com.projetoA3.dto;
 
-import java.time.LocalDate;
+import br.com.projetoA3.model.enums.Prioridade;
+import br.com.projetoA3.model.enums.StatusTarefa;
 
-/**
- * Data Transfer Object (DTO) para Tarefa.
- * 
- * Este Record imutável desacopla a entidade JPA Tarefa das views Thymeleaf,
- * evitando problemas de serialização com associações lazy e permitindo
- * evolução independente da API.
- * 
- * @param id ID da tarefa
- * @param titulo Título da tarefa
- * @param descricao Descrição detalhada
- * @param status Status atual (A_FAZER, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
- * @param prioridade Prioridade da tarefa (BAIXA, MEDIA, ALTA, CRITICA)
- * @param responsavelNome Nome do responsável (null se não atribuído)
- * @param responsavelId ID do responsável (null se não atribuído)
- * @param dataVencimento Data de vencimento (null se não definida)
- * @param atrasada Flag indicando se a tarefa está atrasada
- */
-public record TarefaDTO(
-    Long id,
-    String titulo,
-    String descricao,
-    String status,
-    String prioridade,
-    String responsavelNome,
-    Long responsavelId,
-    LocalDate dataVencimento,
-    boolean atrasada
-) {
-    /**
-     * Verifica se a tarefa está concluída
-     */
-    public boolean isConcluida() {
-        return "CONCLUIDA".equals(status);
+import java.time.LocalDateTime;
+
+public class TarefaDTO {
+    
+    private Long id;
+    private String titulo;
+    private String descricao;
+    private Prioridade prioridade;
+    private StatusTarefa status;
+    private LocalDateTime dataCriacao;
+    private LocalDateTime dataConclusao;
+    private Long responsavelId;
+    private String responsavelNome;
+    private Long projetoId;
+    private String projetoNome; // ✅ Nova propriedade para exibir nome do projeto
+    
+    // Construtor padrão
+    public TarefaDTO() {
     }
     
-    /**
-     * Verifica se a tarefa está cancelada
-     */
-    public boolean isCancelada() {
-        return "CANCELADA".equals(status);
+    // Construtor com parâmetros
+    public TarefaDTO(Long id, String titulo, String descricao, Prioridade prioridade, 
+                    StatusTarefa status, LocalDateTime dataCriacao, LocalDateTime dataConclusao,
+                    Long responsavelId, String responsavelNome, Long projetoId, String projetoNome) {
+        this.id = id;
+        this.titulo = titulo;
+        this.descricao = descricao;
+        this.prioridade = prioridade;
+        this.status = status;
+        this.dataCriacao = dataCriacao;
+        this.dataConclusao = dataConclusao;
+        this.responsavelId = responsavelId;
+        this.responsavelNome = responsavelNome;
+        this.projetoId = projetoId;
+        this.projetoNome = projetoNome;
     }
     
-    /**
-     * Retorna a descrição do status em português
-     */
-    public String getStatusDescricao() {
-        return switch (status) {
-            case "A_FAZER" -> "A Fazer";
-            case "EM_ANDAMENTO" -> "Em Andamento";
-            case "CONCLUIDA" -> "Concluída";
-            case "CANCELADA" -> "Cancelada";
-            default -> status;
-        };
+    // Getters e Setters
+    public Long getId() {
+        return id;
     }
     
-    /**
-     * Retorna a descrição da prioridade em português
-     */
-    public String getPrioridadeDescricao() {
-        return switch (prioridade) {
-            case "BAIXA" -> "Baixa";
-            case "MEDIA" -> "Média";
-            case "ALTA" -> "Alta";
-            case "CRITICA" -> "Crítica";
-            default -> prioridade;
-        };
+    public void setId(Long id) {
+        this.id = id;
+    }
+    
+    public String getTitulo() {
+        return titulo;
+    }
+    
+    public void setTitulo(String titulo) {
+        this.titulo = titulo;
+    }
+    
+    public String getDescricao() {
+        return descricao;
+    }
+    
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
+    }
+    
+    public Prioridade getPrioridade() {
+        return prioridade;
+    }
+    
+    public void setPrioridade(Prioridade prioridade) {
+        this.prioridade = prioridade;
+    }
+    
+    public StatusTarefa getStatus() {
+        return status;
+    }
+    
+    public void setStatus(StatusTarefa status) {
+        this.status = status;
+    }
+    
+    public LocalDateTime getDataCriacao() {
+        return dataCriacao;
+    }
+    
+    public void setDataCriacao(LocalDateTime dataCriacao) {
+        this.dataCriacao = dataCriacao;
+    }
+    
+    public LocalDateTime getDataConclusao() {
+        return dataConclusao;
+    }
+    
+    public void setDataConclusao(LocalDateTime dataConclusao) {
+        this.dataConclusao = dataConclusao;
+    }
+    
+    public Long getResponsavelId() {
+        return responsavelId;
+    }
+    
+    public void setResponsavelId(Long responsavelId) {
+        this.responsavelId = responsavelId;
+    }
+    
+    public String getResponsavelNome() {
+        return responsavelNome;
+    }
+    
+    public void setResponsavelNome(String responsavelNome) {
+        this.responsavelNome = responsavelNome;
+    }
+    
+    public Long getProjetoId() {
+        return projetoId;
+    }
+    
+    public void setProjetoId(Long projetoId) {
+        this.projetoId = projetoId;
+    }
+    
+    public String getProjetoNome() {
+        return projetoNome;
+    }
+    
+    public void setProjetoNome(String projetoNome) {
+        this.projetoNome = projetoNome;
+    }
+    
+    @Override
+    public String toString() {
+        return "TarefaDTO{" +
+                "id=" + id +
+                ", titulo='" + titulo + '\'' +
+                ", prioridade=" + prioridade +
+                ", status=" + status +
+                ", projetoNome='" + projetoNome + '\'' +
+                '}';
     }
 }
