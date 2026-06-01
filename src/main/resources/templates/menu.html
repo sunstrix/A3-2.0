@@ -9,29 +9,31 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     
-    <!-- ✅ CSS Global do Projeto (Temas, Responsividade, Dark Mode) -->
+    <!-- CSS Global do Projeto -->
     <link rel="stylesheet" href="/css/main.css">
     
-    <!-- ✅ Fragmento CSRF para proteção de futuras requisições AJAX -->
+    <!-- Fragmento CSRF para proteção de futuras requisições AJAX -->
     <div th:replace="~{common/csrf-meta :: csrf}"></div>
     
     <style>
         .welcome-card {
-            background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
             color: white;
-            border-radius: var(--radius-lg);
+            border-radius: 16px;
             padding: 2rem;
             margin-bottom: 2rem;
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 10px 30px rgba(79, 70, 229, 0.2);
         }
         .stat-card {
-            transition: var(--transition);
+            transition: all 0.2s;
             cursor: pointer;
             height: 100%;
+            border: none;
+            border-radius: 12px;
         }
         .stat-card:hover {
             transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
         }
         .stat-icon {
             font-size: 2.5rem;
@@ -46,37 +48,62 @@
             opacity: 0.9;
         }
         .quick-action {
-            transition: var(--transition);
-            border: 2px dashed var(--border-color);
+            transition: all 0.2s;
+            border: 2px dashed #e2e8f0;
+            border-radius: 12px;
         }
         .quick-action:hover {
-            border-color: var(--primary);
-            background: var(--bg-tertiary);
+            border-color: #4f46e5;
+            background: rgba(79, 70, 229, 0.03);
+            transform: translateY(-2px);
         }
         .user-greeting {
             font-size: 1.1rem;
             opacity: 0.9;
         }
+        .badge-tech {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
 
-    <!-- ✅ Navbar Global (Fragmento) -->
+    <!-- Navbar Global (Fragmento) -->
     <div th:replace="~{common/navbar :: navbar}"></div>
 
     <div class="container fade-in">
+        
+        <!-- Mensagens Flash -->
+        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${sucesso}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${erro}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
         <!-- Card de Boas-vindas -->
         <div class="welcome-card">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h1 class="display-5 fw-bold mb-2">Olá, <span sec:authentication="name">Usuário</span>! 👋</h1>
-                    <p class="user-greeting mb-0">Bem-vindo ao seu painel de gestão de projetos e equipes.</p>
+                    <h1 class="display-5 fw-bold mb-2">
+                        Olá, <span sec:authentication="name">Usuário</span>! 👋
+                    </h1>
+                    <p class="user-greeting mb-0">
+                        Bem-vindo ao seu painel de gestão de projetos e equipes.
+                    </p>
                 </div>
                 <div class="d-flex gap-2">
                     <a href="/projetos/novo" class="btn btn-light btn-lg fw-semibold">
-                        <i class="bi bi-plus-circle"></i> Novo Projeto
+                        <i class="bi bi-plus-circle me-1"></i> Novo Projeto
                     </a>
-                    <a href="/configuracoes" class="btn btn-outline-light btn-lg">
+                    <a href="/configuracoes" class="btn btn-outline-light btn-lg" 
+                       sec:authorize="hasRole('ADMINISTRADOR')">
                         <i class="bi bi-gear-fill"></i>
                     </a>
                 </div>
@@ -170,34 +197,36 @@
         <!-- Área de Informações do Sistema -->
         <div class="row g-3 mb-5">
             <div class="col-md-8">
-                <div class="card h-100">
+                <div class="card h-100 border-0 shadow-sm" style="border-radius: 12px;">
                     <div class="card-body">
                         <h5 class="card-title fw-bold mb-3">
                             <i class="bi bi-info-circle text-primary"></i> Sobre o A3 2.0
                         </h5>
-                        <p class="card-text">
+                        <p class="card-text text-muted">
                             Sistema completo de gestão de projetos com quadro Kanban interativo,
                             relatórios em PDF/Excel e envio automático por e-mail. Construído com
                             as melhores práticas de arquitetura Java e Spring Boot 3.3.
                         </p>
                         <div class="d-flex gap-2 mt-3 flex-wrap">
-                            <span class="badge bg-primary">Java 21</span>
-                            <span class="badge bg-success">Spring Boot 3.3.5</span>
-                            <span class="badge bg-info">Thymeleaf</span>
-                            <span class="badge bg-warning text-dark">SQLite</span>
-                            <span class="badge bg-secondary">Kanban</span>
+                            <span class="badge-tech bg-primary text-white">Java 21</span>
+                            <span class="badge-tech bg-success text-white">Spring Boot 3.3.5</span>
+                            <span class="badge-tech bg-info text-white">Thymeleaf</span>
+                            <span class="badge-tech bg-warning text-dark">SQLite</span>
+                            <span class="badge-tech bg-secondary text-white">Kanban</span>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card h-100 bg-light">
+                <div class="card h-100 border-0 shadow-sm" style="border-radius: 12px;">
                     <div class="card-body text-center d-flex flex-column justify-content-center">
                         <i class="bi bi-lightbulb fs-1 text-warning mb-2"></i>
                         <h6 class="fw-bold">Dica do dia</h6>
+                        <!-- ✅ BUG 3 FIX: Texto atualizado para refletir o botão real -->
                         <p class="small text-muted mb-0">
                             Use o botão <span class="badge bg-dark">🌙</span> no canto inferior 
-                            direito para alternar entre tema claro e escuro.
+                            direito para alternar entre tema claro e escuro. Sua preferência 
+                            é salva automaticamente.
                         </p>
                     </div>
                 </div>
@@ -205,15 +234,17 @@
         </div>
     </div>
 
-    <!-- ✅ Footer Global (Fragmento) -->
+    <!-- Footer Global (Fragmento) -->
     <div th:replace="~{common/footer :: footer}"></div>
+
+    <!-- ✅ BUG 3 FIX: Botão flutuante de tema claro/escuro -->
+    <div th:replace="~{common/theme-toggle :: toggle}"></div>
 
     <!-- Toast Container para notificações -->
     <div class="toast-container"></div>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- ✅ JavaScript de UX (Tema, Toasts, Loading) -->
     <script src="/js/ux.js"></script>
     
     <script>
