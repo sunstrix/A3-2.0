@@ -1,107 +1,120 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Tarefas - A3 2.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8f9fa; }
-        .page-header { background: #4f46e5; color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px; }
-        .table-container { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    </style>
+    <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/menu">🔙 Voltar ao Menu</a>
-            <div class="ms-auto">
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Sair</button>
-                </form>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container">
-        <div class="page-header d-flex justify-content-between align-items-center px-4">
-            <h2 class="mb-0">📋 Gerenciamento de Tarefas</h2>
-            <a href="/projetos" class="btn btn-light text-primary fw-bold">Ver Projetos</a>
+    <!-- Navbar Global -->
+    <div th:replace="~{common/navbar :: navbar}"></div>
+
+    <div class="container mt-4">
+        
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-list-check text-primary"></i> Gerenciamento de Tarefas
+            </h2>
+            <a href="/projetos" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> Voltar aos Projetos
+            </a>
         </div>
 
         <!-- Mensagens de Feedback -->
         <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ <span th:text="${sucesso}"></span>
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${sucesso}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            ⚠️ <span th:text="${erro}"></span>
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${erro}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <div class="table-container">
-            <div th:if="${tarefas.isEmpty()}" class="text-center py-5 text-muted">
-                <i class="bi bi-clipboard-check fs-1"></i>
-                <p class="mt-2">Nenhuma tarefa cadastrada ainda.</p>
-                <a href="/projetos" class="btn btn-primary">Criar um Projeto</a>
-            </div>
+        <!-- Card da Lista -->
+        <div class="card shadow-sm border-0">
+            <div class="card-body">
 
-            <table th:if="${!tarefas.isEmpty()}" class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Título</th>
-                        <th>Projeto</th>
-                        <th>Responsável</th>
-                        <th>Prioridade</th>
-                        <th>Vencimento</th>
-                        <th>Status</th>
-                        <th class="text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="tarefa : ${tarefas}">
-                        <td th:text="${tarefa.id}"></td>
-                        <td class="fw-bold" th:text="${tarefa.titulo}"></td>
-                        <td th:text="${tarefa.projeto?.nome ?: '-'}"></td>
-                        <td th:text="${tarefa.responsavel?.nome ?: 'Não atribuído'}"></td>
-                        <td>
-                            <span class="badge" 
-                                  th:classappend="${tarefa.prioridade?.name() == 'ALTA'} ? 'bg-danger' : 
-                                                  ${tarefa.prioridade?.name() == 'MEDIA'} ? 'bg-warning text-dark' : 'bg-success'"
-                                  th:text="${tarefa.prioridade?.descricao ?: 'Média'}">
-                            </span>
-                        </td>
-                        <td>
-                            <span th:if="${tarefa.dataVencimento}" 
-                                  th:class="${tarefa.dataVencimento.isBefore(T(java.time.LocalDate).now()) and tarefa.status?.name() != 'CONCLUIDA'} ? 'text-danger fw-bold' : ''"
-                                  th:text="${#temporals.format(tarefa.dataVencimento, 'dd/MM/yyyy')}">
-                            </span>
-                            <span th:unless="${tarefa.dataVencimento}" class="text-muted">-</span>
-                        </td>
-                        <td>
-                            <span class="badge" 
-                                  th:classappend="${tarefa.status?.name() == 'A_FAZER'} ? 'bg-secondary' : 
-                                                  ${tarefa.status?.name() == 'EM_PROGRESSO'} ? 'bg-primary' : 'bg-success'"
-                                  th:text="${tarefa.status?.descricao}">
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <a th:href="@{/tarefas/editar/{id}(id=${tarefa.id})}" class="btn btn-sm btn-warning me-1" title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a th:href="@{/tarefas/deletar/{id}(id=${tarefa.id})}" class="btn btn-sm btn-danger" title="Excluir"
-                               onclick="return confirm('Tem certeza que deseja excluir esta tarefa?');">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                <!-- Estado Vazio (Nenhuma tarefa) -->
+                <div th:if="${tarefas == null or #lists.isEmpty(tarefas)}" class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                    <h5 class="mt-3">Nenhuma tarefa cadastrada.</h5>
+                    <p class="text-muted">Crie um projeto e adicione tarefas para começar.</p>
+                    <a href="/projetos" class="btn btn-primary mt-2">
+                        <i class="bi bi-folder-plus"></i> Ver Projetos
+                    </a>
+                </div>
+
+                <!-- Tabela de Tarefas -->
+                <div th:unless="${tarefas == null or #lists.isEmpty(tarefas)}" class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Título</th>
+                                <th>Prioridade</th>
+                                <th>Status</th>
+                                <th>Responsável</th>
+                                <th>Vencimento</th>
+                                <th class="text-end">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="tarefa : ${tarefas}">
+                                <td th:text="${tarefa.id}"></td>
+                                <td>
+                                    <strong th:text="${tarefa.titulo}">Título da Tarefa</strong>
+                                    <br>
+                                    <small class="text-muted" th:text="${#strings.abbreviate(tarefa.descricao, 50)}"></small>
+                                </td>
+                                <td>
+                                    <!-- Badges de Prioridade -->
+                                    <span class="badge"
+                                          th:classappend="${tarefa.prioridade == 'ALTA' || tarefa.prioridade == 'CRITICA'} ? 'bg-danger' : 
+                                                         (${tarefa.prioridade == 'MEDIA'} ? 'bg-warning text-dark' : 'bg-success')"
+                                          th:text="${tarefa.prioridade}">
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-secondary" th:text="${tarefa.status}"></span>
+                                </td>
+                                <td th:text="${tarefa.responsavelNome ?: 'Não atribuído'}"></td>
+                                <td>
+                                    <span th:text="${tarefa.dataVencimento != null ? #temporals.format(tarefa.dataVencimento, 'dd/MM/yyyy') : '-'}"></span>
+                                    <span th:if="${tarefa.atrasada}" class="badge bg-danger ms-1">Atrasada</span>
+                                </td>
+                                <td class="text-end">
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <!-- Editar -->
+                                        <a th:href="@{/tarefas/editar/{id}(id=${tarefa.id})}" class="btn btn-outline-warning" title="Editar">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                        <!-- Excluir -->
+                                        <form th:action="@{/tarefas/deletar/{id}(id=${tarefa.id})}" method="post" style="display:inline;"
+                                              onsubmit="return confirm('Tem certeza que deseja excluir esta tarefa?');">
+                                            <button type="submit" class="btn btn-outline-danger" title="Excluir">
+                                                <i class="bi bi-trash-fill"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
         </div>
     </div>
 
+    <!-- Footer Global -->
+    <div th:replace="~{common/footer :: footer}"></div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
