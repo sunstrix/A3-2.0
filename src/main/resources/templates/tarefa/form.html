@@ -7,17 +7,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/main.css">
-    <!-- Fragmento CSRF para proteção contra ataques CSRF -->
-    <div th:replace="~{common/csrf-meta :: csrf}"></div>
 </head>
 <body>
-
-    <!-- Navbar Global -->
     <div th:replace="~{common/navbar :: navbar}"></div>
 
     <div class="container mt-4" style="max-width: 800px;">
-        
-        <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold">
                 <i class="bi bi-kanban-fill text-primary"></i>
@@ -28,7 +22,7 @@
             </a>
         </div>
 
-        <!-- Mensagem de erro geral (vinda do controller via Model) -->
+        <!-- Mensagem de erro geral -->
         <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <strong>Erro ao salvar:</strong> <span th:text="${erro}">Erro desconhecido</span>
@@ -36,9 +30,8 @@
         </div>
 
         <!-- 
-            ⚠️ CRÍTICO: O <form> DEVE ter th:object="${tarefa}" para que 
-            as expressões #fields e *{campo} funcionem corretamente.
-            Também é necessária a ação dinâmica para criação vs edição.
+            ⚠️ CRÍTICO: O form DEVE ter th:object="${tarefa}" para que 
+            as expressões *{campo} e #fields funcionem corretamente.
         -->
         <form th:action="${tarefa.id != null} ? @{/tarefas/atualizar/{id}(id=${tarefa.id})} : @{/tarefas}"
               th:object="${tarefa}"
@@ -48,7 +41,7 @@
             
             <div class="card-body p-4">
 
-                <!-- ✅ ERROS GLOBAIS DE VALIDAÇÃO (agora DENTRO do form com th:object) -->
+                <!-- Erros globais de validação (AGORA FUNCIONA com th:object) -->
                 <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger" role="alert">
                     <i class="bi bi-exclamation-circle-fill me-2"></i>
                     <strong>Por favor, corrija os erros abaixo:</strong>
@@ -154,10 +147,7 @@
 
     </div>
 
-    <!-- Footer Global -->
     <div th:replace="~{common/footer :: footer}"></div>
-    
-    <!-- Botão de Tema -->
     <div th:replace="~{common/theme-toggle :: toggle}"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
