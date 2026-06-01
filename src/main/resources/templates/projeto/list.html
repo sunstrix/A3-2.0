@@ -1,97 +1,183 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Projetos - A3 2.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/main.css">
     <style>
-        body { background-color: #f8f9fa; }
-        .page-header { background: #4f46e5; color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px; }
-        .table-container { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        .project-card {
+            transition: all 0.2s ease;
+            border: none;
+            border-radius: 12px;
+            height: 100%;
+        }
+        .project-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        .project-status {
+            font-size: 0.75rem;
+            padding: 0.35rem 0.65rem;
+            border-radius: 6px;
+            font-weight: 600;
+        }
+        .stat-card {
+            transition: transform 0.2s;
+            border: none;
+            border-radius: 12px;
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/menu">🔙 Voltar ao Menu</a>
-            <div class="ms-auto">
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Sair</button>
-                </form>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container">
-        <div class="page-header d-flex justify-content-between align-items-center px-4">
-            <h2 class="mb-0">📁 Gerenciamento de Projetos</h2>
-            <a href="/projetos/novo" class="btn btn-light text-primary fw-bold">+ Novo Projeto</a>
-        </div>
+    <!-- Navbar Global -->
+    <div th:replace="~{common/navbar :: navbar}"></div>
 
-        <!-- Mensagens de Feedback -->
+    <div class="container mt-4">
+        
+        <!-- Mensagens Flash -->
         <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ <span th:text="${sucesso}"></span>
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${sucesso}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
         <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            ⚠️ <span th:text="${erro}"></span>
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${erro}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
-        <div class="table-container">
-            <div th:if="${projetos.isEmpty()}" class="text-center py-5 text-muted">
-                <i class="bi bi-folder-x fs-1"></i>
-                <p class="mt-2">Nenhum projeto cadastrado ainda.</p>
+        <!-- Cabeçalho -->
+        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div>
+                <h2 class="fw-bold mb-1">
+                    <i class="bi bi-folder-fill text-primary"></i> Gestão de Projetos
+                </h2>
+                <p class="text-muted mb-0">Gerencie todos os projetos da organização</p>
+            </div>
+            <a href="/projetos/novo" class="btn btn-primary">
+                <i class="bi bi-plus-circle me-1"></i> Novo Projeto
+            </a>
+        </div>
+
+        <!-- Cards de Estatísticas -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card stat-card bg-primary text-white shadow-sm">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="bi bi-folder-fill fs-1 me-3 opacity-75"></i>
+                        <div>
+                            <div class="fs-3 fw-bold" th:text="${#lists.size(projetos)}">0</div>
+                            <div class="small opacity-75">Total de Projetos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-success text-white shadow-sm">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="bi bi-check-circle-fill fs-1 me-3 opacity-75"></i>
+                        <div>
+                            <div class="fs-3 fw-bold" 
+                                 th:text="${#lists.size(projetos.?[status.name() == 'CONCLUIDO'])}">0</div>
+                            <div class="small opacity-75">Projetos Concluídos</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card stat-card bg-info text-white shadow-sm">
+                    <div class="card-body d-flex align-items-center">
+                        <i class="bi bi-play-circle-fill fs-1 me-3 opacity-75"></i>
+                        <div>
+                            <div class="fs-3 fw-bold" 
+                                 th:text="${#lists.size(projetos.?[status.name() == 'EM_ANDAMENTO'])}">0</div>
+                            <div class="small opacity-75">Em Andamento</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Grid de Projetos -->
+        <div class="row g-4">
+            <div th:if="${#lists.isEmpty(projetos)}" class="col-12">
+                <div class="alert alert-info text-center py-5">
+                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                    <h5>Nenhum projeto cadastrado ainda</h5>
+                    <p class="mb-0">Clique em "Novo Projeto" para começar.</p>
+                </div>
             </div>
 
-            <table th:if="${!projetos.isEmpty()}" class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome</th>
-                        <th>Equipe</th>
-                        <th>Início</th>
-                        <th>Previsão Término</th>
-                        <th>Status</th>
-                        <th class="text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="projeto : ${projetos}">
-                        <td th:text="${projeto.id}"></td>
-                        <td class="fw-bold" th:text="${projeto.nome}"></td>
-                        <td th:text="${projeto.equipe?.nome ?: 'Não definida'}"></td>
-                        <td th:text="${#temporals.format(projeto.dataInicio, 'dd/MM/yyyy')}"></td>
-                        <td th:text="${#temporals.format(projeto.dataTerminoPrevista, 'dd/MM/yyyy')}"></td>
-                        <td>
-                            <!-- ✅ CORREÇÃO: Usar th:classappend com expressão Thymeleaf válida -->
-                            <span class="badge"
-                                  th:classappend="${projeto.status.name() == 'PLANEJAMENTO'} ? 'bg-secondary' : 
-                                                  ${projeto.status.name() == 'EM_ANDAMENTO'} ? 'bg-primary' : 
-                                                  ${projeto.status.name() == 'CONCLUIDO'} ? 'bg-success' : 'bg-danger'"
-                                  th:text="${projeto.status.descricao}">
-                            </span>
-                        </td>
-                        <td class="text-center">
-                            <a th:href="@{/tarefas/kanban/{id}(id=${projeto.id})}" class="btn btn-sm btn-success me-1" title="Ver Kanban">
-                                <i class="bi bi-kanban"></i>
+            <div th:each="projeto : ${projetos}" class="col-md-6 col-lg-4">
+                <div class="card project-card shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title fw-bold mb-0" th:text="${projeto.nome}">Nome do Projeto</h5>
+                            <!-- ✅ CORREÇÃO: Expressão ternária dentro de um único ${...} -->
+                            <span class="project-status"
+                                  th:classappend="${projeto.status.name() == 'PLANEJAMENTO' ? 'bg-secondary' : 
+                                                   (projeto.status.name() == 'EM_ANDAMENTO' ? 'bg-primary' : 
+                                                   (projeto.status.name() == 'CONCLUIDO' ? 'bg-success' : 'bg-danger'))}"
+                                  th:text="${projeto.status.name()}">STATUS</span>
+                        </div>
+                        
+                        <p class="card-text text-muted small mb-3" 
+                           th:text="${projeto.descricao != null ? #strings.abbreviate(projeto.descricao, 100) : 'Sem descrição'}">
+                            Descrição do projeto...
+                        </p>
+
+                        <div class="mb-3">
+                            <small class="text-muted d-block mb-1">
+                                <i class="bi bi-calendar-event me-1"></i>
+                                <span th:text="${projeto.dataInicio != null ? #temporals.format(projeto.dataInicio, 'dd/MM/yyyy') : '-'}"></span>
+                                <span th:if="${projeto.dataTerminoPrevista != null}">
+                                    até <span th:text="${#temporals.format(projeto.dataTerminoPrevista, 'dd/MM/yyyy')}"></span>
+                                </span>
+                            </small>
+                            <small class="text-muted d-block">
+                                <i class="bi bi-people-fill me-1"></i>
+                                <span th:text="${projeto.equipe != null ? projeto.equipe.nome : 'Sem equipe'}">Equipe</span>
+                            </small>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <a th:href="@{/tarefas/kanban/{id}(id=${projeto.id})}" 
+                               class="btn btn-sm btn-outline-primary flex-fill" title="Kanban">
+                                <i class="bi bi-kanban-fill"></i> Kanban
                             </a>
-                            <a th:href="@{/projetos/editar/{id}(id=${projeto.id})}" class="btn btn-sm btn-warning me-1" title="Editar">
-                                <i class="bi bi-pencil"></i>
+                            <a th:href="@{/projetos/editar/{id}(id=${projeto.id})}" 
+                               class="btn btn-sm btn-outline-secondary" title="Editar">
+                                <i class="bi bi-pencil-fill"></i>
                             </a>
-                            <a th:href="@{/projetos/deletar/{id}(id=${projeto.id})}" class="btn btn-sm btn-danger" title="Excluir"
-                               onclick="return confirm('Tem certeza que deseja excluir este projeto e todas as suas tarefas?');">
-                                <i class="bi bi-trash"></i>
+                            <a th:href="@{/projetos/deletar/{id}(id=${projeto.id})}" 
+                               class="btn btn-sm btn-outline-danger"
+                               title="Remover"
+                               onclick="return confirm('Tem certeza que deseja remover este projeto?');">
+                                <i class="bi bi-trash-fill"></i>
                             </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
+
     </div>
 
+    <!-- Footer Global -->
+    <div th:replace="~{common/footer :: footer}"></div>
+
+    <!-- Botão de Tema -->
+    <div th:replace="~{common/theme-toggle :: toggle}"></div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/ux.js"></script>
 </body>
 </html>
