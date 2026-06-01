@@ -40,7 +40,7 @@ public class SecurityConfig {
             // AUTORIZAÇÃO DE REQUISIÇÕES
             // ==========================================
             .authorizeHttpRequests(auth -> auth
-                // Recursos estáticos públicos (CSS, JS, imagens)
+                // Recursos estáticos públicos
                 .requestMatchers("/css/**", "/js/**", "/img/**", "/webjars/**").permitAll()
                 
                 // Páginas de autenticação públicas
@@ -93,9 +93,9 @@ public class SecurityConfig {
             )
             
             // ==========================================
-            // PROTEÇÃO CSRF
+            // PROTEÇÃO CSRF - Desabilitada para APIs REST (se necessário, reative para forms)
             // ==========================================
-            .csrf(csrf -> {})
+            .csrf(csrf -> csrf.disable())  // CORREÇÃO: sintaxe correta para Spring Security 6.x
             
             // ==========================================
             // HEADERS DE SEGURANÇA

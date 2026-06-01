@@ -4,7 +4,13 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
+/**
+ * Entidade Projeto.
+ * ✅ Refatoração Sênior: Restaurada integridade original e adicionado mapeamento de tarefas.
+ */
 @Entity
 @Table(name = "projetos")
 public class Projeto {
@@ -32,16 +38,21 @@ public class Projeto {
     @Column(nullable = false)
     private StatusProjeto status = StatusProjeto.PLANEJAMENTO;
 
-    // ✅ Gerente: mantido no model/banco, mas opcional no formulário
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "gerente_id", nullable = true)
     private Usuario gerente;
 
-    // ✅ NOVO: Equipe responsável (obrigatória no formulário)
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "equipe_id", nullable = false)
     @NotNull(message = "Equipe responsável é obrigatória")
     private Equipe equipe;
+
+    /**
+     * ✅ ADIÇÃO NECESSÁRIA: Mapeamento bidirecional de tarefas.
+     * Necessário para evitar o erro 'UnknownPathException' no ProjetoRepository.
+     */
+    @OneToMany(mappedBy = "projeto", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Tarefa> tarefas = new ArrayList<>();
 
     // Construtores
     public Projeto() {}
@@ -54,7 +65,7 @@ public class Projeto {
         this.status = status;
     }
 
-    // Getters e Setters
+    // Getters e Setters (Mantendo todos os originais)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getNome() { return nome; }
@@ -69,12 +80,13 @@ public class Projeto {
     public void setStatus(StatusProjeto status) { this.status = status; }
     public Usuario getGerente() { return gerente; }
     public void setGerente(Usuario gerente) { this.gerente = gerente; }
-    
-    // ✅ Getter e Setter do novo campo equipe
     public Equipe getEquipe() { return equipe; }
     public void setEquipe(Equipe equipe) { this.equipe = equipe; }
 
-    // Enum para status do projeto
+    public List<Tarefa> getTarefas() { return tarefas; }
+    public void setTarefas(List<Tarefa> tarefas) { this.tarefas = tarefas; }
+
+    // Enum para status do projeto (Mantido original)
     public enum StatusProjeto {
         PLANEJAMENTO("Em Planejamento"),
         EM_ANDAMENTO("Em Andamento"),

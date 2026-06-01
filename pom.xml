@@ -1,34 +1,36 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+         https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    
-    <!-- ✅ CORREÇÃO: Atualizado para versão estável mais recente da linha 3.x -->
+
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.5</version>
+        <version>3.2.0</version>
         <relativePath/>
     </parent>
-    
+
     <groupId>br.com.projetoA3</groupId>
     <artifactId>a3-2-0</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>A3-2.0</name>
     <description>Sistema de Gestão de Projetos e Equipes com Kanban</description>
-    
+
     <properties>
         <java.version>21</java.version>
-        <!-- Versões compatíveis com Spring Boot 3.3.5 -->
+        <spring-boot.version>3.2.0</spring-boot.version>
         <sqlite-jdbc.version>3.45.3.0</sqlite-jdbc.version>
         <poi.version>5.2.5</poi.version>
         <openpdf.version>2.0.2</openpdf.version>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
-        <!-- ===================================================== -->
-        <!-- SPRING BOOT STARTERS                                  -->
-        <!-- ===================================================== -->
+        <!-- Spring Boot Starters -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -53,38 +55,43 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
+        
+        <!-- Developer Tools -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <scope>runtime</scope>
+            <optional>true</optional>
+        </dependency>
 
-        <!-- ===================================================== -->
-        <!-- BANCO DE DADOS SQLite                                 -->
-        <!-- ===================================================== -->
+        <!-- SQLite Database -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>${sqlite-jdbc.version}</version>
         </dependency>
-        <!-- Dialetos comunitários do Hibernate (necessário para SQLite) -->
+        
+        <!-- Hibernate SQLite Dialect -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-community-dialects</artifactId>
         </dependency>
 
-        <!-- ===================================================== -->
-        <!-- RELATÓRIOS                                            -->
-        <!-- ===================================================== -->
+        <!-- Apache POI for Excel manipulation -->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${poi.version}</version>
         </dependency>
+
+        <!-- OpenPDF for PDF generation -->
         <dependency>
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
             <version>${openpdf.version}</version>
         </dependency>
 
-        <!-- ===================================================== -->
-        <!-- TESTES                                                -->
-        <!-- ===================================================== -->
+        <!-- Test Dependencies -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -102,16 +109,30 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring-boot.version}</version>
+                <configuration>
+                    <mainClass>br.com.projetoA3.A320Application</mainClass>
+                    <layout>JAR</layout>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
-            <!-- Plugin para compilar com Java 21 -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                    <encoding>${project.build.sourceEncoding}</encoding>
                 </configuration>
             </plugin>
         </plugins>
     </build>
+
 </project>
