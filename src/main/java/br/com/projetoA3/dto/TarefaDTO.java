@@ -12,22 +12,6 @@ import java.time.LocalDate;
  * Este Record imutável desacopla a entidade JPA Tarefa das views Thymeleaf,
  * evitando problemas de serialização com associações lazy e permitindo
  * evolução independente da API.
- * 
- * Records geram automaticamente accessors no estilo {@code campo()} em vez
- * de {@code getCampo()}, o que é esperado pelo KanbanViewModel e pelos
- * templates Thymeleaf deste projeto.
- * 
- * @param id                 ID da tarefa
- * @param titulo             Título da tarefa
- * @param descricao          Descrição detalhada
- * @param prioridade         Prioridade da tarefa (BAIXA, MEDIA, ALTA, CRITICA)
- * @param status             Status atual (A_FAZER, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
- * @param responsavelNome    Nome do responsável (null se não atribuído)
- * @param responsavelId      ID do responsável (null se não atribuído)
- * @param dataVencimento     Data de vencimento (null se não definida)
- * @param atrasada           Flag indicando se a tarefa está atrasada
- * @param projetoId          ID do projeto ao qual a tarefa pertence
- * @param projetoNome        Nome do projeto (para exibição em listas)
  */
 public record TarefaDTO(
     Long id,
@@ -45,12 +29,6 @@ public record TarefaDTO(
 
     /**
      * Construtor de mapeamento a partir da entidade JPA Tarefa.
-     * 
-     * Converte uma entidade {@link Tarefa} em um DTO imutável, extraindo
-     * apenas os dados necessários para apresentação e calculando campos
-     * derivados como {@code atrasada}.
-     * 
-     * @param tarefa Entidade JPA a ser convertida (pode ser null)
      */
     public TarefaDTO(Tarefa tarefa) {
         this(
@@ -100,18 +78,6 @@ public record TarefaDTO(
         return tarefa.getProjeto().getNome();
     }
 
-    /**
-     * Calcula se a tarefa está atrasada com base na data de vencimento e status.
-     * 
-     * Uma tarefa é considerada atrasada se:
-     * - Tem data de vencimento definida
-     * - A data de vencimento é anterior à data atual
-     * - NÃO está concluída (CONCLUIDA)
-     * - NÃO está cancelada (CANCELADA)
-     * 
-     * @param tarefa Entidade a ser avaliada
-     * @return true se a tarefa está atrasada, false caso contrário
-     */
     private static boolean calcularAtraso(Tarefa tarefa) {
         if (tarefa == null || tarefa.getDataVencimento() == null) {
             return false;
@@ -124,44 +90,27 @@ public record TarefaDTO(
     }
 
     // ==========================================
-    // MÉTODOS DE CONVENIÊNCIA
+    // MÉTODOS DE CONVENIÊNCIA PARA THYMELEAF
     // ==========================================
 
-    /**
-     * Verifica se a tarefa está concluída.
-     */
     public boolean isConcluida() {
         return status == StatusTarefa.CONCLUIDA;
     }
 
-    /**
-     * Verifica se a tarefa está cancelada.
-     */
     public boolean isCancelada() {
         return status == StatusTarefa.CANCELADA;
     }
 
-    /**
-     * Verifica se a tarefa está em andamento.
-     */
     public boolean isEmAndamento() {
         return status == StatusTarefa.EM_ANDAMENTO;
     }
 
-    /**
-     * Verifica se a tarefa está pendente (A Fazer).
-     */
     public boolean isAFazer() {
         return status == StatusTarefa.A_FAZER;
     }
 
-    /**
-     * Retorna a descrição do status em português.
-     */
     public String getStatusDescricao() {
-        if (status == null) {
-            return "-";
-        }
+        if (status == null) return "-";
         return switch (status) {
             case A_FAZER -> "A Fazer";
             case EM_ANDAMENTO -> "Em Andamento";
@@ -170,13 +119,8 @@ public record TarefaDTO(
         };
     }
 
-    /**
-     * Retorna a descrição da prioridade em português.
-     */
     public String getPrioridadeDescricao() {
-        if (prioridade == null) {
-            return "-";
-        }
+        if (prioridade == null) return "-";
         return switch (prioridade) {
             case BAIXA -> "Baixa";
             case MEDIA -> "Média";
@@ -185,13 +129,8 @@ public record TarefaDTO(
         };
     }
 
-    /**
-     * Retorna a classe CSS Bootstrap apropriada para o badge de prioridade.
-     */
     public String getPrioridadeCssClass() {
-        if (prioridade == null) {
-            return "bg-secondary";
-        }
+        if (prioridade == null) return "bg-secondary";
         return switch (prioridade) {
             case BAIXA -> "bg-success";
             case MEDIA -> "bg-warning text-dark";
@@ -199,13 +138,8 @@ public record TarefaDTO(
         };
     }
 
-    /**
-     * Retorna a classe CSS Bootstrap apropriada para o badge de status.
-     */
     public String getStatusCssClass() {
-        if (status == null) {
-            return "bg-secondary";
-        }
+        if (status == null) return "bg-secondary";
         return switch (status) {
             case A_FAZER -> "bg-secondary";
             case EM_ANDAMENTO -> "bg-primary";
@@ -214,17 +148,10 @@ public record TarefaDTO(
         };
     }
 
-    /**
-     * Retorna o nome do projeto ou um placeholder se não houver.
-     * Útil para templates Thymeleaf que precisam de fallback.
-     */
     public String getProjetoNomeOuTraco() {
         return projetoNome != null ? projetoNome : "-";
     }
 
-    /**
-     * Retorna o nome do responsável ou um placeholder se não houver.
-     */
     public String getResponsavelNomeOuTraco() {
         return responsavelNome != null ? responsavelNome : "Não atribuído";
     }
