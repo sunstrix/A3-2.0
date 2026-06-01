@@ -74,7 +74,7 @@
                                     <br>
                                     <small class="text-muted" th:text="${#strings.abbreviate(tarefa.descricao, 50)}"></small>
                                 </td>
-                                <!-- ✅ CORREÇÃO: Usando projetoNome do DTO em vez de tarefa.projeto?.nome -->
+                                <!-- ✅ CORREÇÃO: Usando projetoNome (String) em vez de projeto.nome (objeto) -->
                                 <td>
                                     <span th:text="${tarefa.projetoNome != null ? tarefa.projetoNome : '-'}"></span>
                                 </td>
@@ -82,6 +82,7 @@
                                     <span th:text="${tarefa.responsavelNome != null ? tarefa.responsavelNome : 'Não atribuído'}"></span>
                                 </td>
                                 <td>
+                                    <!-- ✅ Expressão ternária em único ${} para evitar erro de parsing -->
                                     <span class="badge"
                                           th:classappend="${(tarefa.prioridade == 'ALTA' or tarefa.prioridade == 'CRITICA') ? 'bg-danger' : (tarefa.prioridade == 'MEDIA' ? 'bg-warning text-dark' : 'bg-success')}"
                                           th:text="${tarefa.prioridade}">
