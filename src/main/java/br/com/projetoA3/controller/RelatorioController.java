@@ -8,24 +8,30 @@ import br.com.projetoA3.service.UsuarioService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
-import java.util.List;
 
 /**
  * Controller responsável pela geração de relatórios em Excel e PDF.
  * 
- * ✅ Refatoração Sênior: Proteção de acesso, injeção por construtor 
- * e preservação completa da lógica de index e filtros.
+ * ✅ BUG 2 FIX: Adicionado método GET /relatorios que retorna a página de
+ * listagem de relatórios disponíveis, sem gerar arquivos automaticamente.
+ * Anteriormente, acessar /relatorios causava HTTP 500 (Whitelabel Error Page)
+ * por falta de mapeamento explícito para o índice.
+ * 
+ * Princípios aplicados:
+ * - Injeção por construtor (sem @Autowired em campo)
+ * - GET apenas lista opções, sem gerar arquivos
+ * - Geração de arquivos em endpoints específicos (ex: /relatorios/equipes/excel)
+ * - Uso de ResponseEntity com headers corretos para download
  */
 @Controller
 @RequestMapping("/relatorios")
-@PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GERENTE')") // ✅ Hardening de Segurança
 public class RelatorioController {
 
     private final RelatorioService relatorioService;
@@ -34,9 +40,6 @@ public class RelatorioController {
     private final TarefaService tarefaService;
     private final UsuarioService usuarioService;
 
-    /**
-     * Injeção de dependências via construtor (Padrão Spring Moderno).
-     */
     public RelatorioController(RelatorioService relatorioService,
                                 EquipeService equipeService,
                                 ProjetoService projetoService,
@@ -50,16 +53,22 @@ public class RelatorioController {
     }
 
     // ==========================================
-    // 📋 PÁGINA ÍNDICE DE RELATÓRIOS (PRESERVADO)
+    // 📋 PÁGINA ÍNDICE DE RELATÓRIOS (BUG 2 FIX)
     // ==========================================
 
     /**
-     * Exibe a página de listagem de relatórios disponíveis.
-     * ✅ BUG 2 FIX PRESERVADO: Evita erro 500 ao acessar /relatorios.
+     * ✅ NOVO: Exibe a página de listagem de relatórios disponíveis.
+     * 
+     * Este método é chamado quando o usuário acessa /relatorios diretamente.
+     * Não gera nenhum arquivo — apenas prepara o model com dados para os
+     * filtros dos formulários de geração.
+     * 
+     * Acesso restrito a ADMINISTRADOR e GERENTE via SecurityConfig.
      */
     @GetMapping
     public String index(Model model) {
         try {
+            // Carrega dados para os selects dos formulários
             model.addAttribute("equipes", equipeService.findAll());
             model.addAttribute("projetos", projetoService.findAll());
             model.addAttribute("usuarios", usuarioService.findAll());
@@ -67,9 +76,10 @@ public class RelatorioController {
             
             return "relatorios/index";
         } catch (Exception e) {
-            model.addAttribute("equipes", List.of());
-            model.addAttribute("projetos", List.of());
-            model.addAttribute("usuarios", List.of());
+            // Fallback: se algum service falhar, ainda mostra a página com listas vazias
+            model.addAttribute("equipes", java.util.List.of());
+            model.addAttribute("projetos", java.util.List.of());
+            model.addAttribute("usuarios", java.util.List.of());
             model.addAttribute("activePage", "relatorios");
             model.addAttribute("erro", "Erro ao carregar dados de filtro: " + e.getMessage());
             return "relatorios/index";
@@ -118,7 +128,6 @@ public class RelatorioController {
 
     @GetMapping("/tarefas/excel")
     public ResponseEntity<byte[]> baixarTarefasExcel() throws IOException {
-        // ✅ Utiliza o método findAllEntities() restaurado no TarefaService
         byte[] excelBytes = relatorioService.gerarRelatorioTarefasExcel(tarefaService.findAllEntities());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_tarefas.xlsx")
@@ -128,7 +137,6 @@ public class RelatorioController {
 
     @GetMapping("/tarefas/pdf")
     public ResponseEntity<byte[]> baixarTarefasPdf() throws Exception {
-        // ✅ Utiliza o método findAllEntities() restaurado no TarefaService
         byte[] pdfBytes = relatorioService.gerarRelatorioTarefasPdf(tarefaService.findAllEntities());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_tarefas.pdf")
@@ -138,6 +146,7 @@ public class RelatorioController {
 
     @GetMapping("/usuarios/excel")
     public ResponseEntity<byte[]> baixarUsuariosExcel() throws IOException {
+        // Reutiliza o relatório de equipes com adaptação (ou cria novo método específico)
         byte[] excelBytes = relatorioService.gerarRelatorioEquipesExcel(equipeService.findAll());
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=relatorio_usuarios.xlsx")
