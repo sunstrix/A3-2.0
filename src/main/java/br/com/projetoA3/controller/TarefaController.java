@@ -1,6 +1,7 @@
 package br.com.projetoA3.controller;
 
 import br.com.projetoA3.dto.TarefaDTO;
+import br.com.projetoA3.enums.Prioridade;
 import br.com.projetoA3.enums.StatusTarefa;
 import br.com.projetoA3.model.Tarefa;
 import br.com.projetoA3.service.ProjetoService;
@@ -61,6 +62,7 @@ public class TarefaController {
     public String listar(Model model) {
         List<TarefaDTO> tarefas = tarefaService.findAll();
         model.addAttribute("tarefas", tarefas);
+        model.addAttribute("activePage", "tarefas");
         return "tarefa/list";
     }
 
@@ -80,8 +82,9 @@ public class TarefaController {
         model.addAttribute("projetoId", projetoId);
         model.addAttribute("projetoNome", kanban.getNomeProjeto());
         model.addAttribute("totalTarefas", kanban.getTotalTarefas());
+        model.addAttribute("activePage", "tarefas");
         
-        // Mantém compatibilidade com template antigo (tarefas separadas por status)
+        // Mantém compatibilidade com template existente (tarefas separadas por status)
         model.addAttribute("tarefasAFazer", kanban.getTarefasAFazer());
         model.addAttribute("tarefasEmProgresso", kanban.getTarefasEmAndamento());
         model.addAttribute("tarefasConcluidas", kanban.getTarefasConcluidas());
@@ -96,13 +99,27 @@ public class TarefaController {
 
     /**
      * Exibe formulário para criar uma nova tarefa.
+     * 
+     * @param projetoId ID do projeto ao qual a tarefa será associada (obrigatório)
      */
     @GetMapping("/novo")
     public String novo(@RequestParam Long projetoId, Model model) {
-        model.addAttribute("tarefa", new Tarefa());
+        // Verifica se o projeto existe
+        if (projetoService.findById(projetoId).isEmpty()) {
+            model.addAttribute("erro", "Projeto não encontrado: " + projetoId);
+            return "redirect:/projetos";
+        }
+        
+        Tarefa tarefa = new Tarefa();
+        tarefa.setStatus(StatusTarefa.A_FAZER);
+        tarefa.setPrioridade(Prioridade.MEDIA);
+        
+        model.addAttribute("tarefa", tarefa);
         model.addAttribute("projetoId", projetoId);
         model.addAttribute("usuarios", usuarioService.findAll());
         model.addAttribute("statusOptions", StatusTarefa.values());
+        model.addAttribute("activePage", "tarefas");
+        
         return "tarefa/form";
     }
 
@@ -115,21 +132,28 @@ public class TarefaController {
                          Model model,
                          RedirectAttributes attributes,
                          @AuthenticationPrincipal UserDetails userDetails) {
+        Long projetoId = tarefa.getProjeto() != null ? tarefa.getProjeto().getId() : null;
+        
         if (result.hasErrors()) {
             model.addAttribute("usuarios", usuarioService.findAll());
             model.addAttribute("statusOptions", StatusTarefa.values());
+            model.addAttribute("projetoId", projetoId);
+            model.addAttribute("activePage", "tarefas");
             return "tarefa/form";
         }
         
         try {
             String username = userDetails != null ? userDetails.getUsername() : null;
             TarefaDTO criada = tarefaService.save(tarefa, username);
-            attributes.addFlashAttribute("sucesso", "Tarefa '" + criada.titulo() + "' criada com sucesso!");
-            return "redirect:/tarefas/kanban/" + tarefa.getProjeto().getId();
+            attributes.addFlashAttribute("sucesso", 
+                "Tarefa '" + criada.titulo() + "' criada com sucesso!");
+            return "redirect:/tarefas/kanban/" + projetoId;
         } catch (Exception e) {
-            model.addAttribute("erro", e.getMessage());
+            model.addAttribute("erro", "Erro ao salvar: " + e.getMessage());
             model.addAttribute("usuarios", usuarioService.findAll());
             model.addAttribute("statusOptions", StatusTarefa.values());
+            model.addAttribute("projetoId", projetoId);
+            model.addAttribute("activePage", "tarefas");
             return "tarefa/form";
         }
     }
@@ -138,15 +162,23 @@ public class TarefaController {
      * Exibe formulário para editar uma tarefa existente.
      */
     @GetMapping("/editar/{id}")
-    public String editar(@PathVariable Long id, Model model) {
-        Tarefa tarefa = tarefaService.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Tarefa não encontrada"));
-        
-        model.addAttribute("tarefa", tarefa);
-        model.addAttribute("projetoId", tarefa.getProjeto().getId());
-        model.addAttribute("usuarios", usuarioService.findAll());
-        model.addAttribute("statusOptions", StatusTarefa.values());
-        return "tarefa/form";
+    public String editar(@PathVariable Long id, Model model, RedirectAttributes attributes) {
+        try {
+            Tarefa tarefa = tarefaService.findById(id)
+                    .orElseThrow(() -> new IllegalArgumentException("Tarefa não encontrada"));
+            
+            Long projetoId = tarefa.getProjeto() != null ? tarefa.getProjeto().getId() : null;
+            
+            model.addAttribute("tarefa", tarefa);
+            model.addAttribute("projetoId", projetoId);
+            model.addAttribute("usuarios", usuarioService.findAll());
+            model.addAttribute("statusOptions", StatusTarefa.values());
+            model.addAttribute("activePage", "tarefas");
+            return "tarefa/form";
+        } catch (Exception e) {
+            attributes.addFlashAttribute("erro", "Erro: " + e.getMessage());
+            return "redirect:/tarefas";
+        }
     }
 
     /**
@@ -158,19 +190,23 @@ public class TarefaController {
                             BindingResult result,
                             Model model,
                             RedirectAttributes attributes) {
+        Long projetoId = tarefa.getProjeto() != null ? tarefa.getProjeto().getId() : null;
+        
         if (result.hasErrors()) {
             model.addAttribute("usuarios", usuarioService.findAll());
             model.addAttribute("statusOptions", StatusTarefa.values());
+            model.addAttribute("projetoId", projetoId);
+            model.addAttribute("activePage", "tarefas");
             return "tarefa/form";
         }
         
         try {
             tarefaService.update(id, tarefa);
             attributes.addFlashAttribute("sucesso", "Tarefa atualizada com sucesso!");
-            return "redirect:/tarefas/kanban/" + tarefa.getProjeto().getId();
+            return "redirect:/tarefas/kanban/" + projetoId;
         } catch (Exception e) {
-            attributes.addFlashAttribute("erro", e.getMessage());
-            return "redirect:/tarefas/kanban/" + tarefa.getProjeto().getId();
+            attributes.addFlashAttribute("erro", "Erro ao atualizar: " + e.getMessage());
+            return "redirect:/tarefas/kanban/" + projetoId;
         }
     }
 
@@ -181,14 +217,17 @@ public class TarefaController {
     public String deletar(@PathVariable Long id, RedirectAttributes attributes) {
         try {
             Tarefa tarefa = tarefaService.findById(id).orElse(null);
-            Long projetoId = tarefa != null ? tarefa.getProjeto().getId() : null;
+            Long projetoId = tarefa != null && tarefa.getProjeto() != null 
+                           ? tarefa.getProjeto().getId() : null;
+            
             tarefaService.deleteById(id);
             attributes.addFlashAttribute("sucesso", "Tarefa removida com sucesso!");
+            
             if (projetoId != null) {
                 return "redirect:/tarefas/kanban/" + projetoId;
             }
         } catch (Exception e) {
-            attributes.addFlashAttribute("erro", e.getMessage());
+            attributes.addFlashAttribute("erro", "Erro ao remover: " + e.getMessage());
         }
         return "redirect:/tarefas";
     }
