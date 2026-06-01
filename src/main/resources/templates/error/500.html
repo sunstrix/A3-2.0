@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Erro 500 - Erro Interno do Servidor</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .error-container {
+            text-align: center;
+            max-width: 650px;
+            padding: 2rem;
+        }
+        .error-icon {
+            font-size: 5rem;
+            color: #dc3545;
+            margin-bottom: 1.5rem;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .error-code {
+            font-size: 8rem;
+            font-weight: 800;
+            color: #dee2e6;
+            line-height: 1;
+            margin-bottom: -1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="error-container">
+        <div class="error-code">500</div>
+        <i class="bi bi-exclamation-octagon-fill error-icon"></i>
+        <h1 class="display-5 fw-bold text-dark">Ops! Algo deu errado.</h1>
+        <p class="lead text-muted mb-4">
+            Ocorreu um erro interno inesperado no servidor. Nossa equipe já foi notificada.
+            Por favor, tente novamente mais tarde ou volte para a página inicial.
+        </p>
+        
+        <!-- Detalhes técnicos (O Spring Boot injeta essas variáveis automaticamente em páginas de erro) -->
+        <div class="card bg-light border-0 text-start mb-4 shadow-sm" th:if="${message != null and message != ''}">
+            <div class="card-body">
+                <h6 class="card-title fw-bold text-danger mb-3">
+                    <i class="bi bi-bug-fill me-2"></i>Detalhes Técnicos do Erro:
+                </h6>
+                <ul class="list-unstyled small text-muted mb-0">
+                    <li class="mb-2"><strong class="text-dark">Data/Hora:</strong> <span th:text="${timestamp}">--</span></li>
+                    <li class="mb-2"><strong class="text-dark">Caminho (Path):</strong> <code th:text="${path}">/</code></li>
+                    <li class="mb-2"><strong class="text-dark">Status:</strong> <span class="badge bg-danger" th:text="${status}">500</span></li>
+                    <li><strong class="text-dark">Mensagem:</strong> <span th:text="${message}">Erro desconhecido</span></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="d-flex gap-3 justify-content-center flex-wrap">
+            <a href="/menu" class="btn btn-primary btn-lg">
+                <i class="bi bi-house-fill me-2"></i>Voltar ao Menu
+            </a>
+            <button onclick="window.history.back()" class="btn btn-outline-secondary btn-lg">
+                <i class="bi bi-arrow-left me-2"></i>Tentar Novamente
+            </button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
