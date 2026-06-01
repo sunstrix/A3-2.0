@@ -23,25 +23,26 @@
                         </h4>
                     </div>
                     <div class="card-body">
-                        <!-- Mensagens de erro gerais -->
-                        <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                            <strong><i class="bi bi-exclamation-triangle"></i> Erros de validação:</strong>
-                            <ul class="mb-0 mt-2">
-                                <li th:each="err : ${#fields.errors('*')}" th:text="${err}">Erro</li>
-                            </ul>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                        </div>
-
+                        
                         <!-- ✅ CORREÇÃO: Ajustadas as rotas th:action para bater com o TarefaController -->
                         <form th:action="${tarefa.id != null} ? @{/tarefas/atualizar/{id}(id=${tarefa.id})} : @{/tarefas}"
                               th:object="${tarefa}"
                               method="post">
+                              
+                            <!-- ✅ CORREÇÃO CRÍTICA: O bloco de erros deve estar DENTRO do form para ter acesso ao th:object -->
+                            <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                                <strong><i class="bi bi-exclamation-triangle"></i> Erros de validação:</strong>
+                                <ul class="mb-0 mt-2">
+                                    <li th:each="err : ${#fields.errors('*')}" th:text="${err}">Erro</li>
+                                </ul>
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
                             
                             <!-- ID oculto para edição -->
                             <input type="hidden" th:field="*{id}" th:if="${tarefa.id != null}">
                             
                             <!-- Campo oculto para o Projeto (Obrigatório para o Service) -->
-                            <input type="hidden" th:name="projeto.id" th:value="${projetoId != null ? projetoId : tarefa.projeto.id}">
+                            <input type="hidden" th:name="projeto.id" th:value="${projetoId != null ? projetoId : (tarefa.projeto != null ? tarefa.projeto.id : '')}">
                             
                             <!-- Título -->
                             <div class="mb-3">
@@ -148,7 +149,7 @@
 
                             <!-- Botões de ação -->
                             <div class="d-flex justify-content-between">
-                                <a th:href="@{/tarefas/kanban/{id}(id=${projetoId != null ? projetoId : tarefa.projeto.id})}" class="btn btn-secondary">
+                                <a th:href="@{/tarefas/kanban/{id}(id=${projetoId != null ? projetoId : (tarefa.projeto != null ? tarefa.projeto.id : 0)})}" class="btn btn-secondary">
                                     <i class="bi bi-arrow-left"></i> Voltar ao Kanban
                                 </a>
                                 <button type="submit" class="btn btn-primary">
