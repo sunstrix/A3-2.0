@@ -117,7 +117,7 @@
                     <div class="card stat-card bg-primary text-white">
                         <div class="card-body text-center">
                             <i class="bi bi-people-fill stat-icon"></i>
-                            <div class="stat-value">--</div>
+                            <div class="stat-value" th:text="${totalEquipes}">0</div>
                             <div class="stat-label">Equipes Ativas</div>
                         </div>
                     </div>
@@ -128,7 +128,7 @@
                     <div class="card stat-card bg-success text-white">
                         <div class="card-body text-center">
                             <i class="bi bi-folder-fill stat-icon"></i>
-                            <div class="stat-value">--</div>
+                            <div class="stat-value" th:text="${projetosEmAndamento}">0</div>
                             <div class="stat-label">Projetos em Andamento</div>
                         </div>
                     </div>
@@ -139,7 +139,7 @@
                     <div class="card stat-card bg-warning text-dark">
                         <div class="card-body text-center">
                             <i class="bi bi-kanban-fill stat-icon"></i>
-                            <div class="stat-value">--</div>
+                            <div class="stat-value" th:text="${tarefasPendentes}">0</div>
                             <div class="stat-label">Tarefas Pendentes</div>
                         </div>
                     </div>
@@ -222,7 +222,6 @@
                     <div class="card-body text-center d-flex flex-column justify-content-center">
                         <i class="bi bi-lightbulb fs-1 text-warning mb-2"></i>
                         <h6 class="fw-bold">Dica do dia</h6>
-                        <!-- ✅ BUG 3 FIX: Texto atualizado para refletir o botão real -->
                         <p class="small text-muted mb-0">
                             Use o botão <span class="badge bg-dark">🌙</span> no canto inferior 
                             direito para alternar entre tema claro e escuro. Sua preferência 
@@ -237,7 +236,7 @@
     <!-- Footer Global (Fragmento) -->
     <div th:replace="~{common/footer :: footer}"></div>
 
-    <!-- ✅ BUG 3 FIX: Botão flutuante de tema claro/escuro -->
+    <!-- Botão flutuante de tema claro/escuro -->
     <div th:replace="~{common/theme-toggle :: toggle}"></div>
 
     <!-- Toast Container para notificações -->
