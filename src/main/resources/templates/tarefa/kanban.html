@@ -3,10 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kanban - <span th:text="${projeto.nome}">Projeto</span></title>
+    <title>Kanban - <span th:text="${projetoNome}">Projeto</span></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/main.css">
+    
+    <!-- Fragmento CSRF para proteção contra ataques CSRF -->
+    <div th:replace="~{common/csrf-meta :: csrf}"></div>
+    
     <style>
         .kanban-board {
             display: flex;
@@ -17,7 +21,7 @@
         }
         .kanban-column {
             flex: 1;
-            min-width: 300px;
+            min-width: 280px;
             background: #f8f9fa;
             border-radius: 8px;
             padding: 1rem;
@@ -40,14 +44,18 @@
             background: white;
             border-radius: 6px;
             padding: 1rem;
-            margin-bottom: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 0.75rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             cursor: move;
-            transition: all 0.2s;
+            transition: all 0.2s ease;
+            border-left: 4px solid #dee2e6;
         }
         .task-card:hover {
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
             transform: translateY(-2px);
+        }
+        .task-card:active {
+            cursor: grabbing;
         }
         .task-card.dragging {
             opacity: 0.5;
@@ -56,106 +64,130 @@
         .task-title {
             font-weight: 600;
             margin-bottom: 0.5rem;
+            color: #212529;
         }
         .task-description {
             font-size: 0.875rem;
             color: #6c757d;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
         }
         .task-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            font-size: 0.75rem;
+            font-size: 0.8rem;
             color: #6c757d;
         }
-        .badge-prioridade-alta, .badge-prioridade-critica {
-            background-color: #dc3545 !important;
+        .badge-prioridade {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
         }
-        .badge-prioridade-media {
-            background-color: #ffc107 !important;
-            color: #000 !important;
+        .priority-ALTA, .priority-CRITICA {
+            border-left-color: #dc3545;
         }
-        .badge-prioridade-baixa {
-            background-color: #198754 !important;
+        .priority-MEDIA {
+            border-left-color: #ffc107;
         }
-        .overdue {
-            border-left: 4px solid #dc3545;
+        .priority-BAIXA {
+            border-left-color: #198754;
         }
         .add-task-btn {
             margin-top: auto;
-            width: 100%;
+        }
+        .kanban-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+        }
+        .metrics-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        .metric-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
-        <div class="container-fluid">
-            <a class="navbar-brand" href="/menu">
-                <i class="bi bi-kanban"></i> A3 2.0
-            </a>
-            <div class="navbar-nav ms-auto">
-                <a class="nav-link" th:href="@{/projetos/{id}/tarefas(id=${projeto.id})}">
-                    <i class="bi bi-list-task"></i> Lista de Tarefas
-                </a>
-                <a class="nav-link" href="/menu">
-                    <i class="bi bi-arrow-left"></i> Voltar ao Menu
-                </a>
-                <a class="nav-link" href="/logout">
-                    <i class="bi bi-box-arrow-right"></i> Sair
-                </a>
-            </div>
-        </div>
-    </nav>
+    <!-- Navbar Global -->
+    <div th:replace="~{common/navbar :: navbar}"></div>
 
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <div>
-                <h2>
-                    <i class="bi bi-kanban-fill"></i> 
-                    <span th:text="${projeto.nome}">Nome do Projeto</span>
-                </h2>
-                <p class="text-muted mb-0" th:text="${projeto.descricao}">Descrição do projeto</p>
+    <div class="container-fluid mt-4 px-4">
+        <!-- Cabeçalho do Projeto -->
+        <div class="kanban-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div>
+                    <h2 class="mb-1">
+                        <i class="bi bi-kanban-fill"></i> 
+                        <span th:text="${projetoNome}">Nome do Projeto</span>
+                    </h2>
+                    <p class="mb-0 opacity-75">Quadro Kanban Interativo</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{/tarefas/novo(projetoId=${projetoId})}" class="btn btn-light btn-lg">
+                        <i class="bi bi-plus-circle"></i> Nova Tarefa
+                    </a>
+                    <a href="/projetos" class="btn btn-outline-light btn-lg">
+                        <i class="bi bi-folder"></i> Ver Projetos
+                    </a>
+                </div>
             </div>
-            <a th:href="@{/projetos/{id}/tarefas/nova(id=${projeto.id})}" class="btn btn-primary">
-                <i class="bi bi-plus-circle"></i> Nova Tarefa
-            </a>
         </div>
 
         <!-- Métricas do Projeto -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="text-primary" th:text="${stats.totalTarefas}">0</h3>
-                        <small class="text-muted">Total</small>
-                    </div>
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-sm-6">
+                <div class="metrics-card">
+                    <div class="metric-value text-primary" th:text="${kanban.percentualConcluido}">0</div>
+                    <div class="metric-label">% Concluído</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="text-success" th:text="${stats.tarefasConcluidas}">0</h3>
-                        <small class="text-muted">Concluídas</small>
-                    </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="metrics-card">
+                    <div class="metric-value text-warning" th:text="${kanban.totalTarefasAtrasadas}">0</div>
+                    <div class="metric-label">Atrasadas</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="text-danger" th:text="${stats.tarefasAtrasadas}">0</h3>
-                        <small class="text-muted">Atrasadas</small>
-                    </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="metrics-card">
+                    <div class="metric-value text-danger" th:text="${kanban.totalTarefasUrgentes}">0</div>
+                    <div class="metric-label">Urgentes</div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="text-info" th:text="${stats.percentualConcluido}">0%</h3>
-                        <small class="text-muted">Progresso</small>
-                    </div>
+            <div class="col-md-3 col-sm-6">
+                <div class="metrics-card">
+                    <div class="metric-value text-info" th:text="${kanban.totalTarefas}">0</div>
+                    <div class="metric-label">Total</div>
                 </div>
             </div>
+        </div>
+
+        <!-- Mensagens de Feedback -->
+        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>
+            <span th:text="${sucesso}">Sucesso!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>
+            <span th:text="${erro}">Erro!</span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
         <!-- Quadro Kanban -->
@@ -165,38 +197,42 @@
                  ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
                 <div class="column-header">
                     <h5 class="mb-0">📋 A Fazer</h5>
-                    <span class="badge bg-secondary" th:text="${#lists.size(tarefasAFazer)}">0</span>
+                    <span class="badge bg-secondary rounded-pill" th:text="${#lists.size(tarefasAFazer)}">0</span>
                 </div>
-                <div class="task-list">
+                <div class="task-list flex-grow-1">
                     <div th:each="tarefa : ${tarefasAFazer}" 
                          class="task-card" 
+                         th:classappend="${'priority-' + tarefa.prioridade}"
+                         th:attr="data-id=${tarefa.id}"
                          draggable="true" 
-                         ondragstart="drag(event)"
-                         th:classappend="${tarefa.atrasada} ? 'overdue'"
-                         th:data-id="${tarefa.id}">
+                         ondragstart="drag(event)">
                         <div class="task-title" th:text="${tarefa.titulo}">Título da Tarefa</div>
-                        <div class="task-description" th:text="${tarefa.descricao}">Descrição</div>
+                        <div class="task-description" th:text="${tarefa.descricao}">Descrição da tarefa...</div>
                         
-                        <!-- ✅ CORREÇÃO: Expressão ternária simplificada e correta -->
-                        <span class="badge" 
-                              th:classappend="${tarefa.prioridade.name() == 'ALTA' or tarefa.prioridade.name() == 'CRITICA'} ? 'badge-prioridade-alta' : (${tarefa.prioridade.name() == 'MEDIA'} ? 'badge-prioridade-media' : 'badge-prioridade-baixa')"
-                              th:text="${tarefa.prioridade.descricao}">Prioridade</span>
-                        
-                        <div class="task-meta">
-                            <span th:if="${tarefa.atrasada}" class="text-danger">
-                                <i class="bi bi-exclamation-triangle"></i> Prazo vencido!
+                        <!-- ✅ CORREÇÃO: Expressão ternária completa em UM ÚNICO ${} -->
+                        <span class="badge badge-prioridade"
+                              th:classappend="${(tarefa.prioridade == 'ALTA' or tarefa.prioridade == 'CRITICA') ? 'bg-danger' : (tarefa.prioridade == 'MEDIA' ? 'bg-warning text-dark' : 'bg-success')}"
+                              th:text="${tarefa.prioridade}">
+                            Prioridade
+                        </span>
+
+                        <div class="task-meta mt-2">
+                            <span th:if="${tarefa.atrasada}" class="text-danger fw-bold">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Prazo vencido!
                             </span>
                             <span th:if="${!tarefa.atrasada and tarefa.dataVencimento != null}">
                                 <i class="bi bi-calendar"></i> 
-                                <span th:text="${#temporals.format(tarefa.dataVencimento, 'dd/MM')}">01/01</span>
+                                <span th:text="${#temporals.format(tarefa.dataVencimento, 'dd/MM/yyyy')}">01/01/2026</span>
                             </span>
-                            <a th:href="@{/tarefas/{id}/editar(id=${tarefa.id})}" class="btn btn-sm btn-outline-primary">
+                            <a th:href="@{/tarefas/editar/{id}(id=${tarefa.id})}" 
+                               class="btn btn-sm btn-outline-primary"
+                               onclick="event.stopPropagation();">
                                 <i class="bi bi-pencil"></i>
                             </a>
                         </div>
                     </div>
                 </div>
-                <a th:href="@{/projetos/{id}/tarefas/nova(id=${projeto.id})}" class="btn btn-outline-primary add-task-btn">
+                <a th:href="@{/tarefas/novo(projetoId=${projetoId})}" class="btn btn-outline-secondary add-task-btn">
                     <i class="bi bi-plus"></i> Adicionar Tarefa
                 </a>
             </div>
@@ -206,37 +242,41 @@
                  ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
                 <div class="column-header">
                     <h5 class="mb-0">🔄 Em Andamento</h5>
-                    <span class="badge bg-primary" th:text="${#lists.size(tarefasEmAndamento)}">0</span>
+                    <span class="badge bg-primary rounded-pill" th:text="${#lists.size(tarefasEmAndamento)}">0</span>
                 </div>
-                <div class="task-list">
+                <div class="task-list flex-grow-1">
                     <div th:each="tarefa : ${tarefasEmAndamento}" 
                          class="task-card" 
+                         th:classappend="${'priority-' + tarefa.prioridade}"
+                         th:attr="data-id=${tarefa.id}"
                          draggable="true" 
-                         ondragstart="drag(event)"
-                         th:classappend="${tarefa.atrasada} ? 'overdue'"
-                         th:data-id="${tarefa.id}">
+                         ondragstart="drag(event)">
                         <div class="task-title" th:text="${tarefa.titulo}">Título da Tarefa</div>
-                        <div class="task-description" th:text="${tarefa.descricao}">Descrição</div>
+                        <div class="task-description" th:text="${tarefa.descricao}">Descrição da tarefa...</div>
                         
-                        <span class="badge" 
-                              th:classappend="${tarefa.prioridade.name() == 'ALTA' or tarefa.prioridade.name() == 'CRITICA'} ? 'badge-prioridade-alta' : (${tarefa.prioridade.name() == 'MEDIA'} ? 'badge-prioridade-media' : 'badge-prioridade-baixa')"
-                              th:text="${tarefa.prioridade.descricao}">Prioridade</span>
-                        
-                        <div class="task-meta">
-                            <span th:if="${tarefa.atrasada}" class="text-danger">
-                                <i class="bi bi-exclamation-triangle"></i> Prazo vencido!
+                        <span class="badge badge-prioridade"
+                              th:classappend="${(tarefa.prioridade == 'ALTA' or tarefa.prioridade == 'CRITICA') ? 'bg-danger' : (tarefa.prioridade == 'MEDIA' ? 'bg-warning text-dark' : 'bg-success')}"
+                              th:text="${tarefa.prioridade}">
+                            Prioridade
+                        </span>
+
+                        <div class="task-meta mt-2">
+                            <span th:if="${tarefa.atrasada}" class="text-danger fw-bold">
+                                <i class="bi bi-exclamation-triangle-fill"></i> Prazo vencido!
                             </span>
                             <span th:if="${!tarefa.atrasada and tarefa.dataVencimento != null}">
                                 <i class="bi bi-calendar"></i> 
-                                <span th:text="${#temporals.format(tarefa.dataVencimento, 'dd/MM')}">01/01</span>
+                                <span th:text="${#temporals.format(tarefa.dataVencimento, 'dd/MM/yyyy')}">01/01/2026</span>
                             </span>
-                            <a th:href="@{/tarefas/{id}/editar(id=${tarefa.id})}" class="btn btn-sm btn-outline-primary">
+                            <a th:href="@{/tarefas/editar/{id}(id=${tarefa.id})}" 
+                               class="btn btn-sm btn-outline-primary"
+                               onclick="event.stopPropagation();">
                                 <i class="bi bi-pencil"></i>
                             </a>
                         </div>
                     </div>
                 </div>
-                <a th:href="@{/projetos/{id}/tarefas/nova(id=${projeto.id})}" class="btn btn-outline-primary add-task-btn">
+                <a th:href="@{/tarefas/novo(projetoId=${projetoId})}" class="btn btn-outline-secondary add-task-btn">
                     <i class="bi bi-plus"></i> Adicionar Tarefa
                 </a>
             </div>
@@ -246,26 +286,29 @@
                  ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
                 <div class="column-header">
                     <h5 class="mb-0">✅ Concluída</h5>
-                    <span class="badge bg-success" th:text="${#lists.size(tarefasConcluidas)}">0</span>
+                    <span class="badge bg-success rounded-pill" th:text="${#lists.size(tarefasConcluidas)}">0</span>
                 </div>
-                <div class="task-list">
+                <div class="task-list flex-grow-1">
                     <div th:each="tarefa : ${tarefasConcluidas}" 
                          class="task-card" 
+                         th:classappend="${'priority-' + tarefa.prioridade}"
+                         th:attr="data-id=${tarefa.id}"
                          draggable="true" 
-                         ondragstart="drag(event)"
-                         th:data-id="${tarefa.id}">
+                         ondragstart="drag(event)">
                         <div class="task-title text-decoration-line-through" th:text="${tarefa.titulo}">Título da Tarefa</div>
-                        <div class="task-description" th:text="${tarefa.descricao}">Descrição</div>
+                        <div class="task-description" th:text="${tarefa.descricao}">Descrição da tarefa...</div>
                         
-                        <span class="badge" 
-                              th:classappend="${tarefa.prioridade.name() == 'ALTA' or tarefa.prioridade.name() == 'CRITICA'} ? 'badge-prioridade-alta' : (${tarefa.prioridade.name() == 'MEDIA'} ? 'badge-prioridade-media' : 'badge-prioridade-baixa')"
-                              th:text="${tarefa.prioridade.descricao}">Prioridade</span>
-                        
-                        <div class="task-meta">
+                        <span class="badge badge-prioridade bg-success" th:text="${tarefa.prioridade}">
+                            Prioridade
+                        </span>
+
+                        <div class="task-meta mt-2">
                             <span class="text-success">
-                                <i class="bi bi-check-circle"></i> Concluída
+                                <i class="bi bi-check-circle-fill"></i> Concluída
                             </span>
-                            <a th:href="@{/tarefas/{id}/editar(id=${tarefa.id})}" class="btn btn-sm btn-outline-primary">
+                            <a th:href="@{/tarefas/editar/{id}(id=${tarefa.id})}" 
+                               class="btn btn-sm btn-outline-primary"
+                               onclick="event.stopPropagation();">
                                 <i class="bi bi-pencil"></i>
                             </a>
                         </div>
@@ -278,23 +321,25 @@
                  ondrop="drop(event)" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">
                 <div class="column-header">
                     <h5 class="mb-0">❌ Cancelada</h5>
-                    <span class="badge bg-danger" th:text="${#lists.size(tarefasCanceladas)}">0</span>
+                    <span class="badge bg-danger rounded-pill" th:text="${#lists.size(tarefasCanceladas)}">0</span>
                 </div>
-                <div class="task-list">
+                <div class="task-list flex-grow-1">
                     <div th:each="tarefa : ${tarefasCanceladas}" 
                          class="task-card" 
-                         draggable="true" 
-                         ondragstart="drag(event)"
                          style="opacity: 0.6;"
-                         th:data-id="${tarefa.id}">
+                         th:attr="data-id=${tarefa.id}"
+                         draggable="true" 
+                         ondragstart="drag(event)">
                         <div class="task-title text-decoration-line-through text-muted" th:text="${tarefa.titulo}">Título da Tarefa</div>
-                        <div class="task-description text-muted" th:text="${tarefa.descricao}">Descrição</div>
+                        <div class="task-description text-muted" th:text="${tarefa.descricao}">Descrição da tarefa...</div>
                         
-                        <div class="task-meta">
+                        <div class="task-meta mt-2">
                             <span class="text-muted">
-                                <i class="bi bi-x-circle"></i> Cancelada
+                                <i class="bi bi-x-circle-fill"></i> Cancelada
                             </span>
-                            <a th:href="@{/tarefas/{id}/editar(id=${tarefa.id})}" class="btn btn-sm btn-outline-secondary">
+                            <a th:href="@{/tarefas/editar/{id}(id=${tarefa.id})}" 
+                               class="btn btn-sm btn-outline-secondary"
+                               onclick="event.stopPropagation();">
                                 <i class="bi bi-pencil"></i>
                             </a>
                         </div>
@@ -304,13 +349,15 @@
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:inline="javascript">
-        /*<![CDATA[*/
-        const csrfParameterName = /*[[${_csrf.parameterName}]]*/ '_csrf';
-        const csrfToken = /*[[${_csrf.token}]]*/ '';
-        /*]]>*/
+    <!-- Footer Global -->
+    <div th:replace="~{common/footer :: footer}"></div>
+    
+    <!-- Botão de Tema -->
+    <div th:replace="~{common/theme-toggle :: toggle}"></div>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Variáveis para Drag & Drop
         let draggedElement = null;
 
         function allowDrop(ev) {
@@ -323,11 +370,13 @@
         }
 
         function drag(ev) {
-            draggedElement = ev.target;
+            draggedElement = ev.target.closest('.task-card');
             ev.dataTransfer.effectAllowed = 'move';
             ev.dataTransfer.setData('text/html', ev.target.outerHTML);
             setTimeout(() => {
-                ev.target.classList.add('dragging');
+                if (draggedElement) {
+                    draggedElement.classList.add('dragging');
+                }
             }, 0);
         }
 
@@ -335,39 +384,42 @@
             ev.preventDefault();
             ev.currentTarget.classList.remove('drag-over');
             
-            const tarefaId = draggedElement.getAttribute('data-id');
-            const novoStatus = ev.currentTarget.getAttribute('data-status');
+            const tarefaId = draggedElement ? draggedElement.getAttribute('data-id') : null;
+            const column = ev.target.closest('.kanban-column');
+            if (!column || !tarefaId) return;
             
+            const novoStatus = column.getAttribute('data-status');
+            
+            // Obter Token CSRF
+            const csrfToken = document.querySelector('meta[name="_csrf"]')?.getAttribute('content');
+            const csrfHeader = document.querySelector('meta[name="_csrf_header"]')?.getAttribute('content');
+
             if (tarefaId && novoStatus) {
-                atualizarStatusTarefa(tarefaId, novoStatus);
+                // Requisição AJAX para atualizar status
+                fetch(`/tarefas/mover?tarefaId=${tarefaId}&novoStatus=${novoStatus}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        [csrfHeader]: csrfToken
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // Recarrega a página para atualizar o kanban
+                        window.location.reload();
+                    } else {
+                        alert('Erro ao mover a tarefa. Tente novamente.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    alert('Falha na comunicação com o servidor.');
+                });
             }
             
             if (draggedElement) {
                 draggedElement.classList.remove('dragging');
             }
-        }
-
-        function atualizarStatusTarefa(tarefaId, novoStatus) {
-            const formData = new FormData();
-            formData.append('status', novoStatus);
-            formData.append(csrfParameterName, csrfToken);
-
-            fetch(`/tarefas/${tarefaId}/status`, {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => {
-                if (response.ok) {
-                    // Recarrega a página para atualizar o kanban
-                    window.location.reload();
-                } else {
-                    alert('Erro ao atualizar status da tarefa');
-                }
-            })
-            .catch(error => {
-                console.error('Erro:', error);
-                alert('Erro ao atualizar status da tarefa');
-            });
         }
     </script>
 </body>
