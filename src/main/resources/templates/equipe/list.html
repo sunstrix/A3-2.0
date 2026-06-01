@@ -6,90 +6,117 @@
     <title>Equipes - A3 2.0</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <style>
-        body { background-color: #f8f9fa; }
-        .page-header { background: #4f46e5; color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px; }
-        .table-container { background: white; padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    </style>
+    <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
-
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/menu">🔙 Voltar ao Menu</a>
-            <div class="ms-auto">
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Sair</button>
-                </form>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/menu">
+                <i class="bi bi-kanban"></i> A3 2.0
+            </a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="/menu">
+                    <i class="bi bi-arrow-left"></i> Voltar ao Menu
+                </a>
+                <a class="nav-link" href="/logout">
+                    <i class="bi bi-box-arrow-right"></i> Sair
+                </a>
             </div>
         </div>
     </nav>
 
-    <div class="container">
-
-        <!-- Cabeçalho da página -->
-        <div class="page-header d-flex justify-content-between align-items-center px-4">
-            <h2 class="mb-0">🤝 Gestão de Equipes</h2>
-            <a href="/equipes/novo" class="btn btn-light text-primary fw-bold">+ Nova Equipe</a>
+    <div class="container mt-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2>
+                <i class="bi bi-people-fill"></i> Gerenciamento de Equipes
+            </h2>
+            <a href="/equipes/novo" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Nova Equipe
+            </a>
         </div>
 
-        <!-- Mensagens de Sucesso/Erro -->
+        <!-- Mensagens de sucesso/erro -->
         <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
-            ✅ <span th:text="${sucesso}"></span>
+            <i class="bi bi-check-circle-fill"></i>
+            <span th:text="${sucesso}">Sucesso!</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
+
         <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
-            ⚠️ <span th:text="${erro}"></span>
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            <span th:text="${erro}">Erro!</span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
 
         <!-- Tabela de Equipes -->
-        <div class="table-container">
+        <div class="card">
+            <div class="card-body">
+                <div th:if="${#lists.isEmpty(equipes)}" class="text-center py-5">
+                    <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
+                    <h5 class="mt-3">Nenhuma equipe cadastrada ainda.</h5>
+                    <a href="/equipes/novo" class="btn btn-primary mt-2">
+                        <i class="bi bi-plus-circle"></i> Criar Primeira Equipe
+                    </a>
+                </div>
 
-            <div th:if="${equipes.isEmpty()}" class="text-center py-5 text-muted">
-                <i class="bi bi-people fs-1"></i>
-                <p class="mt-2">Nenhuma equipe cadastrada ainda.</p>
+                <div th:unless="${#lists.isEmpty(equipes)}" class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Nome da Equipe</th>
+                                <th>Líder</th>
+                                <th>Membros</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="equipe : ${equipes}">
+                                <td th:text="${equipe.id}">1</td>
+                                <td>
+                                    <strong th:text="${equipe.nome}">Nome</strong>
+                                    <br>
+                                    <small class="text-muted" th:text="${equipe.descricao}">Descrição</small>
+                                </td>
+                                <td>
+                                    <span th:if="${equipe.lider != null}" th:text="${equipe.lider.nome}">Líder</span>
+                                    <span th:if="${equipe.lider == null}" class="text-muted">-</span>
+                                </td>
+                                <td>
+                                    <!-- ✅ CORREÇÃO: Verificação segura de null antes de acessar membros -->
+                                    <span th:if="${equipe.membros != null}" 
+                                          th:text="${#lists.size(equipe.membros)}">0</span>
+                                    <span th:if="${equipe.membros == null}" class="text-muted">0</span>
+                                    <span class="text-muted"> membro(s)</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a th:href="@{/equipes/{id}(id=${equipe.id})}" 
+                                           class="btn btn-sm btn-info" 
+                                           title="Ver Detalhes">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a th:href="@{/equipes/editar/{id}(id=${equipe.id})}" 
+                                           class="btn btn-sm btn-warning" 
+                                           title="Editar">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form th:action="@{/equipes/excluir/{id}(id=${equipe.id})}" 
+                                              method="post" 
+                                              style="display: inline;"
+                                              onsubmit="return confirm('Tem certeza que deseja excluir esta equipe?');">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Excluir">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
-            <table th:if="${!equipes.isEmpty()}" class="table table-hover align-middle">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Nome da Equipe</th>
-                        <th>Líder</th>
-                        <th>Membros</th>
-                        <th class="text-center">Ações</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr th:each="equipe : ${equipes}">
-                        <td th:text="${equipe.id}"></td>
-                        <td class="fw-bold" th:text="${equipe.nome}"></td>
-                        <td th:text="${equipe.lider?.nome ?: 'Não definido'}"></td>
-                        <td>
-                            <span class="badge bg-info text-dark"
-                                  th:text="${#lists.size(equipe.membros)} + ' membros'"></span>
-                        </td>
-                        <td class="text-center">
-                            <a th:href="@{/equipes/{id}(id=${equipe.id})}"
-                               class="btn btn-sm btn-success me-1" title="Ver Detalhes e Membros">
-                                <i class="bi bi-eye"></i>
-                            </a>
-                            <a th:href="@{/equipes/editar/{id}(id=${equipe.id})}"
-                               class="btn btn-sm btn-warning me-1" title="Editar">
-                                <i class="bi bi-pencil"></i>
-                            </a>
-                            <a th:href="@{/equipes/deletar/{id}(id=${equipe.id})}"
-                               class="btn btn-sm btn-danger" title="Excluir"
-                               onclick="return confirm('Tem certeza que deseja excluir esta equipe?');">
-                                <i class="bi bi-trash"></i>
-                            </a>
-                        </td>
-                    </tr>
-                </tbody>
-            </table>
-
         </div>
     </div>
 
