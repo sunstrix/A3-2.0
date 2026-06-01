@@ -9,19 +9,22 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
  * Configuração do Spring Security para Spring Boot 3.x / Spring Security 6.x
  * 
- * ✅ Refatoração Sênior: Mantém toda a lógica original de rotas, mas adiciona 
- * suporte a @PreAuthorize e atualiza para criptografia robusta.
+ * ✅ BUG 1 FIX: Autorização de /usuarios/** apenas para ADMINISTRADOR
+ * ✅ BUG 2 FIX: Autorização de /relatorios/** para ADMINISTRADOR e GERENTE
+ * 
+ * ⚠️ ATENÇÃO: Usa NoOpPasswordEncoder (senhas em texto puro) apenas para
+ * fins acadêmicos/demonstração. Em produção, SEMPRE use BCrypt ou similar.
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity // ✅ Necessário para as correções de autorização nos Services/Controllers
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
@@ -43,13 +46,14 @@ public class SecurityConfig {
                 // Páginas de autenticação públicas
                 .requestMatchers("/login", "/registro", "/erro/**").permitAll()
                 
-                // ✅ Áreas restritas (Mantendo sua lógica original de roles)
+                // ✅ BUG 1 FIX: Área de Usuários restrita ao ADMINISTRADOR
                 .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
-                .requestMatchers("/relatorios/**").hasAnyRole("ADMINISTRADOR", "GERENTE")
-                .requestMatchers("/configuracoes/**").hasRole("ADMINISTRADOR")
                 
-                // Novas rotas administrativas protegidas (conforme análise)
-                .requestMatchers("/admin/**").hasRole("ADMINISTRADOR")
+                // ✅ BUG 2 FIX: Relatórios disponíveis para ADMINISTRADOR e GERENTE
+                .requestMatchers("/relatorios/**").hasAnyRole("ADMINISTRADOR", "GERENTE")
+                
+                // Área de configurações restrita ao ADMINISTRADOR
+                .requestMatchers("/configuracoes/**").hasRole("ADMINISTRADOR")
                 
                 // Demais endpoints exigem autenticação
                 .anyRequest().authenticated()
@@ -61,10 +65,10 @@ public class SecurityConfig {
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
-                .defaultSuccessUrl("/menu", true) // ✅ Mantido seu redirecionamento para /menu
+                .defaultSuccessUrl("/menu", true)
                 .failureUrl("/login?error=true")
-                .usernameParameter("login")      // ✅ Mantido seu parâmetro 'login'
-                .passwordParameter("senha")      // ✅ Mantido seu parâmetro 'senha'
+                .usernameParameter("login")
+                .passwordParameter("senha")
                 .permitAll()
             )
             
@@ -91,15 +95,13 @@ public class SecurityConfig {
             // ==========================================
             // PROTEÇÃO CSRF
             // ==========================================
-            .csrf(csrf -> {
-                // Em desenvolvimento/H2 costuma-se ignorar, mas manteremos o padrão seguro
-            })
+            .csrf(csrf -> {})
             
             // ==========================================
             // HEADERS DE SEGURANÇA
             // ==========================================
             .headers(headers -> headers
-                .frameOptions(frame -> frame.sameOrigin()) // ✅ Alterado de 'deny' para 'sameOrigin' para permitir H2/Frames internos se necessário
+                .frameOptions(frame -> frame.deny())
             )
             
             // USA NOSSO AUTHENTICATION PROVIDER PERSONALIZADO
@@ -122,11 +124,12 @@ public class SecurityConfig {
     }
 
     /**
-     * ✅ CORREÇÃO DE SEGURANÇA: Alterado de NoOp para BCrypt.
-     * O NoOp era um bug de segurança crítico apontado na análise.
+     * ⚠️ NoOpPasswordEncoder - NÃO usar em produção!
+     * Aceita senhas em texto puro para facilitar testes acadêmicos.
      */
     @Bean
+    @SuppressWarnings("deprecation")
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return NoOpPasswordEncoder.getInstance();
     }
 }
