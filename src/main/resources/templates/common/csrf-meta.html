@@ -22,11 +22,11 @@
         </head>
     -->
     <th:block th:fragment="csrf">
-        <!-- Token CSRF gerado pelo Spring Security -->
-        <meta name="_csrf" th:content="${_csrf.token}"/>
+        <!-- Token CSRF gerado pelo Spring Security (com safe-navigation para evitar erro 500) -->
+        <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
         
         <!-- Nome do header HTTP que deve receber o token -->
-        <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+        <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : 'X-CSRF-TOKEN'}"/>
         
         <!-- 
             Script auxiliar para facilitar o uso do token CSRF em JavaScript.
@@ -59,13 +59,6 @@
              * @param {string} url URL da requisição
              * @param {object} options Opções do fetch (method, headers, body, etc.)
              * @returns {Promise<Response>} Promise da resposta
-             * 
-             * Exemplo de uso:
-             * fetchWithCsrf('/tarefas/mover', {
-             *     method: 'POST',
-             *     headers: { 'Content-Type': 'application/json' },
-             *     body: JSON.stringify({ tarefaId: 1, novoStatus: 'CONCLUIDA' })
-             * });
              */
             window.fetchWithCsrf = function(url, options = {}) {
                 const csrfToken = getCsrfToken();
