@@ -10,6 +10,7 @@ import br.com.projetoA3.service.UsuarioService;
 import br.com.projetoA3.viewmodel.KanbanViewModel;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
@@ -23,7 +24,7 @@ import java.util.Map;
 
 /**
  * Controller responsável por orquestrar requisições HTTP relacionadas a Tarefas.
- * Restaurado com lógica completa e corrigido para compatibilidade com Records e Kanban UI.
+ * Restaurado com lógica completa e reforçado com segurança e performance.
  */
 @Controller
 @RequestMapping("/tarefas")
@@ -59,6 +60,7 @@ public class TarefaController {
                          @AuthenticationPrincipal UserDetails userDetails) {
         String username = userDetails != null ? userDetails.getUsername() : null;
         
+        // Service utiliza consultas otimizadas (JOIN FETCH / EntityGraph) para evitar N+1
         KanbanViewModel kanban = tarefaService.buildKanbanViewModel(projetoId, username);
         
         model.addAttribute("kanban", kanban);
@@ -67,8 +69,7 @@ public class TarefaController {
         model.addAttribute("totalTarefas", kanban.getTotalTarefas());
         model.addAttribute("activePage", "tarefas");
         
-        // ✅ CORREÇÃO: Sincronizado nome da variável com o esperado pelo template kanban.html
-        // Alterado de "tarefasEmProgresso" para "tarefasEmAndamento" para resolver o erro de "null size"
+        // Sincronização com o template kanban.html
         model.addAttribute("tarefasAFazer", kanban.getTarefasAFazer());
         model.addAttribute("tarefasEmAndamento", kanban.getTarefasEmAndamento());
         model.addAttribute("tarefasConcluidas", kanban.getTarefasConcluidas());
@@ -81,9 +82,10 @@ public class TarefaController {
     // CRUD - FORMULÁRIOS
     // ==========================================
 
+    @PreAuthorize("isAuthenticated()")
     @GetMapping("/novo")
     public String novo(@RequestParam Long projetoId, Model model) {
-        if (projetoService.findById(projetoId).isEmpty()) {
+        if (projetoService.findById(projetoId) == null) {
             model.addAttribute("erro", "Projeto não encontrado: " + projetoId);
             return "redirect:/projetos";
         }
@@ -101,6 +103,7 @@ public class TarefaController {
         return "tarefa/form";
     }
 
+    @PreAuthorize("isAuthenticated()")
     @PostMapping
     public String salvar(@Valid @ModelAttribute Tarefa tarefa,
                          BindingResult result,
@@ -133,6 +136,7 @@ public class TarefaController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GERENTE')")
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model, RedirectAttributes attributes) {
         try {
@@ -153,12 +157,14 @@ public class TarefaController {
         }
     }
 
+    @PreAuthorize("hasAnyRole('ADMINISTRADOR', 'GERENTE')")
     @PostMapping("/atualizar/{id}")
     public String atualizar(@PathVariable Long id,
                             @Valid @ModelAttribute Tarefa tarefa,
                             BindingResult result,
                             Model model,
-                            RedirectAttributes attributes) {
+                            RedirectAttributes attributes,
+                            @AuthenticationPrincipal UserDetails userDetails) {
         Long projetoId = tarefa.getProjeto() != null ? tarefa.getProjeto().getId() : null;
         
         if (result.hasErrors()) {
@@ -170,7 +176,7 @@ public class TarefaController {
         }
         
         try {
-            tarefaService.update(id, tarefa);
+            tarefaService.update(id, tarefa, userDetails.getUsername());
             attributes.addFlashAttribute("sucesso", "Tarefa atualizada com sucesso!");
             return "redirect:/tarefas/kanban/" + projetoId;
         } catch (Exception e) {
@@ -179,6 +185,7 @@ public class TarefaController {
         }
     }
 
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
     @GetMapping("/deletar/{id}")
     public String deletar(@PathVariable Long id, RedirectAttributes attributes) {
         try {
@@ -223,7 +230,7 @@ public class TarefaController {
                 "mensagem", "Status inválido: " + novoStatus
             ));
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(Map.of(
+            return ResponseEntity.status(403).body(Map.of(
                 "sucesso", false,
                 "mensagem", e.getMessage()
             ));
