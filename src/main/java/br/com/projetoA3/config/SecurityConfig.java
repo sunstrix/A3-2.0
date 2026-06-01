@@ -12,6 +12,7 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
 /**
  * Configuração do Spring Security para Spring Boot 3.x / Spring Security 6.x
@@ -35,12 +36,17 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        // Configuração do Handler de CSRF para Spring Security 6
+        // Isso garante que o token seja injetado como atributo da requisição para o Thymeleaf
+        CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
+        requestHandler.setCsrfRequestAttributeName("_csrf");
+
         return http
             // ==========================================
             // AUTORIZAÇÃO DE REQUISIÇÕES
             // ==========================================
             .authorizeHttpRequests(auth -> auth
-                // Recursos estáticos públicos
+                // Recursos estáticos públicos (CSS, JS, imagens)
                 .requestMatchers("/css/**", "/js/**", "/img/**", "/webjars/**").permitAll()
                 
                 // Páginas de autenticação públicas
@@ -93,9 +99,11 @@ public class SecurityConfig {
             )
             
             // ==========================================
-            // PROTEÇÃO CSRF - Desabilitada para APIs REST (se necessário, reative para forms)
+            // PROTEÇÃO CSRF
             // ==========================================
-            .csrf(csrf -> csrf.disable())  // CORREÇÃO: sintaxe correta para Spring Security 6.x
+            .csrf(csrf -> csrf
+                .csrfTokenRequestHandler(requestHandler)
+            )
             
             // ==========================================
             // HEADERS DE SEGURANÇA
