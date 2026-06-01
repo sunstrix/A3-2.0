@@ -67,8 +67,7 @@ public class TarefaController {
         model.addAttribute("totalTarefas", kanban.getTotalTarefas());
         model.addAttribute("activePage", "tarefas");
         
-        // ✅ CORREÇÃO: Sincronizado nome da variável com o esperado pelo template kanban.html
-        // Alterado de "tarefasEmProgresso" para "tarefasEmAndamento" para resolver o erro de "null size"
+        // CORREÇÃO: Sincronizado nome da variável com o esperado pelo template kanban.html
         model.addAttribute("tarefasAFazer", kanban.getTarefasAFazer());
         model.addAttribute("tarefasEmAndamento", kanban.getTarefasEmAndamento());
         model.addAttribute("tarefasConcluidas", kanban.getTarefasConcluidas());
@@ -82,9 +81,9 @@ public class TarefaController {
     // ==========================================
 
     @GetMapping("/novo")
-    public String novo(@RequestParam Long projetoId, Model model) {
+    public String novo(@RequestParam Long projetoId, Model model, RedirectAttributes attributes) {
         if (projetoService.findById(projetoId).isEmpty()) {
-            model.addAttribute("erro", "Projeto não encontrado: " + projetoId);
+            attributes.addFlashAttribute("erro", "Projeto não encontrado: " + projetoId);
             return "redirect:/projetos";
         }
         
