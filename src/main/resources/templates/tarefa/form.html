@@ -4,25 +4,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${tarefa.id != null} ? 'Editar Tarefa' : 'Nova Tarefa'">Tarefa</title>
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <link rel="stylesheet" href="/css/main.css">
+    
+    <!-- Fragmento CSRF -->
+    <div th:replace="~{common/csrf-meta :: csrf}"></div>
 </head>
 <body>
+
+    <!-- Navbar Global -->
     <div th:replace="~{common/navbar :: navbar}"></div>
 
     <div class="container mt-4" style="max-width: 800px;">
+        
+        <!-- Cabeçalho -->
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold">
                 <i class="bi bi-kanban-fill text-primary"></i>
                 <span th:text="${tarefa.id != null} ? 'Editar Tarefa' : 'Nova Tarefa'">Nova Tarefa</span>
             </h2>
-            <a th:href="@{/tarefas/kanban/{id}(id=${projetoId})}" class="btn btn-outline-secondary">
+            <!-- Botão Voltar: Tenta ir para o Kanban do projeto se houver ID, senão para tarefas -->
+            <a th:href="${projetoId != null} ? @{/tarefas/kanban/{id}(id=${projetoId})} : @{/tarefas}" class="btn btn-outline-secondary">
                 <i class="bi bi-arrow-left"></i> Voltar
             </a>
         </div>
 
-        <!-- Mensagem de erro geral -->
+        <!-- Mensagem de erro geral (vinda do controller via Model) -->
         <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <strong>Erro ao salvar:</strong> <span th:text="${erro}">Erro desconhecido</span>
@@ -30,19 +40,19 @@
         </div>
 
         <!-- 
-            ⚠️ CRÍTICO: O form DEVE ter th:object="${tarefa}" para que 
-            as expressões *{campo} e #fields funcionem corretamente.
+            ✅ CORREÇÃO CRÍTICA: 
+            O formulário deve ter th:object="${tarefa}" para que as expressões 
+            #fields.hasErrors('*') e th:field="*{...}" funcionem.
         -->
         <form th:action="${tarefa.id != null} ? @{/tarefas/atualizar/{id}(id=${tarefa.id})} : @{/tarefas}"
               th:object="${tarefa}"
               method="post"
-              class="card shadow-sm border-0"
-              style="border-radius: 12px;">
+              class="card shadow-sm border-0">
             
             <div class="card-body p-4">
 
-                <!-- Erros globais de validação (AGORA FUNCIONA com th:object) -->
-                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger" role="alert">
+                <!-- ✅ Erros globais de validação (agora DENTRO do form com th:object) -->
+                <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger mb-4" role="alert">
                     <i class="bi bi-exclamation-circle-fill me-2"></i>
                     <strong>Por favor, corrija os erros abaixo:</strong>
                     <ul class="mb-0 mt-2">
@@ -50,7 +60,7 @@
                     </ul>
                 </div>
 
-                <!-- Campo oculto com ID do projeto (obrigatório para criar nova tarefa) -->
+                <!-- Campo oculto com ID do projeto (obrigatório para saber a qual projeto a tarefa pertence) -->
                 <input type="hidden" name="projeto.id" th:value="${projetoId}" />
                 
                 <!-- Campo oculto com ID da tarefa (para atualização) -->
@@ -86,7 +96,8 @@
                     <div class="col-md-6 mb-3">
                         <label for="status" class="form-label fw-semibold">Status</label>
                         <select class="form-select" id="status" th:field="*{status}">
-                            <option th:each="s : ${statusOptions}" 
+                            <!-- Assume que 'statusOptions' é passado pelo controller ou usa o enum direto -->
+                            <option th:each="s : ${T(br.com.projetoA3.enums.StatusTarefa).values()}" 
                                     th:value="${s}" 
                                     th:text="${s.name()}">Status</option>
                         </select>
@@ -116,12 +127,12 @@
                     <!-- Responsável -->
                     <div class="col-md-6 mb-3">
                         <label for="responsavel" class="form-label fw-semibold">Responsável</label>
-                        <select class="form-select" id="responsavel" name="responsavel.id">
+                        <!-- Usa 'responsavel.id' pois é uma relação ManyToOne -->
+                        <select class="form-select" id="responsavel" th:field="*{responsavel.id}">
                             <option value="">-- Sem responsável --</option>
                             <option th:each="u : ${usuarios}" 
                                     th:value="${u.id}" 
-                                    th:text="${u.nome}"
-                                    th:selected="${tarefa.responsavel != null and tarefa.responsavel.id == u.id}">
+                                    th:text="${u.nome}">
                                 Usuário
                             </option>
                         </select>
@@ -131,23 +142,24 @@
             </div>
 
             <!-- Rodapé com botões -->
-            <div class="card-footer bg-white border-0 p-4 pt-0">
-                <div class="d-flex gap-2 justify-content-end">
-                    <a th:href="@{/tarefas/kanban/{id}(id=${projetoId})}" class="btn btn-outline-secondary">
-                        Cancelar
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="bi bi-check-circle me-1"></i>
-                        <span th:text="${tarefa.id != null} ? 'Atualizar Tarefa' : 'Salvar Tarefa'">Salvar</span>
-                    </button>
-                </div>
+            <div class="card-footer bg-white border-0 p-4 pt-0 d-flex justify-content-end gap-2">
+                <a th:href="${projetoId != null} ? @{/tarefas/kanban/{id}(id=${projetoId})} : @{/tarefas}" class="btn btn-outline-secondary">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-1"></i>
+                    <span th:text="${tarefa.id != null} ? 'Atualizar' : 'Salvar'">Salvar</span>
+                </button>
             </div>
 
         </form>
 
     </div>
 
+    <!-- Footer Global -->
     <div th:replace="~{common/footer :: footer}"></div>
+
+    <!-- Botão de Tema -->
     <div th:replace="~{common/theme-toggle :: toggle}"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
