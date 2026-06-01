@@ -1,7 +1,6 @@
 package br.com.projetoA3.mapper;
 
 import br.com.projetoA3.dto.TarefaDTO;
-import br.com.projetoA3.enums.Prioridade;
 import br.com.projetoA3.enums.StatusTarefa;
 import br.com.projetoA3.model.Tarefa;
 import org.springframework.stereotype.Component;
@@ -13,13 +12,8 @@ import java.util.stream.Collectors;
 /**
  * Mapper responsável por converter entre a entidade {@link Tarefa} e o DTO {@link TarefaDTO}.
  * 
- * Esta classe centraliza a lógica de mapeamento, garantindo:
- * - Conversão null-safe de relacionamentos (responsavel, projeto)
- * - Cálculo automático do flag 'atrasada' baseado em dataVencimento e status
- * - Extração de IDs e nomes para evitar problemas de lazy loading
- * 
- * O {@link TarefaDTO} é implementado como um Record Java, o que significa
- * que possui um construtor canônico com todos os campos como parâmetros.
+ * Refatorado para suportar TarefaDTO como Record, mantendo a lógica de 
+ * extração null-safe e cálculo de atraso original.
  */
 @Component
 public class TarefaMapper {
@@ -52,9 +46,6 @@ public class TarefaMapper {
 
     /**
      * Converte uma lista de entidades {@link Tarefa} para uma lista de {@link TarefaDTO}.
-     * 
-     * @param tarefas Lista de entidades a serem convertidas
-     * @return Lista de DTOs correspondentes
      */
     public List<TarefaDTO> toDTOList(List<Tarefa> tarefas) {
         if (tarefas == null) {
@@ -67,12 +58,7 @@ public class TarefaMapper {
 
     /**
      * Atualiza uma entidade {@link Tarefa} existente com os dados de um {@link TarefaDTO}.
-     * 
-     * Este método é usado para atualizações parciais, onde apenas alguns campos
-     * do DTO são aplicados à entidade existente.
-     * 
-     * @param dto DTO com os novos dados
-     * @param tarefa Entidade existente a ser atualizada
+     * Ajustado para acessar campos do Record (sem o prefixo 'get').
      */
     public void updateEntityFromDTO(TarefaDTO dto, Tarefa tarefa) {
         if (dto == null || tarefa == null) {
@@ -97,12 +83,9 @@ public class TarefaMapper {
     }
 
     // ==========================================
-    // MÉTODOS AUXILIARES PRIVADOS
+    // MÉTODOS AUXILIARES PRIVADOS (Restaurados)
     // ==========================================
 
-    /**
-     * Extrai o nome do responsável de forma null-safe.
-     */
     private String extrairNomeResponsavel(Tarefa tarefa) {
         if (tarefa.getResponsavel() == null) {
             return null;
@@ -110,9 +93,6 @@ public class TarefaMapper {
         return tarefa.getResponsavel().getNome();
     }
 
-    /**
-     * Extrai o ID do responsável de forma null-safe.
-     */
     private Long extrairIdResponsavel(Tarefa tarefa) {
         if (tarefa.getResponsavel() == null) {
             return null;
@@ -120,9 +100,6 @@ public class TarefaMapper {
         return tarefa.getResponsavel().getId();
     }
 
-    /**
-     * Extrai o ID do projeto de forma null-safe.
-     */
     private Long extrairIdProjeto(Tarefa tarefa) {
         if (tarefa.getProjeto() == null) {
             return null;
@@ -130,9 +107,6 @@ public class TarefaMapper {
         return tarefa.getProjeto().getId();
     }
 
-    /**
-     * Extrai o nome do projeto de forma null-safe.
-     */
     private String extrairNomeProjeto(Tarefa tarefa) {
         if (tarefa.getProjeto() == null) {
             return null;
@@ -140,15 +114,6 @@ public class TarefaMapper {
         return tarefa.getProjeto().getNome();
     }
 
-    /**
-     * Calcula se a tarefa está atrasada com base na data de vencimento e status.
-     * 
-     * Uma tarefa é considerada atrasada se:
-     * - Tem data de vencimento definida
-     * - A data de vencimento é anterior à data atual
-     * - NÃO está concluída (CONCLUIDA)
-     * - NÃO está cancelada (CANCELADA)
-     */
     private boolean calcularAtraso(Tarefa tarefa) {
         if (tarefa.getDataVencimento() == null) {
             return false;

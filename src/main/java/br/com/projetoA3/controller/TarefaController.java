@@ -23,14 +23,7 @@ import java.util.Map;
 
 /**
  * Controller responsável por orquestrar requisições HTTP relacionadas a Tarefas.
- * 
- * Princípios aplicados:
- * - Injeção por construtor (sem @Autowired em campo)
- * - Zero lógica de negócio - apenas delegação ao Service
- * - Uso de @AuthenticationPrincipal para obter o usuário logado
- * - Uso de ResponseEntity para endpoints AJAX (Drag & Drop do Kanban)
- * - Validação com @Valid + BindingResult
- * - Feedback ao usuário via RedirectAttributes
+ * Restaurado com lógica completa e corrigido para compatibilidade com Records e Kanban UI.
  */
 @Controller
 @RequestMapping("/tarefas")
@@ -40,9 +33,6 @@ public class TarefaController {
     private final ProjetoService projetoService;
     private final UsuarioService usuarioService;
 
-    /**
-     * Injeção de dependências via construtor (padrão Spring moderno).
-     */
     public TarefaController(TarefaService tarefaService,
                             ProjetoService projetoService,
                             UsuarioService usuarioService) {
@@ -55,9 +45,6 @@ public class TarefaController {
     // LISTAGENS E VISUALIZAÇÕES
     // ==========================================
 
-    /**
-     * Lista todas as tarefas do sistema (visão geral).
-     */
     @GetMapping
     public String listar(Model model) {
         List<TarefaDTO> tarefas = tarefaService.findAll();
@@ -66,10 +53,6 @@ public class TarefaController {
         return "tarefa/list";
     }
 
-    /**
-     * Exibe o quadro Kanban de um projeto específico.
-     * O KanbanViewModel já vem pronto do Service com todas as métricas calculadas.
-     */
     @GetMapping("/kanban/{projetoId}")
     public String kanban(@PathVariable Long projetoId,
                          Model model,
@@ -84,9 +67,10 @@ public class TarefaController {
         model.addAttribute("totalTarefas", kanban.getTotalTarefas());
         model.addAttribute("activePage", "tarefas");
         
-        // Mantém compatibilidade com template existente (tarefas separadas por status)
+        // ✅ CORREÇÃO: Sincronizado nome da variável com o esperado pelo template kanban.html
+        // Alterado de "tarefasEmProgresso" para "tarefasEmAndamento" para resolver o erro de "null size"
         model.addAttribute("tarefasAFazer", kanban.getTarefasAFazer());
-        model.addAttribute("tarefasEmProgresso", kanban.getTarefasEmAndamento());
+        model.addAttribute("tarefasEmAndamento", kanban.getTarefasEmAndamento());
         model.addAttribute("tarefasConcluidas", kanban.getTarefasConcluidas());
         model.addAttribute("tarefasCanceladas", kanban.getTarefasCanceladas());
         
@@ -97,14 +81,8 @@ public class TarefaController {
     // CRUD - FORMULÁRIOS
     // ==========================================
 
-    /**
-     * Exibe formulário para criar uma nova tarefa.
-     * 
-     * @param projetoId ID do projeto ao qual a tarefa será associada (obrigatório)
-     */
     @GetMapping("/novo")
     public String novo(@RequestParam Long projetoId, Model model) {
-        // Verifica se o projeto existe
         if (projetoService.findById(projetoId).isEmpty()) {
             model.addAttribute("erro", "Projeto não encontrado: " + projetoId);
             return "redirect:/projetos";
@@ -123,9 +101,6 @@ public class TarefaController {
         return "tarefa/form";
     }
 
-    /**
-     * Salva uma nova tarefa.
-     */
     @PostMapping
     public String salvar(@Valid @ModelAttribute Tarefa tarefa,
                          BindingResult result,
@@ -158,9 +133,6 @@ public class TarefaController {
         }
     }
 
-    /**
-     * Exibe formulário para editar uma tarefa existente.
-     */
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model, RedirectAttributes attributes) {
         try {
@@ -181,9 +153,6 @@ public class TarefaController {
         }
     }
 
-    /**
-     * Atualiza uma tarefa existente.
-     */
     @PostMapping("/atualizar/{id}")
     public String atualizar(@PathVariable Long id,
                             @Valid @ModelAttribute Tarefa tarefa,
@@ -210,9 +179,6 @@ public class TarefaController {
         }
     }
 
-    /**
-     * Remove uma tarefa.
-     */
     @GetMapping("/deletar/{id}")
     public String deletar(@PathVariable Long id, RedirectAttributes attributes) {
         try {
@@ -236,15 +202,6 @@ public class TarefaController {
     // ENDPOINT AJAX - DRAG & DROP DO KANBAN
     // ==========================================
 
-    /**
-     * Move uma tarefa para outro status (chamado via JavaScript/AJAX).
-     * 
-     * Espera receber os parâmetros:
-     * - tarefaId: ID da tarefa
-     * - novoStatus: nome do novo status (A_FAZER, EM_ANDAMENTO, CONCLUIDA, CANCELADA)
-     * 
-     * Retorna JSON com sucesso ou erro para o frontend processar.
-     */
     @PostMapping("/mover")
     @ResponseBody
     public ResponseEntity<?> moverTarefa(@RequestParam Long tarefaId,

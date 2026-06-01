@@ -20,18 +20,20 @@
             <h2>
                 <i class="bi bi-list-check text-primary"></i> Gerenciamento de Tarefas
             </h2>
-            <a href="/projetos" class="btn btn-outline-secondary">
-                <i class="bi bi-arrow-left"></i> Voltar ao Menu
-            </a>
+            <div class="d-flex gap-2">
+                <a href="/projetos" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Voltar aos Projetos
+                </a>
+            </div>
         </div>
 
         <!-- Mensagens de Feedback -->
-        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
             <i class="bi bi-check-circle-fill me-2"></i>
             <span th:text="${sucesso}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <span th:text="${erro}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -41,13 +43,13 @@
         <div class="card shadow-sm border-0">
             <div class="card-body">
 
-                <!-- Estado Vazio (Nenhuma tarefa) -->
+                <!-- Estado Vazio -->
                 <div th:if="${tarefas == null or #lists.isEmpty(tarefas)}" class="text-center py-5">
                     <i class="bi bi-inbox" style="font-size: 4rem; color: #ccc;"></i>
-                    <h5 class="mt-3">Nenhuma tarefa cadastrada ainda.</h5>
-                    <p class="text-muted">Crie um projeto e adicione tarefas para começar.</p>
+                    <h5 class="mt-3">Nenhuma tarefa encontrada.</h5>
+                    <p class="text-muted">As tarefas aparecem aqui após serem criadas dentro de um projeto.</p>
                     <a href="/projetos" class="btn btn-primary mt-2">
-                        <i class="bi bi-folder-plus"></i> Criar um Projeto
+                        <i class="bi bi-folder2-open"></i> Ver Projetos
                     </a>
                 </div>
 
@@ -56,7 +58,6 @@
                     <table class="table table-hover align-middle">
                         <thead class="table-light">
                             <tr>
-                                <th>ID</th>
                                 <th>Título</th>
                                 <th>Projeto</th>
                                 <th>Responsável</th>
@@ -68,46 +69,45 @@
                         </thead>
                         <tbody>
                             <tr th:each="tarefa : ${tarefas}">
-                                <td th:text="${tarefa.id}"></td>
                                 <td>
-                                    <strong th:text="${tarefa.titulo}">Título da Tarefa</strong>
+                                    <strong th:text="${tarefa.titulo}">Título</strong>
                                     <br>
-                                    <small class="text-muted" th:text="${#strings.abbreviate(tarefa.descricao, 50)}"></small>
-                                </td>
-                                <!-- ✅ CORREÇÃO: Usando projetoNome (String) em vez de projeto.nome (objeto) -->
-                                <td>
-                                    <span th:text="${tarefa.projetoNome != null ? tarefa.projetoNome : '-'}"></span>
+                                    <small class="text-muted" th:text="${tarefa.descricao != null and #strings.length(tarefa.descricao) > 40 ? #strings.substring(tarefa.descricao, 0, 40) + '...' : tarefa.descricao}"></small>
                                 </td>
                                 <td>
-                                    <span th:text="${tarefa.responsavelNome != null ? tarefa.responsavelNome : 'Não atribuído'}"></span>
+                                    <span class="badge bg-light text-dark border" th:text="${tarefa.getProjetoNomeOuTraco()}">Projeto</span>
                                 </td>
                                 <td>
-                                    <!-- ✅ Expressão ternária em único ${} para evitar erro de parsing -->
-                                    <span class="badge"
-                                          th:classappend="${(tarefa.prioridade == 'ALTA' or tarefa.prioridade == 'CRITICA') ? 'bg-danger' : (tarefa.prioridade == 'MEDIA' ? 'bg-warning text-dark' : 'bg-success')}"
-                                          th:text="${tarefa.prioridade}">
-                                    </span>
+                                    <i class="bi bi-person text-muted me-1"></i>
+                                    <span th:text="${tarefa.getResponsavelNomeOuTraco()}">Responsável</span>
                                 </td>
                                 <td>
-                                    <span th:text="${tarefa.dataVencimento != null ? #temporals.format(tarefa.dataVencimento, 'dd/MM/yyyy') : '-'}"></span>
-                                    <span th:if="${tarefa.atrasada}" class="badge bg-danger ms-1">Atrasada</span>
+                                    <!-- ✅ Uso dos métodos do Record TarefaDTO para badges CSS -->
+                                    <span th:class="'badge ' + ${tarefa.getPrioridadeCssClass()}" 
+                                          th:text="${tarefa.getPrioridadeDescricao()}">Prioridade</span>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary" th:text="${tarefa.status}"></span>
+                                    <div th:if="${tarefa.dataVencimento != null}">
+                                        <span th:text="${#temporals.format(tarefa.dataVencimento, 'dd/MM/yyyy')}">01/01/2026</span>
+                                        <i th:if="${tarefa.atrasada}" class="bi bi-exclamation-circle-fill text-danger" title="Atrasada"></i>
+                                    </div>
+                                    <span th:unless="${tarefa.dataVencimento != null}" class="text-muted">-</span>
+                                </td>
+                                <td>
+                                    <span th:class="'badge ' + ${tarefa.getStatusCssClass()}" 
+                                          th:text="${tarefa.getStatusDescricao()}">Status</span>
                                 </td>
                                 <td class="text-end">
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <!-- Editar -->
-                                        <a th:href="@{/tarefas/editar/{id}(id=${tarefa.id})}" class="btn btn-outline-warning" title="Editar">
-                                            <i class="bi bi-pencil-fill"></i>
+                                    <div class="btn-group">
+                                        <a th:href="@{/tarefas/editar/{id}(id=${tarefa.id})}" class="btn btn-sm btn-outline-primary" title="Editar">
+                                            <i class="bi bi-pencil"></i>
                                         </a>
-                                        <!-- Excluir -->
-                                        <form th:action="@{/tarefas/deletar/{id}(id=${tarefa.id})}" method="post" style="display:inline;"
-                                              onsubmit="return confirm('Tem certeza que deseja excluir esta tarefa?');">
-                                            <button type="submit" class="btn btn-outline-danger" title="Excluir">
-                                                <i class="bi bi-trash-fill"></i>
-                                            </button>
-                                        </form>
+                                        <a th:href="@{/tarefas/deletar/{id}(id=${tarefa.id})}" 
+                                           class="btn btn-sm btn-outline-danger" 
+                                           title="Excluir"
+                                           onclick="return confirm('Tem certeza que deseja remover esta tarefa?')">
+                                            <i class="bi bi-trash"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -119,10 +119,8 @@
         </div>
     </div>
 
-    <!-- Footer Global -->
+    <!-- Fragmentos Globais -->
     <div th:replace="~{common/footer :: footer}"></div>
-    
-    <!-- Botão de Tema -->
     <div th:replace="~{common/theme-toggle :: toggle}"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
