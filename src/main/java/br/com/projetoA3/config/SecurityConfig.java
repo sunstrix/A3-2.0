@@ -16,6 +16,9 @@ import org.springframework.security.web.SecurityFilterChain;
 /**
  * Configuração do Spring Security para Spring Boot 3.x / Spring Security 6.x
  * 
+ * ✅ BUG 1 FIX: Autorização de /usuarios/** apenas para ADMINISTRADOR
+ * ✅ BUG 2 FIX: Autorização de /relatorios/** para ADMINISTRADOR e GERENTE
+ * 
  * ⚠️ ATENÇÃO: Usa NoOpPasswordEncoder (senhas em texto puro) apenas para
  * fins acadêmicos/demonstração. Em produção, SEMPRE use BCrypt ou similar.
  */
@@ -33,13 +36,32 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         return http
+            // ==========================================
+            // AUTORIZAÇÃO DE REQUISIÇÕES
+            // ==========================================
             .authorizeHttpRequests(auth -> auth
+                // Recursos estáticos públicos (CSS, JS, imagens)
                 .requestMatchers("/css/**", "/js/**", "/img/**", "/webjars/**").permitAll()
+                
+                // Páginas de autenticação públicas
                 .requestMatchers("/login", "/registro", "/erro/**").permitAll()
-                .requestMatchers("/configuracoes/**").hasRole("ADMINISTRADOR")
+                
+                // ✅ BUG 1 FIX: Área de Usuários restrita ao ADMINISTRADOR
+                .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
+                
+                // ✅ BUG 2 FIX: Relatórios disponíveis para ADMINISTRADOR e GERENTE
                 .requestMatchers("/relatorios/**").hasAnyRole("ADMINISTRADOR", "GERENTE")
+                
+                // Área de configurações restrita ao ADMINISTRADOR
+                .requestMatchers("/configuracoes/**").hasRole("ADMINISTRADOR")
+                
+                // Demais endpoints exigem autenticação
                 .anyRequest().authenticated()
             )
+            
+            // ==========================================
+            // FORMULÁRIO DE LOGIN PERSONALIZADO
+            // ==========================================
             .formLogin(form -> form
                 .loginPage("/login")
                 .loginProcessingUrl("/login")
@@ -49,6 +71,10 @@ public class SecurityConfig {
                 .passwordParameter("senha")
                 .permitAll()
             )
+            
+            // ==========================================
+            // LOGOUT SEGURO
+            // ==========================================
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login?logout=true")
@@ -56,16 +82,31 @@ public class SecurityConfig {
                 .deleteCookies("JSESSIONID")
                 .permitAll()
             )
+            
+            // ==========================================
+            // GERENCIAMENTO DE SESSÃO
+            // ==========================================
             .sessionManagement(session -> session
                 .maximumSessions(1)
                 .expiredUrl("/login?expired=true")
                 .maxSessionsPreventsLogin(false)
             )
+            
+            // ==========================================
+            // PROTEÇÃO CSRF
+            // ==========================================
             .csrf(csrf -> {})
+            
+            // ==========================================
+            // HEADERS DE SEGURANÇA
+            // ==========================================
             .headers(headers -> headers
                 .frameOptions(frame -> frame.deny())
             )
+            
+            // USA NOSSO AUTHENTICATION PROVIDER PERSONALIZADO
             .authenticationProvider(authenticationProvider())
+            
             .build();
     }
 
@@ -87,6 +128,7 @@ public class SecurityConfig {
      * Aceita senhas em texto puro para facilitar testes acadêmicos.
      */
     @Bean
+    @SuppressWarnings("deprecation")
     public PasswordEncoder passwordEncoder() {
         return NoOpPasswordEncoder.getInstance();
     }
