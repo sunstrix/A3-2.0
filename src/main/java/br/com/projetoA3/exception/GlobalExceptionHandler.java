@@ -1,73 +1,66 @@
 package br.com.projetoA3.exception;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.servlet.ModelAndView;
-
-import java.util.stream.Collectors;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 /**
- * Centralizador de tratamento de exceções da aplicação.
- * ✅ Refatoração Sênior: Evita exposição de stack traces e melhora a UX.
+ * Handler global de exceções utilizando @ControllerAdvice.
+ * Centraliza o tratamento de erros, evitando exposição de stack traces
+ * e garantindo feedback amigável ao usuário final.
  */
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
     /**
-     * Trata erros de recurso não encontrado (404).
+     * Captura entidades não encontradas no banco (ex: Projeto, Tarefa, Equipe)
      */
     @ExceptionHandler(EntityNotFoundException.class)
-    @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ModelAndView handleEntityNotFound(EntityNotFoundException ex) {
-        ModelAndView mav = new ModelAndView("erro/404");
-        mav.addObject("mensagem", "O recurso solicitado não foi encontrado em nosso banco de dados.");
-        mav.addObject("detalhe", ex.getMessage());
-        return mav;
+    public String handleNotFound(EntityNotFoundException ex, Model model) {
+        model.addAttribute("mensagem", ex.getMessage());
+        model.addAttribute("codigo", 404);
+        return "error/404";
     }
 
     /**
-     * Trata erros de permissão negada (403).
+     * Captura negações de acesso pelo Spring Security
      */
     @ExceptionHandler(AccessDeniedException.class)
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ModelAndView handleAccessDenied(AccessDeniedException ex) {
-        ModelAndView mav = new ModelAndView("erro/403");
-        mav.addObject("mensagem", "Você não possui permissão suficiente para realizar esta ação.");
-        return mav;
+    public String handleForbidden(AccessDeniedException ex, Model model) {
+        model.addAttribute("mensagem", "Acesso negado. Você não tem permissão para realizar esta ação.");
+        model.addAttribute("codigo", 403);
+        return "error/403";
     }
 
     /**
-     * Trata erros de validação de formulários (400).
+     * Captura violações de regras de negócio definidas no sistema
      */
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ModelAndView handleValidationErrors(MethodArgumentNotValidException ex) {
-        ModelAndView mav = new ModelAndView("erro/400");
-        String erros = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .collect(Collectors.joining(", "));
-        
-        mav.addObject("mensagem", "Existem erros no preenchimento dos campos.");
-        mav.addObject("erros", erros);
-        return mav;
+    @ExceptionHandler(RegraDeNegocioException.class)
+    public String handleBusinessRule(RegraDeNegocioException ex, RedirectAttributes attributes) {
+        attributes.addFlashAttribute("erro", ex.getMessage());
+        return "redirect:/menu";
     }
 
     /**
-     * Handler genérico para qualquer outra exceção não tratada (500).
-     * ✅ SEGURANÇA: Oculta detalhes técnicos em produção.
+     * Captura tentativas de acesso bloqueadas por lógica de negócio
+     */
+    @ExceptionHandler(AcessoNegadoException.class)
+    public String handleBusinessAccess(AcessoNegadoException ex, RedirectAttributes attributes) {
+        attributes.addFlashAttribute("erro", ex.getMessage());
+        return "redirect:/menu";
+    }
+
+    /**
+     * Captura qualquer exceção não tratada (fallback seguro)
      */
     @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ModelAndView handleGenericException(Exception ex) {
-        ModelAndView mav = new ModelAndView("erro/500");
-        mav.addObject("mensagem", "Ocorreu um erro interno inesperado.");
-        // Em um cenário real de produção, aqui faríamos o LOG do erro mas não mostraríamos o stacktrace no View
-        return mav;
+    public String handleGeneric(Exception ex, Model model) {
+        // Em produção, adicione logging: log.error("Erro inesperado", ex);
+        model.addAttribute("mensagem", "Ocorreu um erro interno no sistema. Tente novamente mais tarde.");
+        model.addAttribute("codigo", 500);
+        return "error/500";
     }
 }
