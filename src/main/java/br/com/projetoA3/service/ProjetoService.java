@@ -31,11 +31,6 @@ public class ProjetoService {
         return projetoRepository.findByStatus(status);
     }
 
-    // ✅ Buscar projetos atribuídos a um gerente específico
-    public List<Projeto> findByGerenteId(Long gerenteId) {
-        return projetoRepository.findByGerenteId(gerenteId);
-    }
-
     // ✅ Salvar ou atualizar projeto
     public Projeto save(Projeto projeto) {
         return projetoRepository.save(projeto);
