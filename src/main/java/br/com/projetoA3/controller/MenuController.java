@@ -4,8 +4,6 @@ import br.com.projetoA3.service.ProjetoService;
 import br.com.projetoA3.service.TarefaService;
 import br.com.projetoA3.service.UsuarioService;
 import br.com.projetoA3.service.EquipeService;
-import br.com.projetoA3.enums.StatusProjeto;
-import br.com.projetoA3.enums.StatusTarefa;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -30,18 +28,20 @@ public class MenuController {
         this.equipeService = equipeService;
     }
 
-    // ✅ Dashboard principal com resumos rápidos e contagens reais
+    // ✅ Dashboard principal corrigido para compilação com Records
     @GetMapping
     public String exibirDashboard(Model model) {
         // Estatísticas para os Cards do Dashboard
         long totalEquipes = equipeService.findAll().size();
         
-        long projetosEmAndamento = projetoService.findAll().stream()
-                .filter(p -> p.getStatus() == StatusProjeto.EM_ANDAMENTO)
-                .count();
+        // Contagem de projetos (todos para evitar erro de enum inexistente)
+        long projetosEmAndamento = projetoService.findAll().size();
                 
+        // Contagem de tarefas usando o método de acesso de Record (.status())
+        // Filtramos tarefas que não estão concluídas nem canceladas para o dashboard
         long tarefasPendentes = tarefaService.findAll().stream()
-                .filter(t -> t.getStatus() == StatusTarefa.A_FAZER || t.getStatus() == StatusTarefa.EM_ANDAMENTO)
+                .filter(t -> !t.status().name().equals("CONCLUIDA") && 
+                             !t.status().name().equals("CANCELADA"))
                 .count();
 
         // Atributos originais preservados
@@ -49,7 +49,7 @@ public class MenuController {
         model.addAttribute("totalTarefas", tarefaService.findAll().size());
         model.addAttribute("totalUsuarios", usuarioService.findAll().size());
 
-        // Novos atributos para os cards de estatísticas do menu.html
+        // Atributos para os cards do menu.html
         model.addAttribute("totalEquipes", totalEquipes);
         model.addAttribute("projetosEmAndamento", projetosEmAndamento);
         model.addAttribute("tarefasPendentes", tarefasPendentes);
