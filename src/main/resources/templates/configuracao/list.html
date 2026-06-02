@@ -9,20 +9,55 @@
     <link rel="stylesheet" href="/css/main.css">
     <style>
         body { background-color: var(--bg-secondary); color: var(--text-primary); }
+        
         .page-header { 
-            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); 
-            color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px;
+            background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); 
+            color: white; padding: 2rem 0; margin-bottom: 2rem; border-radius: 0 0 16px 16px;
             box-shadow: var(--shadow-md);
         }
+
         .config-container { 
             background-color: var(--bg-primary); 
-            padding: 2rem; border-radius: 12px; 
+            padding: 2.5rem; 
+            border-radius: 12px; 
             border: 1px solid var(--border-color);
             box-shadow: var(--shadow-lg); 
         }
+
+        /* Estilização da Tabela Técnica */
+        .table { color: var(--text-primary); margin-bottom: 0; }
+        .table thead th {
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+            padding: 1rem;
+        }
         .config-row { border-bottom: 1px solid var(--border-color); }
         .config-row:last-child { border-bottom: none; }
-        code { color: var(--warning) !important; background-color: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 4px; }
+
+        /* Estilização dos Inputs dentro da tabela */
+        .form-control {
+            background-color: var(--bg-tertiary) !important;
+            border: 1px solid var(--border-color) !important;
+            color: var(--text-primary) !important;
+        }
+        .form-control:focus {
+            border-color: var(--primary) !important;
+            box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.15) !important;
+        }
+
+        code { 
+            color: var(--warning) !important; 
+            background-color: rgba(0, 0, 0, 0.4); 
+            padding: 4px 8px; 
+            border-radius: 6px; 
+            font-size: 0.9rem;
+            border: 1px solid rgba(245, 158, 11, 0.2);
+        }
+
         .navbar-custom { background-color: var(--bg-primary); border-bottom: 1px solid var(--border-color); }
     </style>
 </head>
@@ -30,11 +65,11 @@
     <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm mb-3">
         <div class="container">
             <a class="navbar-brand fw-bold" href="/menu" style="color: var(--primary);">
-                <i class="bi bi-arrow-left-circle me-1"></i> Voltar ao Menu
+                <i class="bi bi-arrow-left-circle me-2"></i>Voltar ao Painel
             </a>
             <div class="ms-auto">
-                <form th:action="@{/logout}" method="post" class="d-inline">
-                    <button type="submit" class="btn btn-outline-danger btn-sm">Sair</button>
+                <form th:action="@{/logout}" method="post" class="m-0">
+                    <button type="submit" class="btn btn-outline-danger btn-sm px-3">Sair</button>
                 </form>
             </div>
         </div>
@@ -42,37 +77,41 @@
 
     <div class="container fade-in">
         <div class="page-header px-4">
-            <h2 class="mb-0"><i class="bi bi-gear-wide-connected me-2"></i>Configurações de E-mail (SMTP)</h2>
+            <h2 class="mb-0 fw-bold"><i class="bi bi-gear-wide-connected me-3"></i>Configurações de E-mail (SMTP)</h2>
         </div>
 
-        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert" style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid var(--success);">
+        <!-- Alertas de Feedback -->
+        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert" style="background-color: rgba(16, 185, 129, 0.1); color: #10b981; border: 1px solid var(--success);">
             <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${sucesso}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
         </div>
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid var(--danger);">
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid var(--danger);">
             <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${erro}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
         </div>
 
         <div class="config-container mb-5">
-            <p style="color: var(--text-secondary);" class="mb-4">
-                <i class="bi bi-info-circle me-1"></i> Preencha os dados do seu servidor SMTP. O sistema lerá essas configurações em tempo real para o envio de relatórios.
-            </p>
+            <div class="d-flex align-items-center mb-4 p-3 rounded" style="background-color: var(--bg-tertiary); border-left: 4px solid var(--info);">
+                <i class="bi bi-info-circle-fill fs-4 text-info me-3"></i>
+                <p style="color: var(--text-secondary);" class="mb-0 small">
+                    As configurações de SMTP são aplicadas globalmente para o envio de relatórios e notificações. Certifique-se de que os dados estão corretos para evitar falhas na fila de processamento.
+                </p>
+            </div>
 
             <form th:action="@{/configuracoes/salvar}" method="post">
                 <div class="table-responsive">
-                    <table class="table table-borderless align-middle mb-0">
+                    <table class="table table-borderless align-middle">
                         <thead>
-                            <tr style="background-color: var(--bg-tertiary); border-bottom: 2px solid var(--border-color);">
-                                <th style="width: 25%; color: var(--text-secondary);">Parâmetro</th>
-                                <th style="width: 55%; color: var(--text-secondary);">Valor da Configuração</th>
-                                <th style="width: 20%; color: var(--text-secondary);">Uso</th>
+                            <tr>
+                                <th style="width: 25%">Parâmetro</th>
+                                <th style="width: 50%">Valor Definido</th>
+                                <th style="width: 25%">Descrição Técnica</th>
                             </tr>
                         </thead>
                         <tbody>
                             <!-- HOST -->
                             <tr class="config-row">
-                                <td class="py-3"><code>EMAIL_HOST</code></td>
+                                <td class="py-4"><code>EMAIL_HOST</code></td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_HOST">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_HOST'][0]?.id}">
@@ -80,12 +119,12 @@
                                            th:value="${#lists.isEmpty(configuracoes) ? 'smtp.gmail.com' : configuracoes.?[chave == 'EMAIL_HOST'][0]?.valor ?: 'smtp.gmail.com'}" 
                                            placeholder="ex: smtp.gmail.com" required>
                                 </td>
-                                <td><small style="color: var(--text-muted);">Servidor de saída</small></td>
+                                <td><span class="text-muted small">Endereço do servidor SMTP</span></td>
                             </tr>
 
                             <!-- PORTA -->
                             <tr class="config-row">
-                                <td class="py-3"><code>EMAIL_PORT</code></td>
+                                <td class="py-4"><code>EMAIL_PORT</code></td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_PORT">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_PORT'][0]?.id}">
@@ -93,12 +132,12 @@
                                            th:value="${#lists.isEmpty(configuracoes) ? '587' : configuracoes.?[chave == 'EMAIL_PORT'][0]?.valor ?: '587'}" 
                                            placeholder="ex: 587" required>
                                 </td>
-                                <td><small style="color: var(--text-muted);">587 (TLS) ou 465 (SSL)</small></td>
+                                <td><span class="text-muted small">Porta (587 TLS / 465 SSL)</span></td>
                             </tr>
 
                             <!-- USUÁRIO -->
                             <tr class="config-row">
-                                <td class="py-3"><code>EMAIL_USUARIO</code></td>
+                                <td class="py-4"><code>EMAIL_USUARIO</code></td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_USUARIO">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_USUARIO'][0]?.id}">
@@ -106,41 +145,41 @@
                                            th:value="${#lists.isEmpty(configuracoes) ? '' : configuracoes.?[chave == 'EMAIL_USUARIO'][0]?.valor}" 
                                            placeholder="seuemail@exemplo.com" required>
                                 </td>
-                                <td><small style="color: var(--text-muted);">Conta de autenticação</small></td>
+                                <td><span class="text-muted small">ID de Autenticação</span></td>
                             </tr>
 
                             <!-- SENHA -->
                             <tr class="config-row">
-                                <td class="py-3"><code>EMAIL_SENHA</code></td>
+                                <td class="py-4"><code>EMAIL_SENHA</code></td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_SENHA">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_SENHA'][0]?.id}">
                                     <input type="password" name="valor" class="form-control" 
                                            th:value="${#lists.isEmpty(configuracoes) ? '' : configuracoes.?[chave == 'EMAIL_SENHA'][0]?.valor}" 
-                                           placeholder="Senha de App" required>
+                                           placeholder="••••••••••••" required>
                                 </td>
-                                <td><small style="color: var(--text-muted);">Senha de aplicativo</small></td>
+                                <td><span class="text-muted small">Token ou Senha de App</span></td>
                             </tr>
 
                             <!-- REMETENTE -->
                             <tr class="config-row">
-                                <td class="py-3"><code>EMAIL_REMETENTE</code></td>
+                                <td class="py-4"><code>EMAIL_REMETENTE</code></td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_REMETENTE">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_REMETENTE'][0]?.id}">
                                     <input type="text" name="valor" class="form-control" 
                                            th:value="${#lists.isEmpty(configuracoes) ? 'Sistema A3 2.0' : configuracoes.?[chave == 'EMAIL_REMETENTE'][0]?.valor ?: 'Sistema A3 2.0'}" 
-                                           placeholder="Nome que aparecerá no e-mail">
+                                           placeholder="Nome Amigável">
                                 </td>
-                                <td><small style="color: var(--text-muted);">Nome de exibição</small></td>
+                                <td><span class="text-muted small">Identificação no envio</span></td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="mt-4 d-flex gap-3 border-top pt-4">
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-save me-1"></i> Salvar Alterações
+                <div class="mt-5 d-flex gap-3 border-top pt-4">
+                    <button type="submit" class="btn btn-primary px-5 shadow-sm">
+                        <i class="bi bi-cloud-check me-2"></i>Salvar Alterações
                     </button>
                     <a href="/menu" class="btn btn-outline-secondary">
                         Cancelar
