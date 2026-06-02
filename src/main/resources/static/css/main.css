@@ -1,8 +1,8 @@
 /* ==========================================
-   A3 2.0 - Estilos Globais e UX (DARK MODE DEFAULT)
+   A3 2.0 - Estilos Globais e UX (DARK MODE TOTAL)
    ========================================== */
 
-/* Variáveis de Tema - AGORA DARK POR PADRÃO */
+/* Variáveis de Tema - DARK POR PADRÃO */
 :root {
   --bg-primary: #0f172a;        /* Azul Escuro Profundo (Cards/Navbar) */
   --bg-secondary: #020617;      /* Fundo da Página (Quase Preto) */
@@ -26,153 +26,96 @@
   --transition: all 0.3s ease;
 }
 
-/* Fallback para Light Mode se o usuário explicitamente pedir (opcional) */
-[data-theme="light"] {
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --bg-tertiary: #e9ecef;
-  --text-primary: #212529;
-  --text-secondary: #6c757d;
-  --border-color: #dee2e6;
-}
-
-/* Aplicação Global */
+/* Aplicação Global - Forçando fundo escuro */
 body {
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
+  background-color: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
   font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
   line-height: 1.6;
   transition: var(--transition);
   min-height: 100vh;
 }
 
-/* Cards e Containers */
-.card, .table-container, .form-container, .kanban-column {
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  box-shadow: var(--shadow-md);
-  border-radius: var(--radius-md);
-  transition: var(--transition);
-  color: var(--text-primary);
-}
-
-/* Inputs e Formulários */
-.form-control, .form-select {
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  color: var(--text-primary) !important;
-  border-radius: var(--radius-sm);
-  transition: var(--transition);
-}
-
-.form-control:focus, .form-select:focus {
-  background-color: var(--bg-tertiary);
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.25);
-  color: var(--text-primary);
-}
-
-.form-control::placeholder {
-  color: var(--text-muted);
-}
-
-/* Botões */
-.btn {
-  border-radius: var(--radius-sm);
-  font-weight: 500;
-  transition: var(--transition);
-}
-
-.btn-primary {
-    background-color: var(--primary);
-    border-color: var(--primary);
-}
-
-.btn:hover {
-  transform: translateY(-1px);
-  filter: brightness(1.1);
-}
-
-/* Navbar */
-.navbar {
-  background-color: var(--bg-primary) !important;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.navbar .nav-link, .navbar-brand {
-    color: var(--text-primary) !important;
-}
-
-/* Tabelas Customizadas para Dark Mode */
+/* CORREÇÃO DE TABELAS (Elimina o branco das linhas) */
 .table {
-  color: var(--text-primary);
-  border-color: var(--border-color);
+  color: var(--text-primary) !important;
+  background-color: transparent !important;
+  border-color: var(--border-color) !important;
 }
 
 .table thead th {
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
-    border-bottom: 2px solid var(--border-color);
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-secondary) !important;
+  border-bottom: 2px solid var(--border-color) !important;
+  border-top: none !important;
 }
 
-/* Badges */
-.badge {
-  font-weight: 500;
-  padding: 0.4em 0.8em;
-  border-radius: 20px;
+/* Alvo direto nas células para evitar herança do Bootstrap */
+.table td, .table th, .table tr {
+  background-color: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+  border-color: var(--border-color) !important;
 }
 
-/* Toast Notifications */
-.toast-container {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 10000;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
+.table-hover tbody tr:hover td {
+  background-color: var(--bg-tertiary) !important;
 }
 
-.toast {
-  background: var(--bg-primary);
-  border-left: 4px solid var(--primary);
-  padding: 1rem 1.5rem;
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-lg);
-  min-width: 300px;
-  color: var(--text-primary);
-}
-
-/* Botão de Alternar Tema (UX Preservada) */
-.theme-toggle {
-  position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  background: var(--primary);
-  color: white;
-  border: none;
+/* CARDS E CONTAINERS */
+.card, .table-container, .form-container, .kanban-column, .card-table {
+  background-color: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
   box-shadow: var(--shadow-md);
-  cursor: pointer;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  border-radius: var(--radius-md);
+  color: var(--text-primary) !important;
 }
 
-/* Animações */
-.fade-in {
-  animation: fadeIn 0.3s ease;
+.card-body {
+  background-color: transparent !important;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* INPUTS E FORMULÁRIOS */
+.form-control, .form-select, .input-group-text {
+  background-color: var(--bg-tertiary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-sm);
 }
 
-/* Ajustes Mobile */
-@media (max-width: 768px) {
-  .container { padding-left: 1rem; padding-right: 1rem; }
+.form-control:focus, .form-select:focus {
+  background-color: var(--bg-tertiary) !important;
+  border-color: var(--primary) !important;
+  box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25) !important;
+}
+
+.form-control::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* BOTÕES */
+.btn-primary { background-color: var(--primary) !important; border-color: var(--primary) !important; }
+.btn-primary:hover { filter: brightness(1.2); }
+
+/* NAVBAR */
+.navbar {
+  background-color: var(--bg-primary) !important;
+  border-bottom: 1px solid var(--border-color) !important;
+}
+.navbar .nav-link, .navbar-brand { color: var(--text-primary) !important; }
+
+/* OVERRIDE DE CLASSES UTILITÁRIAS DO BOOTSTRAP */
+.bg-white, .bg-light, .table-light { background-color: var(--bg-primary) !important; }
+.bg-light-subtle { background-color: var(--bg-tertiary) !important; }
+.text-dark { color: var(--text-primary) !important; }
+.text-muted { color: var(--text-secondary) !important; }
+
+/* ANIMAÇÕES */
+.fade-in { animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* TOASTS */
+.toast {
+  background-color: var(--bg-primary) !important;
+  border: 1px solid var(--border-color) !important;
+  color: var(--text-primary) !important;
 }
