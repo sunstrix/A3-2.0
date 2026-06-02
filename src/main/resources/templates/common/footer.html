@@ -5,17 +5,18 @@
 </head>
 <body>
 
-    <!-- Fragmento do Rodapé -->
-    <footer th:fragment="footer" class="mt-5 py-4 border-top text-center text-muted" style="background-color: var(--bg-primary);">
+    <!-- Fragmento do Rodapé (Refatorado para Dark Mode) -->
+    <footer th:fragment="footer" class="mt-5 py-4 text-center" 
+            style="background-color: var(--bg-primary); border-top: 1px solid var(--border-color); color: var(--text-secondary);">
         <div class="container">
             <div class="row align-items-center">
                 <div class="col-md-6 text-md-start">
-                    <span class="fw-semibold text-primary">A3 2.0</span> &copy; <span th:text="${#dates.year(#dates.createNow())}">2026</span>
-                    <span class="mx-2">|</span>
+                    <span class="fw-bold" style="color: var(--primary);">A3 2.0</span> &copy; <span th:text="${#dates.year(#dates.createNow())}">2026</span>
+                    <span class="mx-2" style="color: var(--border-color);">|</span>
                     <small>Sistema de Gestão de Projetos</small>
                 </div>
                 <div class="col-md-6 text-md-end mt-2 mt-md-0">
-                    <span class="badge bg-secondary">v2.0.0</span>
+                    <span class="badge" style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);">v2.0.0</span>
                     <span class="ms-2 small">Desenvolvido com Spring Boot & Thymeleaf</span>
                 </div>
             </div>

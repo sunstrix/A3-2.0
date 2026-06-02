@@ -9,12 +9,13 @@
     <link rel="stylesheet" href="/css/main.css">
     <style>
         body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: var(--bg-secondary);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            color: var(--text-primary);
         }
         .login-container {
             max-width: 420px;
@@ -22,10 +23,11 @@
             padding: 1rem;
         }
         .login-card {
-            background: white;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 2.5rem 2rem;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: var(--shadow-lg);
         }
         .login-header {
             text-align: center;
@@ -33,92 +35,98 @@
         }
         .login-header i {
             font-size: 3.5rem;
-            color: #4f46e5;
+            color: var(--primary);
             margin-bottom: 1rem;
         }
         .login-header h2 {
             font-weight: 700;
-            color: #1e293b;
+            color: var(--text-primary);
         }
         .form-label {
             font-weight: 600;
-            color: #475569;
+            color: var(--text-secondary);
             font-size: 0.9rem;
         }
         .form-control {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
             padding: 0.75rem 1rem;
             border-radius: 8px;
-            border: 2px solid #e2e8f0;
-            transition: all 0.2s;
         }
         .form-control:focus {
-            border-color: #4f46e5;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.15);
+            background-color: var(--bg-tertiary);
+            border-color: var(--primary);
+            color: var(--text-primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
         }
         .btn-login {
-            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
             border: none;
             padding: 0.85rem;
             font-weight: 600;
             font-size: 1rem;
             border-radius: 8px;
             transition: all 0.2s;
+            color: white;
         }
         .btn-login:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.4);
+            box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+            color: white;
         }
         .input-group-text {
-            background: #f8fafc;
-            border: 2px solid #e2e8f0;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
             border-right: none;
-            color: #64748b;
+            color: var(--text-muted);
         }
         .input-group .form-control {
             border-left: none;
         }
         .credentials-hint {
-            background: #f1f5f9;
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
             border-radius: 8px;
             padding: 1rem;
             margin-top: 1.5rem;
             font-size: 0.85rem;
         }
         .credentials-hint strong {
-            color: #4f46e5;
+            color: var(--primary);
+        }
+        code {
+            color: var(--warning);
+            background: rgba(0,0,0,0.2);
+            padding: 2px 4px;
+            border-radius: 4px;
         }
     </style>
 </head>
 <body>
     <div class="login-container">
-        <div class="login-card">
+        <div class="login-card fade-in">
             <div class="login-header">
                 <i class="bi bi-kanban-fill"></i>
                 <h2>A3 2.0</h2>
-                <p class="text-muted mb-0">Sistema de Gestão de Projetos</p>
+                <p class="mb-0" style="color: var(--text-secondary);">Sistema de Gestão de Projetos</p>
             </div>
 
             <!-- Mensagem de Erro -->
             <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center" role="alert">
                 <i class="bi bi-exclamation-triangle-fill me-2"></i>
                 <div>
-                    <strong>⚠️ Login ou senha inválidos.</strong><br>
-                    <small>Verifique suas credenciais e tente novamente.</small>
+                    <strong class="small">Login ou senha inválidos.</strong>
                 </div>
             </div>
 
             <!-- Mensagem de Logout -->
             <div th:if="${param.logout}" class="alert alert-info d-flex align-items-center" role="alert">
                 <i class="bi bi-info-circle-fill me-2"></i>
-                <div>Você saiu do sistema com sucesso.</div>
+                <div class="small">Você saiu do sistema com sucesso.</div>
             </div>
 
-            <!-- ✅ FORMULÁRIO DE LOGIN -->
-            <!-- IMPORTANTE: O action DEVE apontar para /login (processado pelo Spring Security) -->
-            <!-- Os names dos campos DEVEM corresponder ao configurado no SecurityConfig -->
             <form th:action="@{/login}" method="post">
-                
-                <!-- ✅ Campo LOGIN - name="login" (igual ao usernameParameter do SecurityConfig) -->
                 <div class="mb-3">
                     <label for="login" class="form-label">Usuário</label>
                     <div class="input-group">
@@ -134,7 +142,6 @@
                     </div>
                 </div>
 
-                <!-- ✅ Campo SENHA - name="senha" (igual ao passwordParameter do SecurityConfig) -->
                 <div class="mb-4">
                     <label for="senha" class="form-label">Senha</label>
                     <div class="input-group">
@@ -154,13 +161,11 @@
                 </button>
             </form>
 
-            <!-- Credenciais de Teste -->
             <div class="credentials-hint">
                 <strong>🔑 Usuários de teste:</strong>
-                <div class="mt-2">
-                    <div><code>admin</code> / <code>admin123</code> (Administrador)</div>
-                    <div><code>gerente</code> / <code>gerente123</code> (Gerente)</div>
-                    <div><code>colaborador</code> / <code>colab123</code> (Colaborador)</div>
+                <div class="mt-2" style="color: var(--text-secondary);">
+                    <div><code>admin</code> / <code>admin123</code></div>
+                    <div><code>gerente</code> / <code>gerente123</code></div>
                 </div>
             </div>
         </div>

@@ -10,45 +10,48 @@
     <style>
         .project-card {
             transition: all 0.2s ease;
-            border: none;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
             border-radius: 12px;
             height: 100%;
         }
         .project-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--primary);
         }
         .project-status {
             font-size: 0.75rem;
             padding: 0.35rem 0.65rem;
             border-radius: 6px;
             font-weight: 600;
+            color: white;
         }
         .stat-card {
             transition: transform 0.2s;
-            border: none;
+            border: 1px solid rgba(255,255,255,0.1);
             border-radius: 12px;
         }
         .stat-card:hover {
             transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-md);
         }
     </style>
 </head>
-<body>
+<body style="background-color: var(--bg-secondary); color: var(--text-primary);">
 
     <!-- Navbar Global -->
     <div th:replace="~{common/navbar :: navbar}"></div>
 
-    <div class="container mt-4">
+    <div class="container mt-4 fade-in">
         
         <!-- Mensagens Flash -->
-        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert">
+        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert" style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid var(--success);">
             <i class="bi bi-check-circle-fill me-2"></i>
             <span th:text="${sucesso}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
         </div>
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid var(--danger);">
             <i class="bi bi-exclamation-triangle-fill me-2"></i>
             <span th:text="${erro}"></span>
             <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
@@ -58,9 +61,9 @@
         <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
             <div>
                 <h2 class="fw-bold mb-1">
-                    <i class="bi bi-folder-fill text-primary"></i> Gestão de Projetos
+                    <i class="bi bi-folder-fill" style="color: var(--primary);"></i> Gestão de Projetos
                 </h2>
-                <p class="text-muted mb-0">Gerencie todos os projetos da organização</p>
+                <p style="color: var(--text-secondary);" class="mb-0">Gerencie todos os projetos da organização</p>
             </div>
             <a href="/projetos/novo" class="btn btn-primary">
                 <i class="bi bi-plus-circle me-1"></i> Novo Projeto
@@ -70,7 +73,7 @@
         <!-- Cards de Estatísticas -->
         <div class="row g-3 mb-4">
             <div class="col-md-4">
-                <div class="card stat-card bg-primary text-white shadow-sm">
+                <div class="card stat-card text-white shadow-sm" style="background-color: var(--primary);">
                     <div class="card-body d-flex align-items-center">
                         <i class="bi bi-folder-fill fs-1 me-3 opacity-75"></i>
                         <div>
@@ -81,7 +84,7 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card stat-card bg-success text-white shadow-sm">
+                <div class="card stat-card text-white shadow-sm" style="background-color: var(--success);">
                     <div class="card-body d-flex align-items-center">
                         <i class="bi bi-check-circle-fill fs-1 me-3 opacity-75"></i>
                         <div>
@@ -93,7 +96,7 @@
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card stat-card bg-info text-white shadow-sm">
+                <div class="card stat-card text-white shadow-sm" style="background-color: var(--info);">
                     <div class="card-body d-flex align-items-center">
                         <i class="bi bi-play-circle-fill fs-1 me-3 opacity-75"></i>
                         <div>
@@ -109,10 +112,10 @@
         <!-- Grid de Projetos -->
         <div class="row g-4">
             <div th:if="${#lists.isEmpty(projetos)}" class="col-12">
-                <div class="alert alert-info text-center py-5">
-                    <i class="bi bi-inbox fs-1 d-block mb-2"></i>
-                    <h5>Nenhum projeto cadastrado ainda</h5>
-                    <p class="mb-0">Clique em "Novo Projeto" para começar.</p>
+                <div class="text-center py-5" style="background-color: var(--bg-primary); border: 1px dashed var(--border-color); border-radius: 12px;">
+                    <i class="bi bi-inbox fs-1 d-block mb-2" style="color: var(--text-muted);"></i>
+                    <h5 style="color: var(--text-primary);">Nenhum projeto cadastrado ainda</h5>
+                    <p style="color: var(--text-secondary);" class="mb-0">Clique em "Novo Projeto" para começar.</p>
                 </div>
             </div>
 
@@ -120,8 +123,7 @@
                 <div class="card project-card shadow-sm">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title fw-bold mb-0" th:text="${projeto.nome}">Nome do Projeto</h5>
-                            <!-- ✅ CORREÇÃO: Expressão ternária dentro de um único ${...} -->
+                            <h5 class="card-title fw-bold mb-0" th:text="${projeto.nome}" style="color: var(--text-primary);">Nome do Projeto</h5>
                             <span class="project-status"
                                   th:classappend="${projeto.status.name() == 'PLANEJAMENTO' ? 'bg-secondary' : 
                                                    (projeto.status.name() == 'EM_ANDAMENTO' ? 'bg-primary' : 
@@ -129,20 +131,20 @@
                                   th:text="${projeto.status.name()}">STATUS</span>
                         </div>
                         
-                        <p class="card-text text-muted small mb-3" 
+                        <p class="small mb-3" style="color: var(--text-secondary);" 
                            th:text="${projeto.descricao != null ? #strings.abbreviate(projeto.descricao, 100) : 'Sem descrição'}">
                             Descrição do projeto...
                         </p>
 
                         <div class="mb-3">
-                            <small class="text-muted d-block mb-1">
+                            <small class="d-block mb-1" style="color: var(--text-muted);">
                                 <i class="bi bi-calendar-event me-1"></i>
                                 <span th:text="${projeto.dataInicio != null ? #temporals.format(projeto.dataInicio, 'dd/MM/yyyy') : '-'}"></span>
                                 <span th:if="${projeto.dataTerminoPrevista != null}">
                                     até <span th:text="${#temporals.format(projeto.dataTerminoPrevista, 'dd/MM/yyyy')}"></span>
                                 </span>
                             </small>
-                            <small class="text-muted d-block">
+                            <small class="d-block" style="color: var(--text-muted);">
                                 <i class="bi bi-people-fill me-1"></i>
                                 <span th:text="${projeto.equipe != null ? projeto.equipe.nome : 'Sem equipe'}">Equipe</span>
                             </small>
@@ -154,15 +156,15 @@
                                 <i class="bi bi-kanban-fill"></i> Kanban
                             </a>
                             <a th:href="@{/projetos/editar/{id}(id=${projeto.id})}" 
-                               class="btn btn-sm btn-outline-secondary" title="Editar">
+                               class="btn btn-sm btn-outline-warning" title="Editar">
                                 <i class="bi bi-pencil-fill"></i>
                             </a>
-                            <a th:href="@{/projetos/deletar/{id}(id=${projeto.id})}" 
-                               class="btn btn-sm btn-outline-danger"
-                               title="Remover"
-                               onclick="return confirm('Tem certeza que deseja remover este projeto?');">
-                                <i class="bi bi-trash-fill"></i>
-                            </a>
+                            <form th:action="@{/projetos/deletar/{id}(id=${projeto.id})}" method="get" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-danger" 
+                                        onclick="return confirm('Tem certeza que deseja remover este projeto?');">
+                                    <i class="bi bi-trash-fill"></i>
+                                </button>
+                            </form>
                         </div>
                     </div>
                 </div>

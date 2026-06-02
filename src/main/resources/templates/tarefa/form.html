@@ -6,81 +6,95 @@
     <title th:text="${tarefa.id != null} ? 'Editar Tarefa' : 'Nova Tarefa'">Formulário de Tarefa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/styles.css">
+    <!-- ✅ Sincronizado para usar o main.css refatorado -->
+    <link rel="stylesheet" href="/css/main.css">
+    <style>
+        body { background-color: var(--bg-secondary); color: var(--text-primary); }
+        .card { 
+            background-color: var(--bg-primary); 
+            border: 1px solid var(--border-color); 
+            box-shadow: var(--shadow-lg);
+        }
+        .card-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .form-label { color: var(--text-secondary); font-weight: 600; }
+        .form-control, .form-select {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary) !important;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-tertiary);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.2);
+        }
+        .invalid-feedback { color: var(--danger); }
+    </style>
 </head>
 <body>
-    <!-- ✅ CORREÇÃO: Alterado de fragments/ para common/ para coincidir com a estrutura do projeto -->
     <div th:replace="~{common/navbar :: navbar}"></div>
 
-    <div class="container mt-4">
+    <div class="container mt-4 fade-in">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card shadow-sm">
-                    <div class="card-header bg-primary text-white">
+                <div class="card">
+                    <div class="card-header text-white p-3">
                         <h4 class="mb-0">
-                            <i class="bi bi-clipboard-check"></i>
+                            <i class="bi bi-clipboard-check me-2"></i>
                             <span th:text="${tarefa.id != null} ? 'Editar Tarefa' : 'Nova Tarefa'">Formulário</span>
                         </h4>
                     </div>
-                    <div class="card-body">
+                    <div class="card-body p-4">
                         
-                        <!-- ✅ CORREÇÃO: Ajustadas as rotas th:action para bater com o TarefaController -->
+                        <!-- Rota de ação baseada no estado do objeto -->
                         <form th:action="${tarefa.id != null} ? @{/tarefas/atualizar/{id}(id=${tarefa.id})} : @{/tarefas}"
                               th:object="${tarefa}"
                               method="post">
                               
-                            <!-- ✅ CORREÇÃO CRÍTICA: O bloco de erros deve estar DENTRO do form para ter acesso ao th:object -->
-                            <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                                <strong><i class="bi bi-exclamation-triangle"></i> Erros de validação:</strong>
+                            <!-- Bloco de erros de validação (Dentro do form para th:object) -->
+                            <div th:if="${#fields.hasErrors('*')}" class="alert alert-danger alert-dismissible fade show" role="alert" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid var(--danger);">
+                                <strong><i class="bi bi-exclamation-triangle-fill me-2"></i> Erros encontrados:</strong>
                                 <ul class="mb-0 mt-2">
                                     <li th:each="err : ${#fields.errors('*')}" th:text="${err}">Erro</li>
                                 </ul>
                                 <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                             </div>
                             
-                            <!-- ID oculto para edição -->
+                            <!-- IDs Necessários -->
                             <input type="hidden" th:field="*{id}" th:if="${tarefa.id != null}">
-                            
-                            <!-- Campo oculto para o Projeto (Obrigatório para o Service) -->
                             <input type="hidden" th:name="projeto.id" th:value="${projetoId != null ? projetoId : (tarefa.projeto != null ? tarefa.projeto.id : '')}">
                             
                             <!-- Título -->
                             <div class="mb-3">
-                                <label for="titulo" class="form-label">
-                                    Título <span class="text-danger">*</span>
-                                </label>
+                                <label for="titulo" class="form-label">Título da Tarefa <span class="text-danger">*</span></label>
                                 <input type="text" 
                                        class="form-control" 
                                        th:classappend="${#fields.hasErrors('titulo')} ? 'is-invalid'"
                                        id="titulo" 
                                        th:field="*{titulo}" 
-                                       placeholder="Digite o título da tarefa"
+                                       placeholder="O que precisa ser feito?"
                                        required>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}">
-                                    Erro no título
-                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></div>
                             </div>
 
                             <!-- Descrição -->
                             <div class="mb-3">
-                                <label for="descricao" class="form-label">Descrição</label>
+                                <label for="descricao" class="form-label">Descrição Detalhada</label>
                                 <textarea class="form-control" 
                                           th:classappend="${#fields.hasErrors('descricao')} ? 'is-invalid'"
                                           id="descricao" 
                                           th:field="*{descricao}" 
                                           rows="4"
-                                          placeholder="Descreva os detalhes da tarefa"></textarea>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}">
-                                    Erro na descrição
-                                </div>
+                                          placeholder="Adicione detalhes, links ou requisitos da tarefa..."></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></div>
                             </div>
 
                             <div class="row">
                                 <!-- Prioridade -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="prioridade" class="form-label">
-                                        Prioridade <span class="text-danger">*</span>
-                                    </label>
+                                    <label for="prioridade" class="form-label">Prioridade <span class="text-danger">*</span></label>
                                     <select class="form-select" 
                                             th:classappend="${#fields.hasErrors('prioridade')} ? 'is-invalid'"
                                             id="prioridade" 
@@ -90,16 +104,12 @@
                                         <option th:each="p : ${T(br.com.projetoA3.enums.Prioridade).values()}" 
                                                 th:value="${p}" th:text="${p}">Prioridade</option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('prioridade')}" th:errors="*{prioridade}">
-                                        Erro na prioridade
-                                    </div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('prioridade')}" th:errors="*{prioridade}"></div>
                                 </div>
 
                                 <!-- Status -->
                                 <div class="col-md-6 mb-3">
-                                    <label for="status" class="form-label">
-                                        Status <span class="text-danger">*</span>
-                                    </label>
+                                    <label for="status" class="form-label">Status Inicial <span class="text-danger">*</span></label>
                                     <select class="form-select" 
                                             th:classappend="${#fields.hasErrors('status')} ? 'is-invalid'"
                                             id="status" 
@@ -109,9 +119,7 @@
                                         <option th:each="s : ${T(br.com.projetoA3.enums.StatusTarefa).values()}" 
                                                 th:value="${s}" th:text="${s}">Status</option>
                                     </select>
-                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}" th:errors="*{status}">
-                                        Erro no status
-                                    </div>
+                                    <div class="invalid-feedback" th:if="${#fields.hasErrors('status')}" th:errors="*{status}"></div>
                                 </div>
                             </div>
 
@@ -123,38 +131,34 @@
                                        th:classappend="${#fields.hasErrors('dataVencimento')} ? 'is-invalid'"
                                        id="dataVencimento" 
                                        th:field="*{dataVencimento}">
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('dataVencimento')}" th:errors="*{dataVencimento}">
-                                    Erro na data
-                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('dataVencimento')}" th:errors="*{dataVencimento}"></div>
                             </div>
 
                             <!-- Responsável -->
-                            <div class="mb-3">
-                                <label for="responsavel" class="form-label">Responsável</label>
+                            <div class="mb-4">
+                                <label for="responsavel" class="form-label">Responsável pela Execução</label>
                                 <select class="form-select" 
                                         th:classappend="${#fields.hasErrors('responsavel')} ? 'is-invalid'"
                                         id="responsavel" 
                                         th:field="*{responsavel}">
-                                    <option value="">Nenhum responsável</option>
+                                    <option value="">Ninguém atribuído</option>
                                     <option th:each="usuario : ${usuarios}" 
                                             th:value="${usuario.id}" 
                                             th:text="${usuario.nome}">
                                         Usuário
                                     </option>
                                 </select>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('responsavel')}" th:errors="*{responsavel}">
-                                    Erro no responsável
-                                </div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('responsavel')}" th:errors="*{responsavel}"></div>
                             </div>
 
-                            <!-- Botões de ação -->
-                            <div class="d-flex justify-content-between">
-                                <a th:href="@{/tarefas/kanban/{id}(id=${projetoId != null ? projetoId : (tarefa.projeto != null ? tarefa.projeto.id : 0)})}" class="btn btn-secondary">
-                                    <i class="bi bi-arrow-left"></i> Voltar ao Kanban
+                            <!-- Botões -->
+                            <div class="d-flex justify-content-between border-top pt-4">
+                                <a th:href="@{/tarefas/kanban/{id}(id=${projetoId != null ? projetoId : (tarefa.projeto != null ? tarefa.projeto.id : 0)})}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left me-1"></i> Cancelar e Voltar
                                 </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="bi bi-save"></i> 
-                                    <span th:text="${tarefa.id != null} ? 'Atualizar' : 'Salvar'">Salvar</span>
+                                <button type="submit" class="btn btn-primary px-4">
+                                    <i class="bi bi-save me-1"></i> 
+                                    <span th:text="${tarefa.id != null} ? 'Atualizar Tarefa' : 'Criar Tarefa'">Salvar</span>
                                 </button>
                             </div>
                         </form>
@@ -164,8 +168,8 @@
         </div>
     </div>
 
-    <!-- ✅ CORREÇÃO: Alterado de fragments/ para common/ -->
     <div th:replace="~{common/footer :: footer}"></div>
+    <!-- Script para garantir o funcionamento do Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

@@ -5,61 +5,112 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${membro.id} != null ? 'Editar Membro' : 'Adicionar Membro'">Formulário de Membro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/main.css">
     <style>
-        body { background-color: #f8f9fa; }
-        .page-header { background: #4f46e5; color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px; }
-        .form-container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        body { background-color: var(--bg-secondary); color: var(--text-primary); }
+        .page-header { 
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); 
+            color: white; 
+            padding: 1.5rem 0; 
+            margin-bottom: 2rem; 
+            border-radius: 0 0 12px 12px;
+            box-shadow: var(--shadow-md);
+        }
+        .form-container { 
+            background-color: var(--bg-primary); 
+            padding: 2.5rem; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg); 
+        }
+        .form-label { color: var(--text-secondary); font-weight: 600; }
+        .form-control, .form-select {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary) !important;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-tertiary);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.2);
+        }
+        .navbar-custom {
+            background-color: var(--bg-primary);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .static-info {
+            background-color: rgba(99, 102, 241, 0.1);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-3">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm mb-3">
         <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/equipes">🔙 Voltar para Equipes</a>
+            <a class="navbar-brand fw-bold" href="/equipes" style="color: var(--primary);">
+                <i class="bi bi-arrow-left-circle me-1"></i> Voltar para Equipes
+            </a>
         </div>
     </nav>
 
-    <div class="container">
+    <div class="container fade-in">
         <div class="page-header px-4">
-            <h2 class="mb-0">➕ Adicionar Membro à Equipe</h2>
+            <h2 class="mb-0"><i class="bi bi-person-plus-fill me-2"></i>Adicionar Membro à Equipe</h2>
         </div>
 
-        <div class="form-container">
+        <div class="form-container mb-5">
             <form th:action="@{/membros}" th:object="${membro}" method="post">
                 <!-- Mantém o vínculo com a equipe selecionada -->
                 <input type="hidden" th:field="*{equipe.id}">
 
-                <div class="row g-3">
+                <div class="row g-4">
                     <div class="col-12">
-                        <label class="form-label text-muted mb-1">Equipe Selecionada</label>
-                        <div class="form-control-plaintext fw-bold" th:text="${membro.equipe?.nome ?: 'Equipe não definida'}"></div>
+                        <label class="form-label mb-2">Equipe Alvo</label>
+                        <div class="static-info fw-bold fs-5">
+                            <i class="bi bi-people-fill me-2"></i>
+                            <span th:text="${membro.equipe?.nome ?: 'Equipe não definida'}">Nome da Equipe</span>
+                        </div>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="usuario" class="form-label">Usuário / Colaborador</label>
+                        <label for="usuario" class="form-label">Selecionar Colaborador <span class="text-danger">*</span></label>
                         <select class="form-select" id="usuario" th:field="*{usuario.id}" required>
-                            <option value="">Selecione um colaborador...</option>
-                            <option th:each="user : ${usuarios}" th:value="${user.id}" th:text="${user.nome} + ' - ' + ${user.cargo}"></option>
+                            <option value="">Clique para selecionar...</option>
+                            <option th:each="user : ${usuarios}" 
+                                    th:value="${user.id}" 
+                                    th:text="${user.nome} + ' — ' + ${user.cargo}">
+                            </option>
                         </select>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('usuario')}" th:errors="*{usuario}"></div>
+                        <small class="text-muted mt-1 d-block">Apenas usuários cadastrados e ativos aparecem aqui.</small>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="funcao" class="form-label">Função na Equipe</label>
+                        <label for="funcao" class="form-label">Função / Papel no Time <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="funcao" th:field="*{funcao}" 
                                th:classappend="${#fields.hasErrors('funcao')} ? 'is-invalid'" required 
-                               placeholder="Ex: Desenvolvedor, Designer, QA...">
+                               placeholder="Ex: Desenvolvedor Senior, Tech Lead, Scrum Master">
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('funcao')}" th:errors="*{funcao}"></div>
                     </div>
                 </div>
 
-                <div class="mt-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">💾 Adicionar à Equipe</button>
-                    <a href="/equipes" class="btn btn-secondary">Cancelar</a>
+                <div class="mt-5 d-flex gap-3 border-top pt-4">
+                    <button type="submit" class="btn btn-primary px-5">
+                        <i class="bi bi-check-circle me-2"></i> Confirmar Vinculação
+                    </button>
+                    <a href="/equipes" class="btn btn-outline-secondary px-4">
+                        Cancelar
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 
+    <div th:replace="~{common/footer :: footer}"></div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

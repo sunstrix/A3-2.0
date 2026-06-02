@@ -6,100 +6,145 @@
     <title th:text="${usuario.id} != null ? 'Editar Usuário' : 'Novo Usuário'">Formulário de Usuário</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/main.css">
     <style>
-        body { background-color: #f8f9fa; }
-        .page-header { background: #4f46e5; color: white; padding: 1.5rem 0; margin-bottom: 2rem; border-radius: 0 0 12px 12px; }
-        .form-container { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        body { background-color: var(--bg-secondary); color: var(--text-primary); }
+        .page-header { 
+            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); 
+            color: white; 
+            padding: 1.5rem 0; 
+            margin-bottom: 2rem; 
+            border-radius: 0 0 12px 12px;
+            box-shadow: var(--shadow-md);
+        }
+        .form-container { 
+            background-color: var(--bg-primary); 
+            padding: 2rem; 
+            border-radius: 12px; 
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-lg); 
+        }
+        .form-label { color: var(--text-secondary); font-weight: 600; }
+        .form-control, .form-select {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary) !important;
+        }
+        .form-control:focus, .form-select:focus {
+            background-color: var(--bg-tertiary);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.2);
+        }
+        .form-check-input {
+            background-color: var(--bg-tertiary);
+            border-color: var(--border-color);
+        }
+        .form-check-input:checked {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm mb-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold text-primary" href="/usuarios">🔙 Voltar para Lista</a>
-        </div>
-    </nav>
+    <!-- Navbar customizada conforme fragmento central -->
+    <div th:replace="~{common/navbar :: navbar}"></div>
 
-    <div class="container">
+    <div class="container fade-in">
         <div class="page-header px-4">
-            <h2 class="mb-0" th:text="${usuario.id} != null ? '✏️ Editar Usuário' : '➕ Novo Usuário'"></h2>
+            <h2 class="mb-0">
+                <i th:class="${usuario.id != null} ? 'bi bi-pencil-square me-2' : 'bi bi-person-plus-fill me-2'"></i>
+                <span th:text="${usuario.id} != null ? 'Editar Usuário' : 'Novo Usuário'">Formulário</span>
+            </h2>
         </div>
 
-        <div class="form-container">
+        <div class="form-container mb-5">
             <!-- Ação dinâmica: cria novo ou atualiza existente -->
             <form th:action="${usuario.id} != null ? @{/usuarios/atualizar/{id}(id=${usuario.id})} : @{/usuarios}"
                   th:object="${usuario}" method="post">
 
-                <div class="row g-3">
+                <div class="row g-4">
                     <div class="col-md-6">
                         <label for="nome" class="form-label">Nome Completo</label>
                         <input type="text" class="form-control" id="nome" th:field="*{nome}" 
-                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" required>
+                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" 
+                               placeholder="Digite o nome completo" required>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
                     </div>
 
                     <div class="col-md-6">
                         <label for="cpf" class="form-label">CPF</label>
                         <input type="text" class="form-control" id="cpf" th:field="*{cpf}" 
-                               th:classappend="${#fields.hasErrors('cpf')} ? 'is-invalid'" required placeholder="Apenas números (11 dígitos)">
+                               th:classappend="${#fields.hasErrors('cpf')} ? 'is-invalid'" 
+                               required placeholder="Ex: 12345678901">
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}"></div>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="email" class="form-label">Email</label>
+                        <label for="email" class="form-label">E-mail Corporativo</label>
                         <input type="email" class="form-control" id="email" th:field="*{email}" 
-                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" required>
+                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" 
+                               placeholder="email@empresa.com.br" required>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="cargo" class="form-label">Cargo</label>
+                        <label for="cargo" class="form-label">Cargo / Função</label>
                         <input type="text" class="form-control" id="cargo" th:field="*{cargo}" 
-                               th:classappend="${#fields.hasErrors('cargo')} ? 'is-invalid'" required>
+                               th:classappend="${#fields.hasErrors('cargo')} ? 'is-invalid'" 
+                               placeholder="Ex: Desenvolvedor Senior" required>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('cargo')}" th:errors="*{cargo}"></div>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="login" class="form-label">Login</label>
+                        <label for="login" class="form-label">Nome de Usuário (Login)</label>
                         <input type="text" class="form-control" id="login" th:field="*{login}" 
-                               th:classappend="${#fields.hasErrors('login')} ? 'is-invalid'" required>
+                               th:classappend="${#fields.hasErrors('login')} ? 'is-invalid'" 
+                               placeholder="Ex: joao.silva" required>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></div>
                     </div>
 
                     <div class="col-md-6">
-                        <label for="senha" class="form-label">Senha</label>
+                        <label for="senha" class="form-label">Senha de Acesso</label>
                         <input type="password" class="form-control" id="senha" th:field="*{senha}" 
                                th:classappend="${#fields.hasErrors('senha')} ? 'is-invalid'"
-                               th:placeholder="${usuario.id} != null ? 'Deixe em branco para manter a atual' : 'Defina uma senha'">
+                               th:placeholder="${usuario.id} != null ? 'Deixe em branco para manter a atual' : 'Mínimo 6 caracteres'">
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}"></div>
-                        <small class="text-muted" th:if="${usuario.id} != null">* Preencha apenas se desejar alterar a senha</small>
+                        <small style="color: var(--text-muted);" th:if="${usuario.id} != null">
+                            <i class="bi bi-info-circle me-1"></i> Preencha apenas se desejar alterar a senha.
+                        </small>
                     </div>
 
                     <div class="col-md-6">
                         <label for="perfil" class="form-label">Perfil de Acesso</label>
                         <select class="form-select" id="perfil" th:field="*{perfil}" 
                                 th:classappend="${#fields.hasErrors('perfil')} ? 'is-invalid'" required>
-                            <option value="">Selecione...</option>
+                            <option value="">Selecione um nível...</option>
                             <option th:each="p : ${perfis}" th:value="${p}" th:text="${p.descricao}"></option>
                         </select>
                         <div class="invalid-feedback" th:if="${#fields.hasErrors('perfil')}" th:errors="*{perfil}"></div>
                     </div>
 
-                    <div class="col-md-6 d-flex align-items-end">
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="ativo" th:field="*{ativo}">
-                            <label class="form-check-label" for="ativo">Usuário Ativo</label>
+                    <div class="col-md-6 d-flex align-items-center">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="ativo" th:field="*{ativo}" style="width: 3em; height: 1.5em; cursor: pointer;">
+                            <label class="form-check-label ms-2 fw-semibold" for="ativo" style="color: var(--text-primary);">Usuário Ativo</label>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary">💾 Salvar</button>
-                    <a href="/usuarios" class="btn btn-secondary">Cancelar</a>
+                <div class="mt-5 d-flex gap-3 border-top pt-4">
+                    <button type="submit" class="btn btn-primary px-5">
+                        <i class="bi bi-save me-2"></i> Confirmar e Salvar
+                    </button>
+                    <a href="/usuarios" class="btn btn-outline-secondary px-4">
+                        Cancelar
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 
+    <div th:replace="~{common/footer :: footer}"></div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

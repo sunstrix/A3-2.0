@@ -6,20 +6,23 @@
     <title>Erro 500 - Erro Interno do Servidor</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/css/main.css">
     <style>
         body {
-            background: linear-gradient(135deg, #dc3545 0%, #7f1d1d 100%);
+            background-color: var(--bg-secondary);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            color: var(--text-primary);
         }
         .error-container {
-            background: white;
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
             border-radius: 16px;
             padding: 3rem;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            box-shadow: var(--shadow-lg);
             max-width: 600px;
             width: 90%;
             text-align: center;
@@ -27,65 +30,75 @@
         .error-code {
             font-size: 6rem;
             font-weight: 800;
-            color: #dc3545;
+            color: var(--danger);
             line-height: 1;
             margin-bottom: 1rem;
+            text-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);
         }
         .error-icon {
             font-size: 3rem;
-            color: #dc3545;
+            color: var(--danger);
             margin-bottom: 1.5rem;
         }
         .error-details {
-            background: #fff5f5;
-            border-left: 4px solid #dc3545;
-            padding: 1rem;
+            background-color: var(--bg-tertiary);
+            border-left: 4px solid var(--danger);
+            padding: 1.5rem;
             margin: 1.5rem 0;
             text-align: left;
             border-radius: 0 8px 8px 0;
         }
         .error-details p {
-            margin: 0.25rem 0;
+            margin: 0.4rem 0;
             font-size: 0.9rem;
+            color: var(--text-secondary);
         }
         .error-details code {
-            background: #ffe4e6;
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--warning);
             padding: 0.2rem 0.4rem;
             border-radius: 4px;
             font-size: 0.85rem;
         }
         .btn-group-custom .btn {
-            min-width: 140px;
+            min-width: 150px;
+            font-weight: 600;
         }
     </style>
 </head>
 <body>
-    <div class="error-container">
+    <div class="error-container fade-in">
         <div class="error-code">500</div>
         <i class="bi bi-exclamation-triangle-fill error-icon"></i>
         
-        <h1 class="h3 mb-3">Ops! Algo deu errado</h1>
-        <p class="text-muted mb-4">Ocorreu um erro interno no servidor. Nossa equipe foi notificada e está trabalhando para resolver o problema.</p>
+        <h1 class="h3 mb-3 fw-bold">Ops! Algo deu errado</h1>
+        <p style="color: var(--text-secondary);" class="mb-4">
+            Ocorreu um erro interno no servidor. Nossa equipe técnica foi notificada e já estamos trabalhando na solução.
+        </p>
         
+        <!-- Detalhes para Debug (Apenas se disponíveis) -->
         <div class="error-details" th:if="${timestamp} or ${path} or ${status} or ${message}">
-            <h6 class="fw-bold mb-2"><i class="bi bi-info-circle me-1"></i>Detalhes Técnicos:</h6>
+            <h6 class="fw-bold mb-3" style="color: var(--text-primary);">
+                <i class="bi bi-bug me-2 text-warning"></i>Detalhes Técnicos:
+            </h6>
             <p th:if="${timestamp}"><strong>Data/Hora:</strong> <span th:text="${timestamp}">-</span></p>
             <p th:if="${path}"><strong>Caminho:</strong> <code th:text="${path}">-</code></p>
-            <p th:if="${status}"><strong>Status:</strong> <span class="badge bg-danger" th:text="${status}">500</span></p>
-            <p th:if="${message}"><strong>Mensagem:</strong> <span th:text="${message}">Erro desconhecido</span></p>
+            <p th:if="${status}"><strong>Status HTTP:</strong> <span class="badge" style="background-color: var(--danger);" th:text="${status}">500</span></p>
+            <p th:if="${message}"><strong>Mensagem:</strong> <span th:text="${message}" style="font-style: italic;">Erro interno genérico</span></p>
         </div>
         
-        <div class="btn-group btn-group-custom mt-4" role="group">
-            <a href="/menu" class="btn btn-primary">
-                <i class="bi bi-house-fill me-1"></i>Voltar ao Menu
+        <div class="btn-group btn-group-custom mt-4 gap-2" role="group">
+            <a href="/menu" class="btn btn-primary d-flex align-items-center justify-content-center">
+                <i class="bi bi-house-door-fill me-2"></i> Voltar ao Menu
             </a>
-            <button type="button" class="btn btn-outline-secondary" onclick="window.location.reload()">
-                <i class="bi bi-arrow-repeat me-1"></i>Tentar Novamente
+            <button type="button" class="btn btn-outline-secondary d-flex align-items-center justify-content-center" onclick="window.location.reload()">
+                <i class="bi bi-arrow-clockwise me-2"></i> Tentar Novamente
             </button>
         </div>
         
-        <p class="mt-4 mb-0 text-muted small">
-            Se o problema persistir, entre em contato com o suporte técnico.
+        <p class="mt-5 mb-0 small" style="color: var(--text-muted);">
+            ID da Requisição: <span th:text="${#strings.substring(#ids.next('req-'), 0, 8)}">A3-500</span> | 
+            Se o problema persistir, entre em contato com o suporte.
         </p>
     </div>
 
