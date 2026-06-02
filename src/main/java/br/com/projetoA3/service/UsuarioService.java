@@ -13,13 +13,7 @@ import java.util.Optional;
 
 /**
  * Service responsável pela lógica de negócio dos Usuários.
- * 
- * Princípios aplicados:
- * - Injeção por construtor (sem @Autowired em campo)
- * - @Transactional(readOnly = true) na classe (otimiza transações de leitura)
- * - Override com @Transactional apenas em métodos de escrita
- * - Validação de negócio com exceções customizadas
- * - Hash de senha com PasswordEncoder (BCrypt ou NoOp conforme SecurityConfig)
+ * Atualizado com validação de CPF e logging de diagnóstico.
  */
 @Service
 @Transactional(readOnly = true)
@@ -38,37 +32,22 @@ public class UsuarioService {
     // CONSULTAS (READ-ONLY)
     // ==========================================
 
-    /**
-     * Lista todos os usuários do sistema.
-     */
     public List<Usuario> findAll() {
         return usuarioRepository.findAll();
     }
 
-    /**
-     * Busca um usuário por ID.
-     */
     public Optional<Usuario> findById(Long id) {
         return usuarioRepository.findById(id);
     }
 
-    /**
-     * Busca um usuário por login (username).
-     */
     public Optional<Usuario> findByLogin(String login) {
         return usuarioRepository.findByLogin(login);
     }
 
-    /**
-     * Busca um usuário por e-mail.
-     */
     public Optional<Usuario> findByEmail(String email) {
         return usuarioRepository.findByEmail(email);
     }
 
-    /**
-     * Conta o total de usuários ativos no sistema.
-     */
     public long countAtivos() {
         return usuarioRepository.findAll().stream()
                 .filter(u -> u.getAtivo() != null && u.getAtivo())
@@ -81,76 +60,75 @@ public class UsuarioService {
 
     /**
      * Cria um novo usuário no sistema.
-     * 
-     * @param usuario Dados do usuário a ser criado
-     * @return Usuário persistido
-     * @throws RegraDeNegocioException se login ou email já estiverem em uso
      */
     @Transactional
     public Usuario save(Usuario usuario) {
-        // Valida unicidade do login
+        System.out.println("🚀 Iniciando persistência de novo usuário: " + usuario.getLogin());
+
+        // 1. Valida unicidade do login
         if (usuarioRepository.existsByLogin(usuario.getLogin())) {
-            throw new RegraDeNegocioException(
-                "Já existe um usuário com o login: " + usuario.getLogin()
-            );
+            throw new RegraDeNegocioException("O login '" + usuario.getLogin() + "' já está em uso.");
         }
 
-        // Valida unicidade do email (se informado)
+        // 2. Valida unicidade do email
         if (usuario.getEmail() != null && !usuario.getEmail().isBlank()
                 && usuarioRepository.existsByEmail(usuario.getEmail())) {
-            throw new RegraDeNegocioException(
-                "Já existe um usuário com o e-mail: " + usuario.getEmail()
-            );
+            throw new RegraDeNegocioException("O e-mail '" + usuario.getEmail() + "' já está cadastrado.");
         }
 
-        // Hash da senha (usa o encoder configurado no SecurityConfig)
+        // 3. Valida unicidade do CPF (Causa provável do erro silencioso)
+        if (usuario.getCpf() != null && !usuario.getCpf().isBlank()
+                && usuarioRepository.existsByCpf(usuario.getCpf())) {
+            throw new RegraDeNegocioException("O CPF '" + usuario.getCpf() + "' já pertence a outro usuário.");
+        }
+
+        // 4. Tratamento de Senha
         if (usuario.getSenha() != null && !usuario.getSenha().isBlank()) {
             usuario.setSenha(passwordEncoder.encode(usuario.getSenha()));
+        } else {
+            throw new RegraDeNegocioException("A senha é obrigatória para novos usuários.");
         }
 
-        // Define como ativo por padrão
+        // 5. Valores Padrão
         if (usuario.getAtivo() == null) {
             usuario.setAtivo(true);
         }
 
-        return usuarioRepository.save(usuario);
+        Usuario salvo = usuarioRepository.save(usuario);
+        System.out.println("✅ Usuário salvo com sucesso no banco! ID: " + salvo.getId());
+        return salvo;
     }
 
     /**
-     * ✅ NOVO: Atualiza um usuário existente.
-     * 
-     * @param id ID do usuário a ser atualizado
-     * @param dadosAtualizados Novos dados do usuário
-     * @return Usuário atualizado
-     * @throws EntityNotFoundException se o usuário não existir
-     * @throws RegraDeNegocioException se login ou email já estiverem em uso por outro usuário
+     * Atualiza um usuário existente.
      */
     @Transactional
     public Usuario update(Long id, Usuario dadosAtualizados) {
         Usuario existente = usuarioRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                    "Usuário não encontrado com ID: " + id
-                ));
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com ID: " + id));
 
-        // Valida unicidade do login (se foi alterado)
+        // Validação de duplicidade para Login
         if (dadosAtualizados.getLogin() != null 
                 && !dadosAtualizados.getLogin().equals(existente.getLogin())
                 && usuarioRepository.existsByLogin(dadosAtualizados.getLogin())) {
-            throw new RegraDeNegocioException(
-                "Já existe um usuário com o login: " + dadosAtualizados.getLogin()
-            );
+            throw new RegraDeNegocioException("Novo login já em uso.");
         }
 
-        // Valida unicidade do email (se foi alterado)
+        // Validação de duplicidade para Email
         if (dadosAtualizados.getEmail() != null 
                 && !dadosAtualizados.getEmail().equals(existente.getEmail())
                 && usuarioRepository.existsByEmail(dadosAtualizados.getEmail())) {
-            throw new RegraDeNegocioException(
-                "Já existe um usuário com o e-mail: " + dadosAtualizados.getEmail()
-            );
+            throw new RegraDeNegocioException("Novo e-mail já cadastrado.");
         }
 
-        // Atualiza os campos editáveis
+        // Validação de duplicidade para CPF
+        if (dadosAtualizados.getCpf() != null 
+                && !dadosAtualizados.getCpf().equals(existente.getCpf())
+                && usuarioRepository.existsByCpf(dadosAtualizados.getCpf())) {
+            throw new RegraDeNegocioException("Novo CPF já cadastrado.");
+        }
+
+        // Atualiza campos
         existente.setNome(dadosAtualizados.getNome());
         existente.setLogin(dadosAtualizados.getLogin());
         existente.setEmail(dadosAtualizados.getEmail());
@@ -158,75 +136,39 @@ public class UsuarioService {
         existente.setCargo(dadosAtualizados.getCargo());
         existente.setPerfil(dadosAtualizados.getPerfil());
 
-        // Só atualiza a senha se foi informada uma nova (não vazia)
-        if (dadosAtualizados.getSenha() != null 
-                && !dadosAtualizados.getSenha().isBlank()) {
+        if (dadosAtualizados.getSenha() != null && !dadosAtualizados.getSenha().isBlank()) {
             existente.setSenha(passwordEncoder.encode(dadosAtualizados.getSenha()));
         }
 
         return usuarioRepository.save(existente);
     }
 
-    /**
-     * ✅ NOVO: Alterna o status ativo/inativo de um usuário.
-     * Útil para desativar contas sem removê-las do sistema.
-     * 
-     * @param id ID do usuário
-     * @return Usuário com status alterado
-     * @throws EntityNotFoundException se o usuário não existir
-     */
     @Transactional
     public Usuario toggleAtivo(Long id) {
         Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                    "Usuário não encontrado com ID: " + id
-                ));
-
-        // Inverte o status atual
-        boolean statusAtual = usuario.getAtivo() != null ? usuario.getAtivo() : true;
-        usuario.setAtivo(!statusAtual);
-
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com ID: " + id));
+        usuario.setAtivo(usuario.getAtivo() == null || !usuario.getAtivo());
         return usuarioRepository.save(usuario);
     }
 
-    /**
-     * Remove um usuário do sistema.
-     * 
-     * @param id ID do usuário a ser removido
-     * @throws EntityNotFoundException se o usuário não existir
-     */
     @Transactional
     public void deleteById(Long id) {
         if (!usuarioRepository.existsById(id)) {
-            throw new EntityNotFoundException(
-                "Usuário não encontrado com ID: " + id
-            );
+            throw new EntityNotFoundException("Usuário não encontrado.");
         }
         usuarioRepository.deleteById(id);
     }
 
-    /**
-     * Ativa um usuário específico.
-     */
     @Transactional
     public void ativar(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                    "Usuário não encontrado com ID: " + id
-                ));
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow();
         usuario.setAtivo(true);
         usuarioRepository.save(usuario);
     }
 
-    /**
-     * Desativa um usuário específico (soft delete).
-     */
     @Transactional
     public void desativar(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException(
-                    "Usuário não encontrado com ID: " + id
-                ));
+        Usuario usuario = usuarioRepository.findById(id).orElseThrow();
         usuario.setAtivo(false);
         usuarioRepository.save(usuario);
     }

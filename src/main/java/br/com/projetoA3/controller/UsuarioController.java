@@ -14,16 +14,7 @@ import java.util.List;
 
 /**
  * Controller responsável pelo gerenciamento de Usuários do sistema.
- * 
- * ✅ BUG 1 FIX: Garante mapeamento GET /usuarios para listar todos os usuários.
- * Acesso restrito a ADMINISTRADOR via SecurityConfig.
- * 
- * Princípios aplicados:
- * - Injeção por construtor (sem @Autowired em campo)
- * - Zero lógica de negócio - delegação ao UsuarioService
- * - Uso de DTOs quando apropriado para listagens
- * - Validação com @Valid + BindingResult
- * - Feedback ao usuário via RedirectAttributes
+ * Atualizado com logging detalhado para diagnóstico de falha na criação.
  */
 @Controller
 @RequestMapping("/usuarios")
@@ -31,9 +22,6 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
 
-    /**
-     * Injeção de dependências via construtor (padrão Spring moderno).
-     */
     public UsuarioController(UsuarioService usuarioService) {
         this.usuarioService = usuarioService;
     }
@@ -42,13 +30,6 @@ public class UsuarioController {
     // LISTAGEM (GET /usuarios)
     // ==========================================
 
-    /**
-     * Lista todos os usuários do sistema.
-     * Rota acessível apenas por ADMINISTRADOR (configurado no SecurityConfig).
-     * 
-     * @param model Model do Spring MVC
-     * @return Nome do template usuario/list.html
-     */
     @GetMapping
     public String listar(Model model) {
         List<Usuario> usuarios = usuarioService.findAll();
@@ -67,9 +48,6 @@ public class UsuarioController {
     // CADASTRO (GET e POST)
     // ==========================================
 
-    /**
-     * Exibe formulário para criar um novo usuário.
-     */
     @GetMapping("/novo")
     public String novo(Model model) {
         model.addAttribute("usuario", new Usuario());
@@ -80,13 +58,19 @@ public class UsuarioController {
 
     /**
      * Salva um novo usuário.
+     * Log detalhado adicionado para diagnosticar por que o insert não ocorre.
      */
     @PostMapping
     public String salvar(@Valid @ModelAttribute Usuario usuario,
                          BindingResult result,
                          Model model,
                          RedirectAttributes attributes) {
+        
         if (result.hasErrors()) {
+            System.err.println("⚠️ Erro de validação ao salvar usuário:");
+            result.getFieldErrors().forEach(err -> 
+                System.err.println("Campo: " + err.getField() + " | Erro: " + err.getDefaultMessage())
+            );
             model.addAttribute("perfis", Usuario.Perfil.values());
             model.addAttribute("activePage", "usuarios");
             return "usuario/form";
@@ -98,6 +82,8 @@ public class UsuarioController {
                 "Usuário '" + usuario.getNome() + "' criado com sucesso!");
             return "redirect:/usuarios";
         } catch (Exception e) {
+            System.err.println("❌ Erro no Service ao salvar usuário: " + e.getMessage());
+            e.printStackTrace(); // Log da stack trace para identificar a causa raiz (ex: erro de SQL)
             model.addAttribute("erro", "Erro ao salvar: " + e.getMessage());
             model.addAttribute("perfis", Usuario.Perfil.values());
             model.addAttribute("activePage", "usuarios");
@@ -109,9 +95,6 @@ public class UsuarioController {
     // EDIÇÃO
     // ==========================================
 
-    /**
-     * Exibe formulário para editar um usuário existente.
-     */
     @GetMapping("/editar/{id}")
     public String editar(@PathVariable Long id, Model model) {
         Usuario usuario = usuarioService.findById(id)
@@ -123,9 +106,6 @@ public class UsuarioController {
         return "usuario/form";
     }
 
-    /**
-     * Atualiza um usuário existente.
-     */
     @PostMapping("/atualizar/{id}")
     public String atualizar(@PathVariable Long id,
                             @Valid @ModelAttribute Usuario usuario,
@@ -133,6 +113,7 @@ public class UsuarioController {
                             Model model,
                             RedirectAttributes attributes) {
         if (result.hasErrors()) {
+            System.err.println("⚠️ Erro de validação ao atualizar usuário ID " + id);
             model.addAttribute("perfis", Usuario.Perfil.values());
             model.addAttribute("activePage", "usuarios");
             return "usuario/form";
@@ -143,6 +124,7 @@ public class UsuarioController {
             attributes.addFlashAttribute("sucesso", "Usuário atualizado com sucesso!");
             return "redirect:/usuarios";
         } catch (Exception e) {
+            System.err.println("❌ Erro ao atualizar: " + e.getMessage());
             attributes.addFlashAttribute("erro", "Erro ao atualizar: " + e.getMessage());
             return "redirect:/usuarios";
         }
@@ -152,9 +134,6 @@ public class UsuarioController {
     // EXCLUSÃO
     // ==========================================
 
-    /**
-     * Remove um usuário do sistema.
-     */
     @GetMapping("/deletar/{id}")
     public String deletar(@PathVariable Long id, RedirectAttributes attributes) {
         try {
@@ -170,9 +149,6 @@ public class UsuarioController {
     // ATIVAÇÃO / DESATIVAÇÃO
     // ==========================================
 
-    /**
-     * Alterna o status ativo/inativo de um usuário.
-     */
     @GetMapping("/toggle-ativo/{id}")
     public String toggleAtivo(@PathVariable Long id, RedirectAttributes attributes) {
         try {

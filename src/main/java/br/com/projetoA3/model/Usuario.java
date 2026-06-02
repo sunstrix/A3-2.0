@@ -19,7 +19,8 @@ public class Usuario {
 
     @NotBlank(message = "CPF é obrigatório")
     @Column(unique = true, nullable = false)
-    @Pattern(regexp = "\\d{11}", message = "CPF deve conter 11 dígitos")
+    // ✅ Ajuste na mensagem para ficar claro ao usuário no console
+    @Pattern(regexp = "\\d{11}", message = "CPF deve conter exatamente 11 dígitos numéricos")
     private String cpf;
 
     @Email(message = "Email inválido")
@@ -35,7 +36,11 @@ public class Usuario {
     @Column(unique = true, nullable = false)
     private String login;
 
-    @NotBlank(message = "Senha é obrigatória")
+    /**
+     * ✅ Alterado: Removido @NotBlank para permitir a lógica de "deixar em branco para manter a atual" 
+     * no formulário de edição. A obrigatoriedade para NOVOS usuários agora é validada 
+     * via código no UsuarioService.save().
+     */
     @Column(nullable = false)
     private String senha;
 
@@ -63,7 +68,7 @@ public class Usuario {
         }
     }
 
-    // Construtores
+    // Construtores (Preservados)
     public Usuario() {
     }
 
@@ -77,7 +82,7 @@ public class Usuario {
         this.perfil = perfil;
     }
 
-    // Getters e Setters
+    // Getters e Setters (Preservados)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     public String getNome() { return nome; }

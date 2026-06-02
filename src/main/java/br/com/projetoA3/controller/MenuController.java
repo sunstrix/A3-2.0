@@ -1,58 +1,47 @@
 package br.com.projetoA3.controller;
 
-import br.com.projetoA3.service.ProjetoService;
-import br.com.projetoA3.service.TarefaService;
-import br.com.projetoA3.service.UsuarioService;
-import br.com.projetoA3.service.EquipeService;
+import br.com.projetoA3.dto.DashboardStatsDTO;
+import br.com.projetoA3.service.DashboardService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+/**
+ * Controller responsável pela página inicial (Dashboard).
+ * Refatorado para utilizar DashboardService visando performance e separação de conceitos.
+ */
 @Controller
 @RequestMapping("/menu")
 public class MenuController {
 
-    private final ProjetoService projetoService;
-    private final TarefaService tarefaService;
-    private final UsuarioService usuarioService;
-    private final EquipeService equipeService;
+    private final DashboardService dashboardService;
 
-    public MenuController(ProjetoService projetoService, 
-                          TarefaService tarefaService, 
-                          UsuarioService usuarioService,
-                          EquipeService equipeService) {
-        this.projetoService = projetoService;
-        this.tarefaService = tarefaService;
-        this.usuarioService = usuarioService;
-        this.equipeService = equipeService;
+    public MenuController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
     }
 
-    // ✅ Dashboard principal corrigido para compilação com Records
+    /**
+     * Exibe o Dashboard principal com métricas analíticas baseadas no perfil do usuário.
+     * @param model Objeto para passar dados para a View
+     * @param userDetails Detalhes do usuário autenticado injetados pelo Spring Security
+     */
     @GetMapping
-    public String exibirDashboard(Model model) {
-        // Estatísticas para os Cards do Dashboard
-        long totalEquipes = equipeService.findAll().size();
+    public String exibirDashboard(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return "redirect:/login";
+        }
+
+        // Obtém as estatísticas processadas de forma otimizada
+        DashboardStatsDTO stats = dashboardService.getDashboardStats(userDetails.getUsername());
+
+        // Adiciona o DTO ao modelo para renderização no Thymeleaf
+        model.addAttribute("stats", stats);
         
-        // Contagem de projetos (todos para evitar erro de enum inexistente)
-        long projetosEmAndamento = projetoService.findAll().size();
-                
-        // Contagem de tarefas usando o método de acesso de Record (.status())
-        // Filtramos tarefas que não estão concluídas nem canceladas para o dashboard
-        long tarefasPendentes = tarefaService.findAll().stream()
-                .filter(t -> !t.status().name().equals("CONCLUIDA") && 
-                             !t.status().name().equals("CANCELADA"))
-                .count();
-
-        // Atributos originais preservados
-        model.addAttribute("totalProjetos", projetoService.findAll().size());
-        model.addAttribute("totalTarefas", tarefaService.findAll().size());
-        model.addAttribute("totalUsuarios", usuarioService.findAll().size());
-
-        // Atributos para os cards do menu.html
-        model.addAttribute("totalEquipes", totalEquipes);
-        model.addAttribute("projetosEmAndamento", projetosEmAndamento);
-        model.addAttribute("tarefasPendentes", tarefasPendentes);
+        // Identificador da página ativa para a Navbar
+        model.addAttribute("activePage", "dashboard");
 
         return "menu";
     }

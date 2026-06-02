@@ -16,6 +16,7 @@ import com.lowagie.text.pdf.PdfWriter;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,14 +26,7 @@ import java.util.List;
 
 /**
  * Service responsável pela geração de relatórios em Excel (XLSX) e PDF.
- * 
- * Utiliza:
- * - Apache POI para geração de planilhas Excel
- * - OpenPDF (fork livre do iText) para geração de PDFs
- * 
- * Cada método retorna um array de bytes que pode ser:
- * - Enviado como download via ResponseEntity no Controller
- * - Anexado em e-mails via EmailService
+ * Atualizado para garantir transacionalidade e evitar LazyInitializationException.
  */
 @Service
 public class RelatorioService {
@@ -43,26 +37,22 @@ public class RelatorioService {
     // RELATÓRIOS DE EQUIPES
     // ==========================================
 
-    /**
-     * Gera relatório de Equipes em formato Excel (XLSX)
-     */
+    @Transactional(readOnly = true)
     public byte[] gerarRelatorioEquipesExcel(List<Equipe> equipes) throws IOException {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
             Sheet sheet = workbook.createSheet("Equipes");
-
-            // Cabeçalho
             Row header = sheet.createRow(0);
             String[] colunas = {"ID", "Nome", "Descrição", "Líder", "Total de Membros"};
             CellStyle headerStyle = criarEstiloCabeçalho(workbook);
+            
             for (int i = 0; i < colunas.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(colunas[i]);
                 cell.setCellStyle(headerStyle);
             }
 
-            // Dados
             int rowNum = 1;
             for (Equipe equipe : equipes) {
                 Row row = sheet.createRow(rowNum++);
@@ -77,7 +67,6 @@ public class RelatorioService {
                 );
             }
 
-            // Auto-size das colunas
             for (int i = 0; i < colunas.length; i++) {
                 sheet.autoSizeColumn(i);
             }
@@ -87,9 +76,7 @@ public class RelatorioService {
         }
     }
 
-    /**
-     * Gera relatório de Equipes em formato PDF
-     */
+    @Transactional(readOnly = true)
     public byte[] gerarRelatorioEquipesPdf(List<Equipe> equipes) throws IOException, DocumentException {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Document document = new Document();
@@ -127,18 +114,16 @@ public class RelatorioService {
     // RELATÓRIOS DE PROJETOS
     // ==========================================
 
-    /**
-     * Gera relatório de Projetos em formato Excel (XLSX)
-     */
+    @Transactional(readOnly = true)
     public byte[] gerarRelatorioProjetosExcel(List<Projeto> projetos) throws IOException {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
             Sheet sheet = workbook.createSheet("Projetos");
-
             Row header = sheet.createRow(0);
             String[] colunas = {"ID", "Nome", "Descrição", "Status", "Início", "Término Previsto", "Equipe"};
             CellStyle headerStyle = criarEstiloCabeçalho(workbook);
+            
             for (int i = 0; i < colunas.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(colunas[i]);
@@ -168,9 +153,7 @@ public class RelatorioService {
         }
     }
 
-    /**
-     * Gera relatório de Projetos em formato PDF
-     */
+    @Transactional(readOnly = true)
     public byte[] gerarRelatorioProjetosPdf(List<Projeto> projetos) throws IOException, DocumentException {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Document document = new Document();
@@ -210,18 +193,16 @@ public class RelatorioService {
     // RELATÓRIOS DE TAREFAS
     // ==========================================
 
-    /**
-     * Gera relatório de Tarefas em formato Excel (XLSX)
-     */
+    @Transactional(readOnly = true)
     public byte[] gerarRelatorioTarefasExcel(List<Tarefa> tarefas) throws IOException {
         try (Workbook workbook = new XSSFWorkbook();
              ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
             Sheet sheet = workbook.createSheet("Tarefas");
-
             Row header = sheet.createRow(0);
             String[] colunas = {"ID", "Título", "Status", "Prioridade", "Vencimento", "Projeto", "Responsável"};
             CellStyle headerStyle = criarEstiloCabeçalho(workbook);
+            
             for (int i = 0; i < colunas.length; i++) {
                 Cell cell = header.createCell(i);
                 cell.setCellValue(colunas[i]);
@@ -237,7 +218,7 @@ public class RelatorioService {
                 row.createCell(3).setCellValue(t.getPrioridade() != null ? t.getPrioridade().name() : "");
                 row.createCell(4).setCellValue(formatarData(t.getDataVencimento()));
                 row.createCell(5).setCellValue(
-                    t.getProjeto() != null ? t.getProjeto().getNome() : ""
+                    t.getProjeto() != null ? t.getProjeto().getNome() : "Sem projeto"
                 );
                 row.createCell(6).setCellValue(
                     t.getResponsavel() != null ? t.getResponsavel().getNome() : "Não atribuído"
@@ -253,9 +234,7 @@ public class RelatorioService {
         }
     }
 
-    /**
-     * Gera relatório de Tarefas em formato PDF
-     */
+    @Transactional(readOnly = true)
     public byte[] gerarRelatorioTarefasPdf(List<Tarefa> tarefas) throws IOException, DocumentException {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             Document document = new Document();

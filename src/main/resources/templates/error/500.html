@@ -96,8 +96,9 @@
             </button>
         </div>
         
+        <!-- ✅ CORREÇÃO: Removido substring para evitar StringIndexOutOfBoundsException -->
         <p class="mt-5 mb-0 small" style="color: var(--text-muted);">
-            ID da Requisição: <span th:text="${#strings.substring(#ids.next('req-'), 0, 8)}">A3-500</span> | 
+            Referência: <span th:text="${#ids.next('req-')}">A3-500</span> | 
             Se o problema persistir, entre em contato com o suporte.
         </p>
     </div>

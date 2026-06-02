@@ -20,7 +20,7 @@ import java.util.Optional;
 
 /**
  * Service responsável pela lógica de negócio das Tarefas.
- * Refatorado para permitir movimentos de tarefas por administradores e gestores.
+ * Atualizado para suportar extração de Entidades para relatórios sem quebrar o Kanban.
  */
 @Service
 @Transactional(readOnly = true)
@@ -45,10 +45,17 @@ public class TarefaService {
     // CONSULTAS
     // ==========================================
 
+    /**
+     * Retorna DTOs para listagem comum na UI.
+     */
     public List<TarefaDTO> findAll() {
         return tarefaMapper.toDTOList(tarefaRepository.findAll());
     }
 
+    /**
+     * ✅ MÉTODO CRÍTICO PARA RELATÓRIOS:
+     * Retorna Entidades brutas para processamento do Apache POI / OpenPDF.
+     */
     public List<Tarefa> findAllEntities() {
         return tarefaRepository.findAll();
     }
@@ -74,7 +81,7 @@ public class TarefaService {
     }
 
     // ==========================================
-    // VIEWMODEL
+    // VIEWMODEL (KANBAN)
     // ==========================================
 
     public KanbanViewModel buildKanbanViewModel(Long projetoId, String username) {
@@ -88,7 +95,6 @@ public class TarefaService {
         List<TarefaDTO> concluidas = filtrarPorStatus(todasTarefas, StatusTarefa.CONCLUIDA);
         List<TarefaDTO> canceladas = filtrarPorStatus(todasTarefas, StatusTarefa.CANCELADA);
 
-        // Permissões dinâmicas
         boolean podeAdicionar = username != null;
         boolean podeEditar = podeEditarProjeto(projeto, username);
 
@@ -106,12 +112,12 @@ public class TarefaService {
     }
 
     // ==========================================
-    // ESCRITA
+    // ESCRITA (PERSISTÊNCIA)
     // ==========================================
 
     @Transactional
     public TarefaDTO save(Tarefa tarefa, String username) {
-        if (tarefa.getProjeto() == null || tarefa.getProjeto().getId() == null) {
+        if (tarefa.getProjeto() == null || (tarefa.getProjeto().getId() == null)) {
             throw new RegraDeNegocioException("Uma tarefa deve estar associada a um projeto.");
         }
 
@@ -128,9 +134,8 @@ public class TarefaService {
         Tarefa tarefa = tarefaRepository.findById(tarefaId)
                 .orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada: " + tarefaId));
 
-        // ✅ CORREÇÃO: Verificação de permissão aprimorada
         if (!podeMoverTarefa(tarefa, username)) {
-            throw new AcessoNegadoException("Você não tem permissão para mover esta tarefa. Ela deve estar atribuída a você ou você deve ser o líder do projeto.");
+            throw new AcessoNegadoException("Você não tem permissão para mover esta tarefa.");
         }
 
         if (tarefa.getStatus() == StatusTarefa.CANCELADA && novoStatus != StatusTarefa.CANCELADA) {
@@ -143,13 +148,16 @@ public class TarefaService {
 
     @Transactional
     public TarefaDTO update(Long id, Tarefa dados) {
-        Tarefa existente = tarefaRepository.findById(id).orElseThrow();
+        Tarefa existente = tarefaRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Tarefa não encontrada"));
+        
         existente.setTitulo(dados.getTitulo());
         existente.setDescricao(dados.getDescricao());
         existente.setStatus(dados.getStatus());
         existente.setPrioridade(dados.getPrioridade());
         existente.setDataVencimento(dados.getDataVencimento());
         existente.setResponsavel(dados.getResponsavel());
+        
         return tarefaMapper.toDTO(tarefaRepository.save(existente));
     }
 
@@ -159,21 +167,17 @@ public class TarefaService {
     }
 
     // ==========================================
-    // LÓGICA DE PERMISSÃO (PRIVADA)
+    // LÓGICA DE PERMISSÃO (PRESERVADA)
     // ==========================================
 
     private boolean podeMoverTarefa(Tarefa tarefa, String username) {
         if (username == null) return false;
-        
-        // 1. Administrador sempre pode mover (bypass de segurança para facilitar testes)
         if ("admin".equals(username)) return true;
 
-        // 2. O responsável pela tarefa pode movê-la
         if (tarefa.getResponsavel() != null && tarefa.getResponsavel().getLogin().equals(username)) {
             return true;
         }
 
-        // 3. O líder da equipe do projeto pode mover
         return podeEditarProjeto(tarefa.getProjeto(), username);
     }
 
@@ -185,8 +189,7 @@ public class TarefaService {
             return projeto.getEquipe().getLider().getLogin().equals(username);
         }
         
-        // Se o projeto não tem equipe ou líder definido, por enquanto permitimos para o admin
-        return "admin".equals(username);
+        return false;
     }
 
     private List<TarefaDTO> filtrarPorStatus(List<Tarefa> tarefas, StatusTarefa status) {

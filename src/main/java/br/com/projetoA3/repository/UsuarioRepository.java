@@ -2,9 +2,15 @@ package br.com.projetoA3.repository;
 
 import br.com.projetoA3.model.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
+/**
+ * Repository responsável pelas operações de banco de dados para a entidade Usuario.
+ * Atualizado para suportar validação de unicidade de CPF.
+ */
+@Repository
 public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     /**
@@ -32,4 +38,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      * Verifica se já existe um usuário com o e-mail informado.
      */
     boolean existsByEmail(String email);
+
+    /**
+     * ✅ NOVO: Verifica se já existe um usuário com o CPF informado.
+     * Essencial para evitar erros de ConstraintViolation do banco de dados (SQLite).
+     */
+    boolean existsByCpf(String cpf);
 }
