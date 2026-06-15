@@ -32,6 +32,15 @@
             color: white; display: inline-flex; align-items: center; justify-content: center;
             font-size: 0.65rem; font-weight: 600;
         }
+        
+        .stat-card {
+            transition: transform 0.2s;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
     </style>
 </head>
 <body>
@@ -49,6 +58,45 @@
         <a th:href="@{/projetos/novo}" class="btn btn-primary" sec:authorize="hasAnyRole('ADMINISTRADOR','GERENTE')">
             <i class="bi bi-plus-circle me-1"></i> <span th:text="#{project.new}">Novo Projeto</span>
         </a>
+    </div>
+
+    <!-- Cards de Estatísticas -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card text-white shadow-sm" style="background-color: var(--primary);">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-folder-fill fs-1 me-3 opacity-75"></i>
+                    <div>
+                        <div class="fs-3 fw-bold" th:text="${#lists.size(projetos)} ?: 0">0</div>
+                        <div class="small opacity-75">Total de Projetos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card text-white shadow-sm" style="background-color: var(--success);">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-check-circle-fill fs-1 me-3 opacity-75"></i>
+                    <div>
+                        <div class="fs-3 fw-bold" 
+                             th:text="${projetos != null ? #lists.size(projetos.?[status.name() == 'CONCLUIDO']) : 0}">0</div>
+                        <div class="small opacity-75">Projetos Concluidos</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card text-white shadow-sm" style="background-color: var(--info);">
+                <div class="card-body d-flex align-items-center">
+                    <i class="bi bi-play-circle-fill fs-1 me-3 opacity-75"></i>
+                    <div>
+                        <div class="fs-3 fw-bold" 
+                             th:text="${projetos != null ? #lists.size(projetos.?[status.name() == 'EM_ANDAMENTO']) : 0}">0</div>
+                        <div class="small opacity-75">Em Andamento</div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Busca -->
@@ -151,13 +199,13 @@
             </div>
             <div class="card-footer bg-transparent border-top-0 pt-0">
                 <div class="d-flex gap-2">
-                    <a th:href="@{/projetos/{id}(id=${projeto.id})}" class="btn btn-sm btn-outline-info flex-fill">
-                        <i class="bi bi-eye me-1"></i> Detalhes
+                    <a th:href="@{/tarefas/kanban/{id}(id=${projeto.id})}" class="btn btn-sm btn-outline-info flex-fill">
+                        <i class="bi bi-kanban me-1"></i> Kanban
                     </a>
                     <a th:href="@{/projetos/editar/{id}(id=${projeto.id})}" class="btn btn-sm btn-outline-warning flex-fill" sec:authorize="hasAnyRole('ADMINISTRADOR','GERENTE')">
                         <i class="bi bi-pencil me-1"></i> Editar
                     </a>
-                    <form th:action="@{/projetos/excluir/{id}(id=${projeto.id})}" method="post" class="d-inline flex-fill"
+                    <form th:action="@{/projetos/deletar/{id}(id=${projeto.id})}" method="post" class="d-inline flex-fill"
                           th:onclick="'return confirm(\'' + #{app.delete.confirm} + '\')'" sec:authorize="hasRole('ADMINISTRADOR')">
                         <button type="submit" class="btn btn-sm btn-outline-danger w-100">
                             <i class="bi bi-trash me-1"></i> Excluir
