@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Abrir Chamado</title>
+</head>
+<body>
+    <!-- O conteudo desta section sera injetado dentro do layout main.html -->
+    <section layout:fragment="content">
+        <div class="container mb-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card shadow-sm border-0">
+                        <div class="card-header bg-primary text-white py-3">
+                            <h4 class="mb-0"><i class="bi bi-plus-circle-fill me-2"></i> Abrir Novo Chamado</h4>
+                        </div>
+                        <div class="card-body p-4">
+                            <p class="text-muted mb-4">Descreva o problema ou solicitação detalhadamente para que nossa equipe possa ajudar você o mais rápido possível.</p>
+                            
+                            <form th:action="@{/tickets/abrir}" th:object="${ticket}" method="post">
+                                
+                                <!-- Campo Titulo -->
+                                <div class="mb-3">
+                                    <label for="titulo" class="form-label fw-bold">Título do Chamado <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="titulo" th:field="*{titulo}" placeholder="Ex: Impressora do 2º andar não funciona" required>
+                                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></div>
+                                </div>
+                                
+                                <!-- Campos Categoria e Prioridade -->
+                                <div class="row mb-3">
+                                    <div class="col-md-6 mb-3 mb-md-0">
+                                        <label for="categoria" class="form-label fw-bold">Categoria</label>
+                                        <select class="form-select" id="categoria" th:field="*{categoria}">
+                                            <option value="">Selecione uma categoria...</option>
+                                            <option value="Hardware">Hardware</option>
+                                            <option value="Software">Software</option>
+                                            <option value="Rede">Rede / Internet</option>
+                                            <option value="Acessos">Acessos e Permissões</option>
+                                            <option value="Outros">Outros</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label for="prioridade" class="form-label fw-bold">Prioridade <span class="text-danger">*</span></label>
+                                        <select class="form-select" id="prioridade" th:field="*{prioridade}" required>
+                                            <option value="BAIXA">Baixa</option>
+                                            <option value="MEDIA" selected>Média</option>
+                                            <option value="ALTA">Alta</option>
+                                            <option value="URGENTE">Urgente</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <!-- Campo Descricao -->
+                                <div class="mb-4">
+                                    <label for="descricao" class="form-label fw-bold">Descrição Detalhada <span class="text-danger">*</span></label>
+                                    <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="6" placeholder="Inclua passos para reproduzir o erro, mensagens exibidas, etc." required></textarea>
+                                    <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></div>
+                                </div>
+                                
+                                <!-- Botoes de Acao -->
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <a th:href="@{/tickets/meus}" class="btn btn-outline-secondary">
+                                        <i class="bi bi-arrow-left"></i> Cancelar
+                                    </a>
+                                    <button type="submit" class="btn btn-primary px-4">
+                                        <i class="bi bi-send-fill me-2"></i> Enviar Chamado
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
