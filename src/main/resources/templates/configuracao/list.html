@@ -1,183 +1,489 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configurações de E-mail - A3 2.0</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/main.css">
+    <title th:text="#{config.title}">Configuracoes - A3 2.0</title>
     <style>
-        /* Força fundo escuro absoluto em toda a página */
-        body { background-color: var(--bg-secondary) !important; color: var(--text-primary) !important; }
+        .config-card {
+            background-color: var(--bg-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
         
-        .page-header { 
-            background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%); 
-            color: white; padding: 2rem 0; margin-bottom: 2rem; border-radius: 0 0 16px 16px;
-            box-shadow: var(--shadow-md);
+        .config-header {
+            background: linear-gradient(135deg, var(--primary) 0%, #4338ca 100%);
+            color: white;
+            padding: 1.5rem 2rem;
         }
-
-        .config-container { 
-            background-color: var(--bg-primary) !important; 
-            padding: 2.5rem; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-color) !important;
-            box-shadow: var(--shadow-lg); 
+        
+        .config-body {
+            padding: 2rem;
         }
-
-        /* Estilização da Tabela Técnica sem resíduos brancos */
-        .table { color: var(--text-primary) !important; background-color: transparent !important; }
-        .table thead th {
-            background-color: var(--bg-tertiary) !important;
-            color: var(--text-secondary) !important;
-            border-bottom: 2px solid var(--border-color) !important;
-            padding: 1rem;
-        }
-        .table td { 
-            background-color: var(--bg-primary) !important; 
-            border-bottom: 1px solid var(--border-color) !important; 
-            color: var(--text-primary) !important;
-        }
-
-        /* Inputs customizados para não herdarem branco do Bootstrap */
-        .form-control {
-            background-color: var(--bg-tertiary) !important;
-            border: 1px solid var(--border-color) !important;
-            color: var(--text-primary) !important;
-        }
-        .form-control::placeholder { color: var(--text-muted) !important; }
-
-        code { 
-            color: var(--warning) !important; 
-            background-color: rgba(0, 0, 0, 0.5) !important; 
-            padding: 4px 8px; 
-            border-radius: 6px; 
-        }
-
-        /* Caixa de Info SMTP Dark */
-        .info-box-dark {
-            background-color: rgba(14, 165, 233, 0.1) !important;
-            border: 1px solid rgba(14, 165, 233, 0.3) !important;
-            border-left: 4px solid var(--info) !important;
-            padding: 1.2rem;
+        
+        .info-box {
+            background-color: rgba(14, 165, 233, 0.08);
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            border-left: 4px solid var(--info);
+            padding: 1.25rem;
             border-radius: 8px;
-            color: var(--text-secondary) !important;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        
+        .config-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+        
+        .config-table thead th {
+            background-color: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border-bottom: 2px solid var(--border-color);
+            padding: 1rem 1.25rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+        
+        .config-table tbody tr {
+            transition: background-color 0.2s;
+        }
+        
+        .config-table tbody tr:hover {
+            background-color: var(--bg-tertiary);
+        }
+        
+        .config-table td {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: middle;
+        }
+        
+        .config-table td:first-child {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: var(--warning);
+            background-color: rgba(0, 0, 0, 0.05);
+            border-right: 1px solid var(--border-color);
+        }
+        
+        .config-table .form-control {
+            background-color: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            transition: all 0.2s;
+        }
+        
+        .config-table .form-control:focus {
+            background-color: var(--bg-primary);
+            border-color: var(--primary);
+            box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.15);
+        }
+        
+        .param-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            font-size: 1rem;
+        }
+        
+        .param-icon.host { background-color: rgba(13, 110, 253, 0.15); color: #0d6efd; }
+        .param-icon.port { background-color: rgba(111, 66, 193, 0.15); color: #6f42c1; }
+        .param-icon.user { background-color: rgba(13, 202, 240, 0.15); color: #0dcaf0; }
+        .param-icon.pass { background-color: rgba(220, 53, 69, 0.15); color: #dc3545; }
+        .param-icon.sender { background-color: rgba(25, 135, 84, 0.15); color: #198754; }
+        
+        .btn-toggle-password {
+            border: 1px solid var(--border-color);
+            background-color: var(--bg-tertiary);
+            color: var(--text-muted);
+            transition: all 0.2s;
+        }
+        
+        .btn-toggle-password:hover {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+        
+        .test-email-btn {
+            background: linear-gradient(135deg, var(--success) 0%, #0f5132 100%);
+            border: none;
+            color: white;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .test-email-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(25, 135, 84, 0.3);
+            color: white;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-indicator.configured {
+            background-color: rgba(25, 135, 84, 0.15);
+            color: #198754;
+        }
+        
+        .status-indicator.pending {
+            background-color: rgba(255, 193, 7, 0.15);
+            color: #997404;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm mb-3" style="background-color: var(--bg-primary) !important; border-bottom: 1px solid var(--border-color) !important;">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/menu" style="color: var(--primary);">
-                <i class="bi bi-arrow-left-circle me-2"></i>Voltar ao Painel
-            </a>
-            <div class="ms-auto">
-                <form th:action="@{/logout}" method="post" class="m-0">
-                    <button type="submit" class="btn btn-outline-danger btn-sm px-3">Sair</button>
-                </form>
+<section layout:fragment="content">
+<div class="container mb-5">
+    <!-- Cabecalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-gear-wide-connected text-primary me-2"></i>
+                <span th:text="#{config.title}">Configuracoes do Sistema</span>
+            </h2>
+            <p class="text-muted mb-0 small">Gerenciamento de parametros e integracoes externas</p>
+        </div>
+        <div class="d-flex gap-2">
+            <span class="status-indicator configured" th:if="${configuracoes != null and !#lists.isEmpty(configuracoes)}">
+                <i class="bi bi-check-circle-fill"></i> Configurado
+            </span>
+            <span class="status-indicator pending" th:unless="${configuracoes != null and !#lists.isEmpty(configuracoes)}">
+                <i class="bi bi-exclamation-triangle-fill"></i> Pendente
+            </span>
+        </div>
+    </div>
+
+    <!-- Alertas -->
+    <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i>
+        <span th:text="${sucesso}">Sucesso</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+        <span th:text="${erro}">Erro</span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+
+    <!-- Card Principal de Configuracoes SMTP -->
+    <div class="config-card mb-4">
+        <div class="config-header">
+            <h4 class="mb-0 fw-bold">
+                <i class="bi bi-envelope-at-fill me-2"></i>
+                Configuracoes de E-mail (SMTP)
+            </h4>
+            <p class="mb-0 small opacity-75 mt-1">Credenciais para disparo de notificacoes e documentos</p>
+        </div>
+        
+        <div class="config-body">
+            <!-- Info Box -->
+            <div class="info-box d-flex align-items-start">
+                <i class="bi bi-info-circle-fill fs-4 text-info me-3 flex-shrink-0"></i>
+                <div>
+                    <p class="mb-2 small">
+                        O sistema utiliza estas credenciais para o disparo de <strong>notificacoes automaticas</strong> 
+                        (tickets, comentarios, boas-vindas) e envio de <strong>documentos em PDF/Excel</strong>.
+                    </p>
+                    <p class="mb-0 small">
+                        <i class="bi bi-shield-lock me-1"></i>
+                        Certifique-se de usar uma <strong>Senha de App</strong> se estiver usando Gmail ou Outlook com autenticacao em dois fatores.
+                    </p>
+                </div>
             </div>
-        </div>
-    </nav>
 
-    <div class="container fade-in">
-        <div class="page-header px-4">
-            <h2 class="mb-0 fw-bold"><i class="bi bi-gear-wide-connected me-3"></i>Configurações de E-mail (SMTP)</h2>
-        </div>
-
-        <!-- Alertas corrigidos para Dark Mode -->
-        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert" style="background-color: rgba(16, 185, 129, 0.1) !important; color: #10b981 !important; border: 1px solid #10b981 !important;">
-            <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${sucesso}"></span>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert" style="background-color: rgba(239, 68, 68, 0.1) !important; color: #ef4444 !important; border: 1px solid #ef4444 !important;">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${erro}"></span>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert"></button>
-        </div>
-
-        <div class="config-container mb-5">
-            <div class="info-box-dark d-flex align-items-center mb-4">
-                <i class="bi bi-info-circle-fill fs-4 text-info me-3"></i>
-                <p class="mb-0 small">
-                    O sistema utiliza estas credenciais para o disparo de notificações e documentos em PDF/Excel. Certifique-se de usar uma <strong>Senha de App</strong> se estiver usando Gmail ou Outlook.
-                </p>
-            </div>
-
-            <form th:action="@{/configuracoes/salvar}" method="post">
+            <form th:action="@{/configuracoes/salvar}" method="post" id="formConfiguracoes">
                 <div class="table-responsive">
-                    <table class="table table-borderless align-middle">
+                    <table class="config-table">
                         <thead>
                             <tr>
-                                <th style="width: 25%">Parâmetro</th>
-                                <th style="width: 50%">Valor Definido</th>
-                                <th style="width: 25%">Descrição Técnica</th>
+                                <th style="width: 25%">
+                                    <i class="bi bi-code-slash me-1"></i> Parametro
+                                </th>
+                                <th style="width: 50%">
+                                    <i class="bi bi-input-cursor-text me-1"></i> Valor Definido
+                                </th>
+                                <th style="width: 25%">
+                                    <i class="bi bi-info-circle me-1"></i> Descricao Tecnica
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr class="config-row">
-                                <td class="py-4"><code>EMAIL_HOST</code></td>
+                            <!-- EMAIL_HOST -->
+                            <tr>
+                                <td>
+                                    <span class="param-icon host">
+                                        <i class="bi bi-server"></i>
+                                    </span>
+                                    <code>EMAIL_HOST</code>
+                                </td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_HOST">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_HOST'][0]?.id}">
                                     <input type="text" name="valor" class="form-control" 
-                                           th:value="${#lists.isEmpty(configuracoes) ? 'smtp.gmail.com' : configuracoes.?[chave == 'EMAIL_HOST'][0]?.valor ?: 'smtp.gmail.com'}" required>
+                                           th:value="${#lists.isEmpty(configuracoes) ? 'smtp.gmail.com' : configuracoes.?[chave == 'EMAIL_HOST'][0]?.valor ?: 'smtp.gmail.com'}" 
+                                           placeholder="smtp.exemplo.com"
+                                           required
+                                           aria-label="Servidor SMTP">
                                 </td>
-                                <td><span class="text-muted small">Servidor SMTP</span></td>
+                                <td>
+                                    <span class="text-muted small">
+                                        <i class="bi bi-globe me-1"></i>
+                                        Servidor SMTP
+                                    </span>
+                                </td>
                             </tr>
-                            <tr class="config-row">
-                                <td class="py-4"><code>EMAIL_PORT</code></td>
+                            
+                            <!-- EMAIL_PORT -->
+                            <tr>
+                                <td>
+                                    <span class="param-icon port">
+                                        <i class="bi bi-ethernet"></i>
+                                    </span>
+                                    <code>EMAIL_PORT</code>
+                                </td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_PORT">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_PORT'][0]?.id}">
                                     <input type="number" name="valor" class="form-control" 
-                                           th:value="${#lists.isEmpty(configuracoes) ? '587' : configuracoes.?[chave == 'EMAIL_PORT'][0]?.valor ?: '587'}" required>
+                                           th:value="${#lists.isEmpty(configuracoes) ? '587' : configuracoes.?[chave == 'EMAIL_PORT'][0]?.valor ?: '587'}" 
+                                           placeholder="587"
+                                           min="1"
+                                           max="65535"
+                                           required
+                                           aria-label="Porta SMTP">
                                 </td>
-                                <td><span class="text-muted small">Porta (TLS/SSL)</span></td>
+                                <td>
+                                    <span class="text-muted small">
+                                        <i class="bi bi-plug me-1"></i>
+                                        Porta (TLS/SSL)
+                                    </span>
+                                </td>
                             </tr>
-                            <tr class="config-row">
-                                <td class="py-4"><code>EMAIL_USUARIO</code></td>
+                            
+                            <!-- EMAIL_USUARIO -->
+                            <tr>
+                                <td>
+                                    <span class="param-icon user">
+                                        <i class="bi bi-person-badge"></i>
+                                    </span>
+                                    <code>EMAIL_USUARIO</code>
+                                </td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_USUARIO">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_USUARIO'][0]?.id}">
                                     <input type="email" name="valor" class="form-control" 
-                                           th:value="${#lists.isEmpty(configuracoes) ? '' : configuracoes.?[chave == 'EMAIL_USUARIO'][0]?.valor}" required>
+                                           th:value="${#lists.isEmpty(configuracoes) ? '' : configuracoes.?[chave == 'EMAIL_USUARIO'][0]?.valor}" 
+                                           placeholder="seu-email@exemplo.com"
+                                           required
+                                           aria-label="Usuario SMTP">
                                 </td>
-                                <td><span class="text-muted small">Login/E-mail</span></td>
+                                <td>
+                                    <span class="text-muted small">
+                                        <i class="bi bi-envelope me-1"></i>
+                                        Login/E-mail
+                                    </span>
+                                </td>
                             </tr>
-                            <tr class="config-row">
-                                <td class="py-4"><code>EMAIL_SENHA</code></td>
+                            
+                            <!-- EMAIL_SENHA -->
+                            <tr>
+                                <td>
+                                    <span class="param-icon pass">
+                                        <i class="bi bi-key-fill"></i>
+                                    </span>
+                                    <code>EMAIL_SENHA</code>
+                                </td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_SENHA">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_SENHA'][0]?.id}">
-                                    <input type="password" name="valor" class="form-control" 
-                                           th:value="${#lists.isEmpty(configuracoes) ? '' : configuracoes.?[chave == 'EMAIL_SENHA'][0]?.valor}" required>
+                                    <div class="input-group">
+                                        <input type="password" name="valor" class="form-control" id="senhaSmtp"
+                                               th:value="${#lists.isEmpty(configuracoes) ? '' : configuracoes.?[chave == 'EMAIL_SENHA'][0]?.valor}" 
+                                               placeholder="Senha de App ou senha SMTP"
+                                               required
+                                               aria-label="Senha SMTP">
+                                        <button class="btn btn-toggle-password" type="button" onclick="toggleSenha()" title="Mostrar/ocultar senha" aria-label="Mostrar ou ocultar senha">
+                                            <i class="bi bi-eye" id="icon-senha"></i>
+                                        </button>
+                                    </div>
                                 </td>
-                                <td><span class="text-muted small">Senha Segura</span></td>
+                                <td>
+                                    <span class="text-muted small">
+                                        <i class="bi bi-shield-lock me-1"></i>
+                                        Senha Segura
+                                    </span>
+                                </td>
                             </tr>
-                            <tr class="config-row">
-                                <td class="py-4"><code>EMAIL_REMETENTE</code></td>
+                            
+                            <!-- EMAIL_REMETENTE -->
+                            <tr>
+                                <td>
+                                    <span class="param-icon sender">
+                                        <i class="bi bi-send-fill"></i>
+                                    </span>
+                                    <code>EMAIL_REMETENTE</code>
+                                </td>
                                 <td>
                                     <input type="hidden" name="chave" value="EMAIL_REMETENTE">
                                     <input type="hidden" name="id" th:value="${#lists.isEmpty(configuracoes) ? null : configuracoes.?[chave == 'EMAIL_REMETENTE'][0]?.id}">
                                     <input type="text" name="valor" class="form-control" 
-                                           th:value="${#lists.isEmpty(configuracoes) ? 'Sistema A3 2.0' : configuracoes.?[chave == 'EMAIL_REMETENTE'][0]?.valor ?: 'Sistema A3 2.0'}">
+                                           th:value="${#lists.isEmpty(configuracoes) ? 'Sistema A3 2.0' : configuracoes.?[chave == 'EMAIL_REMETENTE'][0]?.valor ?: 'Sistema A3 2.0'}" 
+                                           placeholder="Nome exibido no e-mail"
+                                           aria-label="Nome do remetente">
                                 </td>
-                                <td><span class="text-muted small">Nome Exibido</span></td>
+                                <td>
+                                    <span class="text-muted small">
+                                        <i class="bi bi-tag me-1"></i>
+                                        Nome Exibido
+                                    </span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
 
-                <div class="mt-5 d-flex gap-3 border-top pt-4">
-                    <button type="submit" class="btn btn-primary px-5 shadow-sm">
-                        <i class="bi bi-cloud-check me-2"></i>Salvar Alterações
-                    </button>
-                    <a href="/menu" class="btn btn-outline-secondary">Cancelar</a>
+                <!-- Botoes de Acao -->
+                <div class="mt-5 d-flex justify-content-between align-items-center flex-wrap gap-3 border-top pt-4">
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary px-5 shadow-sm">
+                            <i class="bi bi-cloud-check me-2"></i>
+                            <span th:text="#{app.save}">Salvar Alteracoes</span>
+                        </button>
+                        <button type="button" class="btn test-email-btn px-4" id="btnTestarEmail">
+                            <i class="bi bi-send me-2"></i>
+                            <span th:text="#{config.email.test}">Testar E-mail</span>
+                        </button>
+                    </div>
+                    <a th:href="@{/menu}" class="btn btn-outline-secondary">
+                        <i class="bi bi-x-circle me-1"></i>
+                        <span th:text="#{app.cancel}">Cancelar</span>
+                    </a>
                 </div>
             </form>
         </div>
     </div>
 
-    <div th:replace="~{common/footer :: footer}"></div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Card de Informacoes Adicionais -->
+    <div class="row g-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-question-circle text-primary me-2"></i>
+                        Como Obter uma Senha de App?
+                    </h5>
+                    <ul class="list-unstyled small text-muted mb-0">
+                        <li class="mb-2">
+                            <i class="bi bi-google text-danger me-2"></i>
+                            <strong>Gmail:</strong> Acesse Conta Google > Seguranca > Verificacao em 2 etapas > Senhas de app
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-microsoft text-info me-2"></i>
+                            <strong>Outlook:</strong> Acesse Conta Microsoft > Seguranca > Opcoes de seguranca avancadas > Senhas de app
+                        </li>
+                        <li>
+                            <i class="bi bi-building text-success me-2"></i>
+                            <strong>Corporativo:</strong> Consulte o administrador de TI da sua empresa
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="fw-bold mb-3">
+                        <i class="bi bi-lightning-charge text-warning me-2"></i>
+                        Portas Comuns
+                    </h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-borderless small mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="fw-bold text-primary">587</td>
+                                    <td class="text-muted">TLS (Recomendado para Gmail, Outlook)</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-primary">465</td>
+                                    <td class="text-muted">SSL (Legado, alguns servidores corporativos)</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold text-primary">25</td>
+                                    <td class="text-muted">Sem criptografia (Nao recomendado)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Toggle de visualizacao da senha
+    function toggleSenha() {
+        var input = document.getElementById('senhaSmtp');
+        var icon = document.getElementById('icon-senha');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    }
+
+    // Botao de teste de e-mail
+    document.getElementById('btnTestarEmail').addEventListener('click', function() {
+        var btn = this;
+        var originalText = btn.innerHTML;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Enviando...';
+        btn.disabled = true;
+
+        fetch('/configuracoes/testar-email', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="_csrf"]')?.content || ''
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.sucesso) {
+                alert('E-mail de teste enviado com sucesso! Verifique sua caixa de entrada.');
+            } else {
+                alert('Erro ao enviar e-mail de teste: ' + (data.mensagem || 'Verifique as configuracoes SMTP.'));
+            }
+        })
+        .catch(error => {
+            alert('Erro de conexao ao testar e-mail. Verifique se o servidor esta ativo.');
+        })
+        .finally(() => {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
+        });
+    });
+</script>
+</section>
 </body>
 </html>
