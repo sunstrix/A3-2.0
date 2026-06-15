@@ -1,217 +1,226 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${equipe.id} != null ? 'Editar Equipe' : 'Nova Equipe'">Formulário de Equipe</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/main.css">
+    <title th:text="${equipe.id} != null ? 'Editar Equipe' : 'Nova Equipe'">Formulario de Equipe</title>
     <style>
-        body { background-color: var(--bg-secondary); color: var(--text-primary); }
-        .page-header { 
-            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); 
-            color: white; 
-            padding: 1.5rem 0; 
-            margin-bottom: 2rem; 
-            border-radius: 0 0 12px 12px;
-            box-shadow: var(--shadow-md);
-        }
-        .form-container { 
-            background-color: var(--bg-primary); 
-            padding: 2rem; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-lg); 
-        }
         .membro-badge {
             display: inline-flex; align-items: center; gap: 0.5rem;
             background: var(--bg-tertiary); color: var(--text-primary);
             padding: 0.35rem 0.75rem; border-radius: 20px;
             font-size: 0.85rem; margin: 0.25rem;
             border: 1px solid var(--primary);
+            transition: all 0.2s;
         }
-        .membro-badge button { background: none; border: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 1rem; line-height: 1; }
+        .membro-badge:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-sm);
+        }
+        .membro-badge button { 
+            background: none; border: none; color: var(--danger); cursor: pointer; 
+            padding: 0; font-size: 1rem; line-height: 1; 
+        }
+        .membro-badge button:hover { color: #dc3545; }
         #membros-container { 
             min-height: 48px; 
             padding: 0.5rem; 
             border: 1px dashed var(--border-color); 
             border-radius: 8px; 
-            background-color: rgba(0,0,0,0.1);
+            background-color: var(--bg-secondary);
         }
-        .navbar-custom {
-            background-color: var(--bg-primary);
-            border-bottom: 1px solid var(--border-color);
+        .avatar-equipe {
+            width: 64px; height: 64px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: white; display: flex; align-items: center; justify-content: center;
+            font-size: 1.5rem; font-weight: 700;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm mb-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/equipes" style="color: var(--primary);">
-                <i class="bi bi-arrow-left-circle me-1"></i> Voltar para Lista
-            </a>
-        </div>
-    </nav>
+    <section layout:fragment="content">
+        <div class="container mb-5">
+            <!-- Cabecalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i th:class="${equipe.id != null} ? 'bi bi-pencil-square me-2' : 'bi bi-plus-circle-fill me-2'"></i>
+                        <span th:text="${equipe.id} != null ? 'Editar Equipe' : 'Nova Equipe'">Formulario</span>
+                    </h2>
+                    <p class="text-muted mb-0 small" th:if="${equipe.id} != null">
+                        ID: <span th:text="${equipe.id}">0</span> | 
+                        Criada em: <span th:text="${#temporals.format(equipe.dataCriacao, 'dd/MM/yyyy')}">data</span>
+                    </p>
+                </div>
+                <a th:href="@{/equipes}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
+            </div>
 
-    <div class="container fade-in">
-        <div class="page-header px-4">
-            <h2 class="mb-0" th:text="${equipe.id} != null ? '✏️ Editar Equipe' : '➕ Nova Equipe'"></h2>
-        </div>
+            <!-- Mensagens de erro -->
+            <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${erro}"></span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
 
-        <!-- Mensagens de erro -->
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid var(--danger);">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${erro}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form th:action="${equipe.id} != null ? @{/equipes/atualizar/{id}(id=${equipe.id})} : @{/equipes}"
+                          th:object="${equipe}" method="post" id="formEquipe" novalidate>
 
-        <div class="form-container">
-            <form th:action="${equipe.id} != null ? @{/equipes/atualizar/{id}(id=${equipe.id})} : @{/equipes}"
-                  th:object="${equipe}" method="post" id="formEquipe">
+                        <div class="row g-4">
+                            <!-- Campo: Nome -->
+                            <div class="col-12">
+                                <label for="nome" class="form-label fw-bold">Nome da Equipe <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nome" th:field="*{nome}"
+                                       th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" required maxlength="100">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
+                            </div>
 
-                <div class="row g-3">
+                            <!-- Campo: Descricao -->
+                            <div class="col-12">
+                                <label for="descricao" class="form-label fw-bold">Descricao</label>
+                                <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="3"
+                                          placeholder="Descreva o objetivo ou contexto desta equipe..." maxlength="500"></textarea>
+                                <div class="form-text small">Maximo 500 caracteres.</div>
+                            </div>
 
-                    <!-- Campo: Nome -->
-                    <div class="col-12">
-                        <label for="nome" class="form-label fw-semibold" style="color: var(--text-secondary);">Nome da Equipe <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="nome" th:field="*{nome}"
-                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" required>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
-                    </div>
+                            <!-- Campo: Lider Responsavel -->
+                            <div class="col-md-6">
+                                <label for="lider" class="form-label fw-bold">Lider Responsavel <span class="text-danger">*</span></label>
+                                <select class="form-select" id="lider" th:field="*{lider.id}" required>
+                                    <option value="">Selecione um lider...</option>
+                                    <option th:each="user : ${lideres}"
+                                            th:value="${user.id}"
+                                            th:text="${user.nome} + ' (' + ${user.perfil?.descricao} + ')'">
+                                    </option>
+                                </select>
+                                <div class="form-text small text-muted">Apenas Administradores e Gerentes podem ser lideres.</div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('lider')}" th:errors="*{lider}"></div>
+                            </div>
 
-                    <!-- Campo: Descrição -->
-                    <div class="col-12">
-                        <label for="descricao" class="form-label fw-semibold" style="color: var(--text-secondary);">Descrição</label>
-                        <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="3"
-                                  placeholder="Descreva o objetivo ou contexto desta equipe..."></textarea>
-                    </div>
+                            <!-- Campo: Membros da Equipe (dinamico) -->
+                            <div class="col-12">
+                                <label class="form-label fw-bold">Membros da Equipe</label>
 
-                    <!-- Campo: Líder Responsável -->
-                    <div class="col-md-6">
-                        <label for="lider" class="form-label fw-semibold" style="color: var(--text-secondary);">Líder Responsável <span class="text-danger">*</span></label>
-                        <select class="form-select" id="lider" th:field="*{lider.id}" required>
-                            <option value="">Selecione um líder...</option>
-                            <option th:each="user : ${lideres}"
-                                    th:value="${user.id}"
-                                    th:text="${user.nome} + ' (' + ${user.perfil.descricao} + ')'">
-                            </option>
-                        </select>
-                        <div class="form-text" style="color: var(--text-muted);">Apenas Administradores e Gerentes podem ser líderes.</div>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('lider')}" th:errors="*{lider}"></div>
-                    </div>
+                                <!-- Seletor para adicionar membros -->
+                                <div class="input-group mb-2">
+                                    <select class="form-select" id="selectMembro">
+                                        <option value="">Selecione um funcionario para adicionar...</option>
+                                        <option th:each="user : ${todosUsuarios}"
+                                                th:value="${user.id}"
+                                                th:attr="data-nome=${user.nome}, data-iniciais=${user.iniciais}"
+                                                th:text="${user.nome} + ' — ' + ${user.cargo}">
+                                        </option>
+                                    </select>
+                                    <button class="btn btn-outline-primary" type="button" id="btnAdicionarMembro">
+                                        <i class="bi bi-plus-lg me-1"></i> Adicionar
+                                    </button>
+                                </div>
 
-                    <!-- Campo: Membros da Equipe (dinâmico) -->
-                    <div class="col-12 mt-2">
-                        <label class="form-label fw-semibold" style="color: var(--text-secondary);">Membros da Equipe</label>
+                                <!-- Area onde os membros selecionados aparecem como badges -->
+                                <div id="membros-container">
+                                    <span id="placeholder-membros" class="text-muted small">Nenhum membro adicionado ainda.</span>
+                                </div>
 
-                        <!-- Seletor para adicionar membros -->
-                        <div class="input-group mb-2">
-                            <select class="form-select" id="selectMembro">
-                                <option value="">Selecione um funcionário para adicionar...</option>
-                                <option th:each="user : ${todosUsuarios}"
-                                        th:value="${user.id}"
-                                        th:attr="data-nome=${user.nome}"
-                                        th:text="${user.nome} + ' — ' + ${user.cargo}">
-                                </option>
-                            </select>
-                            <button class="btn btn-outline-primary" type="button" id="btnAdicionarMembro">
-                                <i class="bi bi-plus-lg"></i> Adicionar
+                                <!-- Inputs hidden que serao submetidos no formulario (um por membro) -->
+                                <div id="membros-inputs"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2 border-top pt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-save me-1"></i> Salvar Equipe
                             </button>
+                            <a th:href="@{/equipes}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                            </a>
                         </div>
-
-                        <!-- Área onde os membros selecionados aparecem como badges -->
-                        <div id="membros-container">
-                            <span id="placeholder-membros" class="text-muted small">Nenhum membro adicionado ainda.</span>
-                        </div>
-
-                        <!-- Inputs hidden que serão submetidos no formulário (um por membro) -->
-                        <div id="membros-inputs"></div>
-                    </div>
-
+                    </form>
                 </div>
-
-                <div class="mt-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-save me-1"></i> Salvar Equipe
-                    </button>
-                    <a href="/equipes" class="btn btn-outline-secondary">Cancelar</a>
-                </div>
-            </form>
+            </div>
         </div>
-    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script th:inline="javascript">
-        // IDs dos membros já salvos (para edição)
-        const membrosIniciais = /*[[${membrosIds}]]*/ [];
+        <script th:inline="javascript">
+            // IDs dos membros ja salvos (para edicao)
+            const membrosIniciais = /*[[${membrosIds}]]*/ [];
 
-        // Mapa de id -> nome de todos os usuários disponíveis
-        const todosUsuarios = {};
-        document.querySelectorAll('#selectMembro option[value]').forEach(opt => {
-            if (opt.value) {
-                todosUsuarios[opt.value] = opt.getAttribute('data-nome');
-            }
-        });
-
-        // Estado interno: Set de IDs selecionados
-        const membrosSelecionados = new Set();
-
-        function renderizarMembros() {
-            const container = document.getElementById('membros-container');
-            const inputsContainer = document.getElementById('membros-inputs');
-            const placeholder = document.getElementById('placeholder-membros');
-
-            container.innerHTML = '';
-            inputsContainer.innerHTML = '';
-
-            if (membrosSelecionados.size === 0) {
-                container.appendChild(Object.assign(document.createElement('span'), {
-                    className: 'text-muted small',
-                    textContent: 'Nenhum membro adicionado ainda.'
-                }));
-                return;
-            }
-
-            membrosSelecionados.forEach(id => {
-                const nome = todosUsuarios[id] || 'Usuário #' + id;
-
-                // Badge visual
-                const badge = document.createElement('span');
-                badge.className = 'membro-badge';
-                badge.innerHTML = `<i class="bi bi-person-fill me-1"></i> ${nome}
-                    <button type="button" onclick="removerMembro('${id}')" title="Remover">
-                        <i class="bi bi-x-circle-fill"></i>
-                    </button>`;
-                container.appendChild(badge);
-
-                // Input hidden para submissão
-                const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = 'membroIds';
-                input.value = id;
-                inputsContainer.appendChild(input);
+            // Mapa de id -> {nome, iniciais} de todos os usuarios disponiveis
+            const todosUsuarios = {};
+            document.querySelectorAll('#selectMembro option[value]').forEach(opt => {
+                if (opt.value) {
+                    todosUsuarios[opt.value] = {
+                        nome: opt.getAttribute('data-nome'),
+                        iniciais: opt.getAttribute('data-iniciais') || 'U'
+                    };
+                }
             });
-        }
 
-        function adicionarMembro() {
-            const select = document.getElementById('selectMembro');
-            const id = select.value;
-            if (!id) return;
-            membrosSelecionados.add(id);
-            select.value = '';
+            // Estado interno: Set de IDs selecionados
+            const membrosSelecionados = new Set();
+
+            function renderizarMembros() {
+                const container = document.getElementById('membros-container');
+                const inputsContainer = document.getElementById('membros-inputs');
+
+                container.innerHTML = '';
+                inputsContainer.innerHTML = '';
+
+                if (membrosSelecionados.size === 0) {
+                    container.innerHTML = '<span class="text-muted small"><i class="bi bi-people me-1"></i> Nenhum membro adicionado ainda.</span>';
+                    return;
+                }
+
+                membrosSelecionados.forEach(id => {
+                    const user = todosUsuarios[id] || {nome: 'Usuario #' + id, iniciais: 'U'};
+
+                    // Badge visual com avatar
+                    const badge = document.createElement('span');
+                    badge.className = 'membro-badge';
+                    badge.innerHTML = `
+                        <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                             style="width: 20px; height: 20px; border-radius: 50%; font-size: 0.6rem; font-weight: 600;">
+                            ${user.iniciais}
+                        </div>
+                        <span>${user.nome}</span>
+                        <button type="button" onclick="removerMembro('${id}')" title="Remover membro" aria-label="Remover ${user.nome}">
+                            <i class="bi bi-x-circle-fill"></i>
+                        </button>`;
+                    container.appendChild(badge);
+
+                    // Input hidden para submissao
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'membroIds';
+                    input.value = id;
+                    inputsContainer.appendChild(input);
+                });
+            }
+
+            function adicionarMembro() {
+                const select = document.getElementById('selectMembro');
+                const id = select.value;
+                if (!id) return;
+                if (membrosSelecionados.has(id)) {
+                    alert('Este usuario ja foi adicionado.');
+                    return;
+                }
+                membrosSelecionados.add(id);
+                select.value = '';
+                renderizarMembros();
+            }
+
+            function removerMembro(id) {
+                membrosSelecionados.delete(id);
+                renderizarMembros();
+            }
+
+            // Carregar membros iniciais (edicao)
+            membrosIniciais.forEach(id => membrosSelecionados.add(String(id)));
             renderizarMembros();
-        }
 
-        function removerMembro(id) {
-            membrosSelecionados.delete(id);
-            renderizarMembros();
-        }
-
-        // Carregar membros iniciais (edição)
-        membrosIniciais.forEach(id => membrosSelecionados.add(String(id)));
-        renderizarMembros();
-
-        document.getElementById('btnAdicionarMembro').addEventListener('click', adicionarMembro);
-    </script>
+            document.getElementById('btnAdicionarMembro').addEventListener('click', adicionarMembro);
+        </script>
+    </section>
 </body>
 </html>
