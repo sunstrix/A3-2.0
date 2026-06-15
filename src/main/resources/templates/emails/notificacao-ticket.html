@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notificação de Ticket</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-font-smoothing: antialiased;">
+    
+    <!-- Container Principal -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f7f6; padding: 40px 0;">
+        <tr>
+            <td align="center">
+                
+                <!-- Cartao de Conteudo -->
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 100%;">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="background-color: #0d6efd; padding: 25px 20px;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 24px; font-weight: bold; letter-spacing: 1px;">A3-2.0 Help Desk</h1>
+                            <p style="margin: 5px 0 0; color: #e9ecef; font-size: 14px;">Atualização de Chamado</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Corpo do E-mail -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="margin: 0 0 20px; color: #212529; font-size: 20px;">
+                                Olá, <span th:text="${nomeDestinatario}">Usuário</span>!
+                            </h2>
+                            
+                            <p style="margin: 0 0 25px; color: #495057; font-size: 16px; line-height: 1.6;">
+                                Houve uma nova movimentação no ticket <strong th:text="'#' + ${ticket.id}">#123</strong>.
+                            </p>
+                            
+                            <!-- Box de Ação -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #e7f1ff; border-left: 4px solid #0d6efd; border-radius: 4px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="margin: 0 0 5px; color: #0a58ca; font-size: 12px; font-weight: bold; text-transform: uppercase;">Ação Registrada:</p>
+                                        <p style="margin: 0; color: #212529; font-size: 16px; font-weight: bold;" th:text="${acao}">Status alterado para EM_ANDAMENTO</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Detalhes do Ticket -->
+                            <h3 style="margin: 0 0 15px; color: #495057; font-size: 16px; text-transform: uppercase; border-bottom: 1px solid #dee2e6; padding-bottom: 5px;">Detalhes do Ticket</h3>
+                            
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-bottom: 25px;">
+                                <tr>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid #f8f9fa; color: #6c757d; font-size: 14px; width: 100px;"><strong>Título:</strong></td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid #f8f9fa; color: #212529; font-size: 14px;" th:text="${ticket.titulo}">Problema na impressora</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid #f8f9fa; color: #6c757d; font-size: 14px;"><strong>Status:</strong></td>
+                                    <td style="padding: 8px 0; border-bottom: 1px solid #f8f9fa; font-size: 14px;">
+                                        <!-- Badge de Status Dinamico -->
+                                        <span th:switch="${ticket.status}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #ffffff; text-transform: uppercase;">
+                                            <span th:case="'ABERTO'" style="background-color: #0d6efd; padding: 4px 8px; border-radius: 4px; display: inline-block;">Aberto</span>
+                                            <span th:case="'EM_ANDAMENTO'" style="background-color: #fd7e14; padding: 4px 8px; border-radius: 4px; display: inline-block;">Em Andamento</span>
+                                            <span th:case="'RESOLVIDO'" style="background-color: #198754; padding: 4px 8px; border-radius: 4px; display: inline-block;">Resolvido</span>
+                                            <span th:case="'FECHADO'" style="background-color: #6c757d; padding: 4px 8px; border-radius: 4px; display: inline-block;">Fechado</span>
+                                            <span th:case="*" style="background-color: #6c757d; padding: 4px 8px; border-radius: 4px; display: inline-block;" th:text="${ticket.status}">Status</span>
+                                        </span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; color: #6c757d; font-size: 14px;"><strong>Prioridade:</strong></td>
+                                    <td style="padding: 8px 0; font-size: 14px;">
+                                        <!-- Badge de Prioridade Dinamico -->
+                                        <span th:switch="${ticket.prioridade}" style="padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; color: #ffffff; text-transform: uppercase;">
+                                            <span th:case="'BAIXA'" style="background-color: #198754; padding: 4px 8px; border-radius: 4px; display: inline-block;">Baixa</span>
+                                            <span th:case="'MEDIA'" style="background-color: #ffc107; padding: 4px 8px; border-radius: 4px; display: inline-block; color: #212529;">Média</span>
+                                            <span th:case="'ALTA'" style="background-color: #fd7e14; padding: 4px 8px; border-radius: 4px; display: inline-block;">Alta</span>
+                                            <span th:case="'URGENTE'" style="background-color: #dc3545; padding: 4px 8px; border-radius: 4px; display: inline-block;">Urgente</span>
+                                            <span th:case="*" style="background-color: #6c757d; padding: 4px 8px; border-radius: 4px; display: inline-block;" th:text="${ticket.prioridade}">Prioridade</span>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Botao de Ação -->
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                                <tr>
+                                    <td align="center" style="border-radius: 6px; background-color: #0d6efd;">
+                                        <a th:href="${linkTicket}" target="_blank" style="display: inline-block; padding: 14px 30px; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; border-radius: 6px;">
+                                            Acessar Ticket
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 30px 0 0; color: #6c757d; font-size: 13px; line-height: 1.5; text-align: center;">
+                                Se o botão não funcionar, copie e cole o seguinte link no seu navegador:<br>
+                                <span th:text="${linkTicket}" style="color: #0d6efd; word-break: break-all;">http://localhost:8080/tickets/detalhar/1</span>
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="background-color: #e9ecef; padding: 20px; border-top: 1px solid #dee2e6;">
+                            <p style="margin: 0; color: #6c757d; font-size: 12px;">
+                                &copy; 2026 A3-2.0 Help Desk. Todos os direitos reservados.<br>
+                                Esta é uma mensagem automática, por favor não responda a este e-mail.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+                <!-- Fim do Cartao -->
+                
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
