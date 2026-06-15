@@ -1,0 +1,226 @@
+/* ==========================================
+   A3-2.0 Help Desk - Estilos Customizados
+   ========================================== */
+
+:root {
+    --cor-primaria: #0d6efd;
+    --cor-secundaria: #6c757d;
+    --cor-sucesso: #198754;
+    --cor-aviso: #ffc107;
+    --cor-perigo: #dc3545;
+    --cor-laranja: #fd7e14;
+    --cor-fundo: #f4f7f6;
+    --sombra-suave: 0 4px 6px rgba(0, 0, 0, 0.05);
+    --sombra-media: 0 10px 15px rgba(0, 0, 0, 0.08);
+}
+
+body {
+    background-color: var(--cor-fundo);
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    color: #212529;
+}
+
+/* ==========================================
+   1. Navbar e Header
+   ========================================== */
+.navbar {
+    box-shadow: var(--sombra-suave);
+}
+
+.navbar-brand {
+    letter-spacing: 0.5px;
+}
+
+.nav-link {
+    font-weight: 500;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.nav-link:hover {
+    transform: translateY(-1px);
+}
+
+/* ==========================================
+   2. Cards e Containers
+   ========================================== */
+.card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sombra-media);
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+}
+
+/* ==========================================
+   3. Modulo Help Desk - Timeline de Comentarios
+   ========================================== */
+.timeline {
+    position: relative;
+    padding-left: 20px;
+}
+
+.timeline::before {
+    content: '';
+    position: absolute;
+    left: 8px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background-color: #e9ecef;
+}
+
+.timeline .card {
+    position: relative;
+    margin-bottom: 1.5rem;
+    z-index: 1;
+}
+
+.timeline .card::before {
+    content: '';
+    position: absolute;
+    left: -16px;
+    top: 20px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background-color: var(--cor-primaria);
+    border: 3px solid #fff;
+    box-shadow: 0 0 0 2px var(--cor-primaria);
+}
+
+/* Linha do tempo para Notas Internas (Amarelo) */
+.timeline .card.border-warning::before {
+    background-color: var(--cor-aviso);
+    box-shadow: 0 0 0 2px var(--cor-aviso);
+}
+
+/* ==========================================
+   4. Badges e Status
+   ========================================== */
+.badge {
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 0.4em 0.8em;
+    border-radius: 6px;
+}
+
+/* Cor customizada para Prioridade Alta (Laranja) */
+.bg-orange {
+    background-color: var(--cor-laranja) !important;
+    color: #fff !important;
+}
+
+/* ==========================================
+   5. Formularios e Inputs
+   ========================================== */
+.form-control, .form-select {
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    border: 1px solid #ced4da;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+    margin-bottom: 0.5rem;
+}
+
+/* ==========================================
+   6. Botoes
+   ========================================== */
+.btn {
+    border-radius: 8px;
+    font-weight: 600;
+    padding: 0.6rem 1.2rem;
+    transition: all 0.2s ease;
+}
+
+.btn:active {
+    transform: scale(0.98);
+}
+
+.btn-primary {
+    background-color: var(--cor-primaria);
+    border-color: var(--cor-primaria);
+}
+
+.btn-primary:hover {
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
+    box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+/* ==========================================
+   7. Tabelas (Painel do Atendente)
+   ========================================== */
+.table thead th {
+    background-color: #f8f9fa;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+    color: var(--cor-secundaria);
+    border-bottom: 2px solid #dee2e6;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.03);
+}
+
+/* ==========================================
+   8. Animacoes e Utilitarios
+   ========================================== */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+    animation: fadeIn 0.4s ease-out forwards;
+}
+
+/* Scrollbar Customizada para Webkit (Chrome, Edge) */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Ajustes de Responsividade para a Timeline em Mobile */
+@media (max-width: 768px) {
+    .timeline {
+        padding-left: 0;
+    }
+    .timeline::before {
+        display: none;
+    }
+    .timeline .card::before {
+        display: none;
+    }
+}
