@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
+<<project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
-         https://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+                             https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- Parent Spring Boot -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
@@ -12,63 +13,73 @@
         <relativePath/>
     </parent>
 
+    <!-- Metadados do Projeto A3-2.0 -->
     <groupId>br.com.projetoA3</groupId>
     <artifactId>a3-2-0</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>A3-2.0</name>
-    <description>Sistema de Gestão de Projetos, Equipes e Help Desk com Kanban</description>
+    <description>Sistema de Gestao de Projetos, Equipes e Help Desk com Kanban</description>
 
+    <!-- Propriedades Globais -->
     <properties>
         <java.version>21</java.version>
         <spring-boot.version>3.2.0</spring-boot.version>
-        <sqlite-jdbc.version>3.45.3.0</sqlite-jdbc.version>
+        <sqlite-jdbc.version>3.45.0.0</sqlite-jdbc.version>
         <poi.version>5.2.5</poi.version>
         <openpdf.version>2.0.2</openpdf.version>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencies>
-        <!-- Spring Boot Starters -->
+        <!-- Web -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <!-- Persistencia JPA -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+
+        <!-- Thymeleaf -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-thymeleaf</artifactId>
         </dependency>
+
+        <!-- Validacao -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+
+        <!-- Seguranca -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+
+        <!-- Email -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
-        
-        <!-- Thymeleaf Layout Dialect (Para reutilizacao de templates: Header, Sidebar, Footer) -->
+
+        <!-- Layout Dialect Thymeleaf -->
         <dependency>
             <groupId>nz.net.ultraq.thymeleaf</groupId>
             <artifactId>thymeleaf-layout-dialect</artifactId>
         </dependency>
 
-        <!-- Thymeleaf Spring Security (Para controle de acesso e exibicao de roles nas views) -->
+        <!-- Extras Spring Security Thymeleaf -->
         <dependency>
             <groupId>org.thymeleaf.extras</groupId>
             <artifactId>thymeleaf-extras-springsecurity6</artifactId>
         </dependency>
 
-        <!-- Developer Tools -->
+        <!-- DevTools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
@@ -76,34 +87,34 @@
             <optional>true</optional>
         </dependency>
 
-        <!-- SQLite Database -->
+        <!-- SQLite -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
             <version>${sqlite-jdbc.version}</version>
         </dependency>
-        
-        <!-- Hibernate SQLite Dialect -->
+
+        <!-- Dialeto Hibernate SQLite -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>
             <artifactId>hibernate-community-dialects</artifactId>
         </dependency>
 
-        <!-- Apache POI for Excel manipulation -->
+        <!-- Apache POI (Excel) -->
         <dependency>
             <groupId>org.apache.poi</groupId>
             <artifactId>poi-ooxml</artifactId>
             <version>${poi.version}</version>
         </dependency>
 
-        <!-- OpenPDF for PDF generation -->
+        <!-- OpenPDF -->
         <dependency>
             <groupId>com.github.librepdf</groupId>
             <artifactId>openpdf</artifactId>
             <version>${openpdf.version}</version>
         </dependency>
 
-        <!-- Test Dependencies -->
+        <!-- Testes -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
@@ -118,6 +129,7 @@
 
     <build>
         <plugins>
+            <!-- Plugin Spring Boot -->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -134,6 +146,8 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- Plugin Compilador Java -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
