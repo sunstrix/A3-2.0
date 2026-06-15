@@ -13,7 +13,7 @@ import java.util.Optional;
 
 /**
  * Service responsável pela lógica de negócio dos Usuários.
- * Atualizado com validação de CPF e logging de diagnóstico.
+ * Atualizado com validação de CPF, logging de diagnóstico e suporte ao modulo Help Desk.
  */
 @Service
 @Transactional(readOnly = true)
@@ -171,5 +171,24 @@ public class UsuarioService {
         Usuario usuario = usuarioRepository.findById(id).orElseThrow();
         usuario.setAtivo(false);
         usuarioRepository.save(usuario);
+    }
+
+    // ==========================================
+    // SUPORTE AO MODULO HELP DESK (NOVO)
+    // ==========================================
+
+    /**
+     * Metodo auxiliar para os Controllers do Help Desk recuperarem o usuario logado.
+     * Tenta buscar pelo e-mail primeiro. Se nao encontrar, faz fallback para o login,
+     * pois o Spring Security pode injetar qualquer um dos dois no objeto Principal.
+     *
+     * @param identificador O e-mail ou login do usuario logado.
+     * @return A entidade Usuario completa.
+     * @throws EntityNotFoundException se o usuario nao for encontrado.
+     */
+    public Usuario buscarPorEmail(String identificador) {
+        return usuarioRepository.findByEmail(identificador)
+                .or(() -> usuarioRepository.findByLogin(identificador))
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado com o identificador: " + identificador));
     }
 }
