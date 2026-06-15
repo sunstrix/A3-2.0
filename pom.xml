@@ -16,7 +16,7 @@
     <artifactId>a3-2-0</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>A3-2.0</name>
-    <description>Sistema de Gestão de Projetos e Equipes com Kanban</description>
+    <description>Sistema de Gestão de Projetos, Equipes e Help Desk com Kanban</description>
 
     <properties>
         <java.version>21</java.version>
@@ -56,6 +56,18 @@
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
         
+        <!-- Thymeleaf Layout Dialect (Para reutilizacao de templates: Header, Sidebar, Footer) -->
+        <dependency>
+            <groupId>nz.net.ultraq.thymeleaf</groupId>
+            <artifactId>thymeleaf-layout-dialect</artifactId>
+        </dependency>
+
+        <!-- Thymeleaf Spring Security (Para controle de acesso e exibicao de roles nas views) -->
+        <dependency>
+            <groupId>org.thymeleaf.extras</groupId>
+            <artifactId>thymeleaf-extras-springsecurity6</artifactId>
+        </dependency>
+
         <!-- Developer Tools -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
