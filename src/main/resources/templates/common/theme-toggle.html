@@ -6,35 +6,38 @@
 <body>
 
     <!-- 
-        Fragmento Thymeleaf: Botão flutuante de alternância de tema (claro/escuro)
+        Fragmento Thymeleaf: Botao flutuante de alternancia de tema (claro/escuro)
         
-        ✅ BUG 3 FIX: Implementa o botão mencionado na "Dica do dia" do menu.
-        
-        Como usar nas páginas:
+        Como usar nas paginas:
         Inclua ANTES do fechamento </body>:
         <div th:replace="~{common/theme-toggle :: toggle}"></div>
         
-        Características:
-        - Botão fixo no canto inferior direito (position: fixed)
-        - Ícone 🌙 (lua) no modo claro e ☀️ (sol) no modo escuro
-        - Persiste preferência no localStorage (chave: 'a3-theme')
-        - Compatível com Bootstrap 5.3+ (data-bs-theme="dark")
+        Caracteristicas:
+        - Botao fixo no canto inferior direito (position: fixed)
+        - Icone Bootstrap bi-moon-fill no modo claro e bi-sun-fill no modo escuro
+        - Persiste preferencia no localStorage (chave: 'a3-theme')
+        - Compativel com Bootstrap 5.3+ (data-bs-theme="dark")
         - CSS fallback para componentes customizados
-        - Transições suaves entre temas
+        - Transicoes suaves entre temas
+        - Acessibilidade: aria-pressed, aria-label dinamico e tooltip Bootstrap
     -->
     <th:block th:fragment="toggle">
 
         <!-- CSS para suporte a tema escuro em componentes customizados -->
         <style>
-            /* Transição suave entre temas */
+            /* Transicao suave entre temas */
             html[data-bs-theme="dark"] body,
             html[data-bs-theme="dark"] .card,
             html[data-bs-theme="dark"] .navbar,
             html[data-bs-theme="dark"] .table,
             html[data-bs-theme="dark"] .form-control,
+            html[data-bs-theme="dark"] .form-select,
             html[data-bs-theme="dark"] .kanban-column,
             html[data-bs-theme="dark"] .task-card,
-            html[data-bs-theme="dark"] .login-card {
+            html[data-bs-theme="dark"] .login-card,
+            html[data-bs-theme="dark"] .list-group-item,
+            html[data-bs-theme="dark"] .modal-content,
+            html[data-bs-theme="dark"] .offcanvas {
                 transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
             }
 
@@ -103,7 +106,23 @@
                 color: #93c5fd;
             }
 
-            /* Estilo do botão flutuante de tema */
+            html[data-bs-theme="dark"] .list-group-item {
+                background-color: #16213e !important;
+                color: #e0e0e0 !important;
+                border-color: #0f3460 !important;
+            }
+
+            html[data-bs-theme="dark"] .modal-content {
+                background-color: #16213e !important;
+                color: #e0e0e0 !important;
+            }
+
+            html[data-bs-theme="dark"] .offcanvas {
+                background-color: #16213e !important;
+                color: #e0e0e0 !important;
+            }
+
+            /* Estilo do botao flutuante de tema */
             #theme-toggle {
                 position: fixed;
                 bottom: 24px;
@@ -114,7 +133,7 @@
                 border-radius: 50%;
                 border: 2px solid rgba(0,0,0,0.1);
                 cursor: pointer;
-                font-size: 22px;
+                font-size: 1.25rem;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -122,6 +141,7 @@
                 background: #ffffff;
                 color: #1e293b;
                 transition: all 0.3s ease;
+                padding: 0;
             }
 
             #theme-toggle:hover {
@@ -129,21 +149,35 @@
                 box-shadow: 0 6px 20px rgba(0,0,0,0.3);
             }
 
+            #theme-toggle:focus-visible {
+                outline: 3px solid #0d6efd;
+                outline-offset: 2px;
+            }
+
             html[data-bs-theme="dark"] #theme-toggle {
                 background: #1e293b;
                 color: #fbbf24;
                 border-color: rgba(255,255,255,0.1);
             }
+
+            html[data-bs-theme="dark"] #theme-toggle:focus-visible {
+                outline-color: #fbbf24;
+            }
         </style>
 
-        <!-- Botão flutuante de alternância de tema -->
+        <!-- Botao flutuante de alternancia de tema -->
         <button id="theme-toggle" 
+                class="btn"
                 title="Alternar tema claro/escuro" 
-                aria-label="Alternar tema">
-            🌙
+                aria-label="Ativar modo escuro"
+                aria-pressed="false"
+                data-bs-toggle="tooltip"
+                data-bs-placement="left"
+                data-bs-title="Alternar tema">
+            <i class="bi bi-moon-fill" id="theme-icon"></i>
         </button>
 
-        <!-- JavaScript de toggle e persistência -->
+        <!-- JavaScript de toggle e persistencia -->
         <script>
         (function() {
             'use strict';
@@ -151,22 +185,43 @@
             const STORAGE_KEY = 'a3-theme';
             const HTML = document.documentElement;
             const btn = document.getElementById('theme-toggle');
+            const icon = document.getElementById('theme-icon');
 
             /**
-             * Aplica o tema (dark ou light) e atualiza o ícone do botão
+             * Aplica o tema (dark ou light) e atualiza o icone e atributos ARIA do botao
              */
             function aplicarTema(tema) {
                 if (tema === 'dark') {
                     HTML.setAttribute('data-bs-theme', 'dark');
-                    if (btn) btn.textContent = '☀️';
+                    if (btn) {
+                        btn.setAttribute('aria-label', 'Ativar modo claro');
+                        btn.setAttribute('aria-pressed', 'true');
+                    }
+                    if (icon) {
+                        icon.className = 'bi bi-sun-fill';
+                    }
                 } else {
                     HTML.removeAttribute('data-bs-theme');
-                    if (btn) btn.textContent = '🌙';
+                    if (btn) {
+                        btn.setAttribute('aria-label', 'Ativar modo escuro');
+                        btn.setAttribute('aria-pressed', 'false');
+                    }
+                    if (icon) {
+                        icon.className = 'bi bi-moon-fill';
+                    }
+                }
+                
+                // Atualiza tooltip do Bootstrap
+                if (btn && typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                    var tooltip = bootstrap.Tooltip.getInstance(btn);
+                    if (tooltip) {
+                        tooltip.setContent({'.tooltip-inner': tema === 'dark' ? 'Modo claro' : 'Modo escuro'});
+                    }
                 }
             }
 
             /**
-             * Restaura o tema salvo no localStorage ao carregar a página
+             * Restaura o tema salvo no localStorage ao carregar a pagina
              */
             function restaurarTemaSalvo() {
                 const salvo = localStorage.getItem(STORAGE_KEY);
@@ -175,7 +230,7 @@
                 } else if (salvo === 'light') {
                     aplicarTema('light');
                 } else {
-                    // Preferência do sistema operacional como fallback
+                    // Preferencia do sistema operacional como fallback
                     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
                         aplicarTema('dark');
                     }
@@ -192,24 +247,29 @@
                 try {
                     localStorage.setItem(STORAGE_KEY, novoTema);
                 } catch (e) {
-                    console.warn('Não foi possível salvar preferência de tema:', e);
+                    console.warn('Nao foi possivel salvar preferencia de tema:', e);
                 }
             }
 
-            // Inicialização
+            // Inicializacao
             if (btn) {
                 btn.addEventListener('click', alternarTema);
             }
             restaurarTemaSalvo();
 
-            // Observa mudanças na preferência do sistema operacional
+            // Observa mudancas na preferencia do sistema operacional
             if (window.matchMedia) {
                 window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function(e) {
-                    // Só aplica automaticamente se o usuário não tiver preferência salva
+                    // So aplica automaticamente se o usuario nao tiver preferencia salva
                     if (!localStorage.getItem(STORAGE_KEY)) {
                         aplicarTema(e.matches ? 'dark' : 'light');
                     }
                 });
+            }
+
+            // Inicializa tooltip do Bootstrap
+            if (btn && typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+                new bootstrap.Tooltip(btn);
             }
         })();
         </script>
