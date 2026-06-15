@@ -1,185 +1,173 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Projetos - A3 2.0</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/main.css">
+    <title th:text="#{project.title}">Projetos - A3 2.0</title>
     <style>
-        .project-card {
-            transition: all 0.2s ease;
-            background-color: var(--bg-primary);
+        .projeto-card {
+            transition: transform 0.2s, box-shadow 0.2s;
             border: 1px solid var(--border-color);
-            border-radius: 12px;
-            height: 100%;
+            border-left: 4px solid var(--primary);
         }
-        .project-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-            border-color: var(--primary);
-        }
-        .project-status {
-            font-size: 0.75rem;
-            padding: 0.35rem 0.65rem;
-            border-radius: 6px;
-            font-weight: 600;
-            color: white;
-        }
-        .stat-card {
-            transition: transform 0.2s;
-            border: 1px solid rgba(255,255,255,0.1);
-            border-radius: 12px;
-        }
-        .stat-card:hover {
+        .projeto-card:hover {
             transform: translateY(-3px);
             box-shadow: var(--shadow-md);
         }
+        .projeto-card.status-concluido { border-left-color: #198754; }
+        .projeto-card.status-cancelado { border-left-color: #6c757d; }
+        .projeto-card.status-em-andamento { border-left-color: #0d6efd; }
+        .projeto-card.status-planejamento { border-left-color: #6f42c1; }
+        .projeto-card.status-em-espera { border-left-color: #ffc107; }
+        
+        .progress-thin {
+            height: 8px;
+            border-radius: 4px;
+            background-color: var(--bg-tertiary);
+        }
+        .avatar-equipe-sm {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: white; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.65rem; font-weight: 600;
+        }
     </style>
 </head>
-<body style="background-color: var(--bg-secondary); color: var(--text-primary);">
-
-    <!-- Navbar Global -->
-    <div th:replace="~{common/navbar :: navbar}"></div>
-
-    <div class="container mt-4 fade-in">
-        
-        <!-- Mensagens Flash -->
-        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert" style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid var(--success);">
-            <i class="bi bi-check-circle-fill me-2"></i>
-            <span th:text="${sucesso}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+<body>
+<section layout:fragment="content">
+<div class="container mb-5">
+    <!-- Cabecalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="bi bi-folder-fill text-primary me-2"></i>
+                <span th:text="#{project.title}">Gestao de Projetos</span>
+            </h2>
+            <p class="text-muted mb-0 small" th:text="'Total: ' + (${#lists.size(projetos)} ?: 0) + ' projeto(s)'">Total: 0</p>
         </div>
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid var(--danger);">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i>
-            <span th:text="${erro}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <!-- Cabeçalho -->
-        <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
-            <div>
-                <h2 class="fw-bold mb-1">
-                    <i class="bi bi-folder-fill" style="color: var(--primary);"></i> Gestão de Projetos
-                </h2>
-                <p style="color: var(--text-secondary);" class="mb-0">Gerencie todos os projetos da organização</p>
-            </div>
-            <a href="/projetos/novo" class="btn btn-primary">
-                <i class="bi bi-plus-circle me-1"></i> Novo Projeto
-            </a>
-        </div>
-
-        <!-- Cards de Estatísticas -->
-        <div class="row g-3 mb-4">
-            <div class="col-md-4">
-                <div class="card stat-card text-white shadow-sm" style="background-color: var(--primary);">
-                    <div class="card-body d-flex align-items-center">
-                        <i class="bi bi-folder-fill fs-1 me-3 opacity-75"></i>
-                        <div>
-                            <div class="fs-3 fw-bold" th:text="${#lists.size(projetos)}">0</div>
-                            <div class="small opacity-75">Total de Projetos</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card stat-card text-white shadow-sm" style="background-color: var(--success);">
-                    <div class="card-body d-flex align-items-center">
-                        <i class="bi bi-check-circle-fill fs-1 me-3 opacity-75"></i>
-                        <div>
-                            <div class="fs-3 fw-bold" 
-                                 th:text="${#lists.size(projetos.?[status.name() == 'CONCLUIDO'])}">0</div>
-                            <div class="small opacity-75">Projetos Concluídos</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card stat-card text-white shadow-sm" style="background-color: var(--info);">
-                    <div class="card-body d-flex align-items-center">
-                        <i class="bi bi-play-circle-fill fs-1 me-3 opacity-75"></i>
-                        <div>
-                            <div class="fs-3 fw-bold" 
-                                 th:text="${#lists.size(projetos.?[status.name() == 'EM_ANDAMENTO'])}">0</div>
-                            <div class="small opacity-75">Em Andamento</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Grid de Projetos -->
-        <div class="row g-4">
-            <div th:if="${#lists.isEmpty(projetos)}" class="col-12">
-                <div class="text-center py-5" style="background-color: var(--bg-primary); border: 1px dashed var(--border-color); border-radius: 12px;">
-                    <i class="bi bi-inbox fs-1 d-block mb-2" style="color: var(--text-muted);"></i>
-                    <h5 style="color: var(--text-primary);">Nenhum projeto cadastrado ainda</h5>
-                    <p style="color: var(--text-secondary);" class="mb-0">Clique em "Novo Projeto" para começar.</p>
-                </div>
-            </div>
-
-            <div th:each="projeto : ${projetos}" class="col-md-6 col-lg-4">
-                <div class="card project-card shadow-sm">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <h5 class="card-title fw-bold mb-0" th:text="${projeto.nome}" style="color: var(--text-primary);">Nome do Projeto</h5>
-                            <span class="project-status"
-                                  th:classappend="${projeto.status.name() == 'PLANEJAMENTO' ? 'bg-secondary' : 
-                                                   (projeto.status.name() == 'EM_ANDAMENTO' ? 'bg-primary' : 
-                                                   (projeto.status.name() == 'CONCLUIDO' ? 'bg-success' : 'bg-danger'))}"
-                                  th:text="${projeto.status.name()}">STATUS</span>
-                        </div>
-                        
-                        <p class="small mb-3" style="color: var(--text-secondary);" 
-                           th:text="${projeto.descricao != null ? #strings.abbreviate(projeto.descricao, 100) : 'Sem descrição'}">
-                            Descrição do projeto...
-                        </p>
-
-                        <div class="mb-3">
-                            <small class="d-block mb-1" style="color: var(--text-muted);">
-                                <i class="bi bi-calendar-event me-1"></i>
-                                <span th:text="${projeto.dataInicio != null ? #temporals.format(projeto.dataInicio, 'dd/MM/yyyy') : '-'}"></span>
-                                <span th:if="${projeto.dataTerminoPrevista != null}">
-                                    até <span th:text="${#temporals.format(projeto.dataTerminoPrevista, 'dd/MM/yyyy')}"></span>
-                                </span>
-                            </small>
-                            <small class="d-block" style="color: var(--text-muted);">
-                                <i class="bi bi-people-fill me-1"></i>
-                                <span th:text="${projeto.equipe != null ? projeto.equipe.nome : 'Sem equipe'}">Equipe</span>
-                            </small>
-                        </div>
-
-                        <div class="d-flex gap-2">
-                            <a th:href="@{/tarefas/kanban/{id}(id=${projeto.id})}" 
-                               class="btn btn-sm btn-outline-primary flex-fill" title="Kanban">
-                                <i class="bi bi-kanban-fill"></i> Kanban
-                            </a>
-                            <a th:href="@{/projetos/editar/{id}(id=${projeto.id})}" 
-                               class="btn btn-sm btn-outline-warning" title="Editar">
-                                <i class="bi bi-pencil-fill"></i>
-                            </a>
-                            <form th:action="@{/projetos/deletar/{id}(id=${projeto.id})}" method="get" class="d-inline">
-                                <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                        onclick="return confirm('Tem certeza que deseja remover este projeto?');">
-                                    <i class="bi bi-trash-fill"></i>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+        <a th:href="@{/projetos/novo}" class="btn btn-primary" sec:authorize="hasAnyRole('ADMINISTRADOR','GERENTE')">
+            <i class="bi bi-plus-circle me-1"></i> <span th:text="#{project.new}">Novo Projeto</span>
+        </a>
     </div>
 
-    <!-- Footer Global -->
-    <div th:replace="~{common/footer :: footer}"></div>
+    <!-- Busca -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body">
+            <form th:action="@{/projetos}" method="get" class="row g-3 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label small text-muted">Buscar</label>
+                    <input type="text" name="termo" class="form-control form-control-sm"
+                           placeholder="Nome do projeto ou equipe..." th:value="${param.termo}">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Status</label>
+                    <select name="status" class="form-select form-select-sm">
+                        <option value="">Todos</option>
+                        <option value="PLANEJAMENTO" th:selected="${param.status == 'PLANEJAMENTO'}">Planejamento</option>
+                        <option value="EM_ANDAMENTO" th:selected="${param.status == 'EM_ANDAMENTO'}">Em Andamento</option>
+                        <option value="EM_ESPERA" th:selected="${param.status == 'EM_ESPERA'}">Em Espera</option>
+                        <option value="CONCLUIDO" th:selected="${param.status == 'CONCLUIDO'}">Concluido</option>
+                        <option value="CANCELADO" th:selected="${param.status == 'CANCELADO'}">Cancelado</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                        <i class="bi bi-funnel me-1"></i> Filtrar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-    <!-- Botão de Tema -->
-    <div th:replace="~{common/theme-toggle :: toggle}"></div>
+    <!-- Estado vazio -->
+    <div th:if="${projetos == null or #lists.isEmpty(projetos)}" class="text-center py-5">
+        <i class="bi bi-folder2-open fs-1 text-muted mb-3 d-block"></i>
+        <h5 class="text-muted">Nenhum projeto cadastrado ainda.</h5>
+        <a th:href="@{/projetos/novo}" class="btn btn-outline-primary mt-2" sec:authorize="hasAnyRole('ADMINISTRADOR','GERENTE')">
+            <i class="bi bi-plus-circle me-1"></i> Criar Primeiro Projeto
+        </a>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/js/ux.js"></script>
+    <!-- Cards de projetos -->
+    <div th:unless="${projetos == null or #lists.isEmpty(projetos)}" class="row g-4">
+        <div th:each="projeto : ${projetos}" 
+             class="col-md-6 col-lg-4"
+             th:classappend="'projeto-card card shadow-sm h-100 status-' + ${#strings.toLowerCase(#strings.replace(projeto.status, '_', '-'))}">
+            <div class="card-body d-flex flex-column">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h5 class="card-title fw-bold mb-0" th:text="${projeto.nome}">Nome</h5>
+                    <span class="badge bg-light text-dark border" th:text="'#' + ${projeto.id}">#0</span>
+                </div>
+                
+                <p class="card-text text-muted small mb-3 flex-grow-1" 
+                   th:text="${projeto.descricao} ?: 'Sem descricao disponivel'">Descricao</p>
+
+                <!-- Status e Progresso -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="badge" 
+                              th:classappend="${
+                                  projeto.status == 'CONCLUIDO' ? 'bg-success' :
+                                  projeto.status == 'EM_ANDAMENTO' ? 'bg-primary' :
+                                  projeto.status == 'PLANEJAMENTO' ? 'bg-purple text-white' :
+                                  projeto.status == 'EM_ESPERA' ? 'bg-warning text-dark' :
+                                  'bg-secondary'
+                              }"
+                              th:text="${#strings.replace(projeto.status, '_', ' ')}">Status</span>
+                        <small class="fw-bold text-primary" th:text="(${projeto.progresso} ?: 0) + '%'">0%</small>
+                    </div>
+                    <div class="progress progress-thin">
+                        <div class="progress-bar bg-primary" 
+                             role="progressbar" 
+                             th:style="'width: ' + (${projeto.progresso} ?: 0) + '%'"
+                             th:attr="aria-valuenow=${projeto.progresso} ?: 0" 
+                             aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                </div>
+
+                <!-- Equipe -->
+                <div class="d-flex align-items-center mb-3">
+                    <i class="bi bi-people-fill text-info me-2"></i>
+                    <span class="small text-muted me-2">Equipe:</span>
+                    <div th:if="${projeto.equipe != null}" class="d-flex align-items-center">
+                        <div class="avatar-equipe-sm me-2" th:text="${projeto.equipe.lider != null ? projeto.equipe.lider.iniciais : 'E'}">E</div>
+                        <span class="fw-semibold small" th:text="${projeto.equipe.nome}">Equipe</span>
+                    </div>
+                    <span th:unless="${projeto.equipe != null}" class="text-muted fst-italic small">Nao definida</span>
+                </div>
+
+                <!-- Datas -->
+                <div class="small text-muted mb-3 d-flex justify-content-between">
+                    <span>
+                        <i class="bi bi-calendar-event me-1"></i>
+                        Inicio: <span th:text="${projeto.dataInicio != null ? #temporals.format(projeto.dataInicio, 'dd/MM/yyyy') : '-'}">Data</span>
+                    </span>
+                    <span>
+                        <i class="bi bi-calendar-check me-1"></i>
+                        Termino: <span th:text="${projeto.dataTerminoPrevista != null ? #temporals.format(projeto.dataTerminoPrevista, 'dd/MM/yyyy') : '-'}">Data</span>
+                    </span>
+                </div>
+            </div>
+            <div class="card-footer bg-transparent border-top-0 pt-0">
+                <div class="d-flex gap-2">
+                    <a th:href="@{/projetos/{id}(id=${projeto.id})}" class="btn btn-sm btn-outline-info flex-fill">
+                        <i class="bi bi-eye me-1"></i> Detalhes
+                    </a>
+                    <a th:href="@{/projetos/editar/{id}(id=${projeto.id})}" class="btn btn-sm btn-outline-warning flex-fill" sec:authorize="hasAnyRole('ADMINISTRADOR','GERENTE')">
+                        <i class="bi bi-pencil me-1"></i> Editar
+                    </a>
+                    <form th:action="@{/projetos/excluir/{id}(id=${projeto.id})}" method="post" class="d-inline flex-fill"
+                          th:onclick="'return confirm(\'' + #{app.delete.confirm} + '\')'" sec:authorize="hasRole('ADMINISTRADOR')">
+                        <button type="submit" class="btn btn-sm btn-outline-danger w-100">
+                            <i class="bi bi-trash me-1"></i> Excluir
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</section>
 </body>
 </html>
