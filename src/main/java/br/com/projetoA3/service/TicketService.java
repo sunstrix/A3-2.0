@@ -17,7 +17,9 @@ import java.util.Optional;
 
 /**
  * Servico responsavel pela regra de negocio e orquestracao do modulo de Help Desk (Tickets).
- * Gerencia o ciclo de vida dos chamados e dispara as notificacoes por e-mail automaticamente.
+ * Gerencia o ciclo de vida dos chamados e dispara as notificacoes por e-mail automaticamente
+ * para todas as movimentacoes: criacao, atualizacao de status, atribuicao, comentarios,
+ * encerramento e reabertura.
  */
 @Service
 public class TicketService {
@@ -40,43 +42,54 @@ public class TicketService {
     public Ticket criarTicket(Ticket ticket, Usuario solicitante) {
         ticket.setSolicitante(solicitante);
         ticket.setStatus("ABERTO");
-        
+
         Ticket novoTicket = ticketRepository.save(ticket);
         logger.info("Ticket #{} criado pelo usuario {}", novoTicket.getId(), solicitante.getNome());
-        
-        // Dispara e-mail de confirmacao de abertura para o solicitante
-        emailService.enviarNotificacaoTicket(novoTicket, "Ticket Criado com Sucesso", solicitante);
-        
+
+        // Notifica o solicitante sobre a abertura do ticket
+        emailService.enviarNotificacaoNovoTicket(novoTicket, solicitante);
+
         return novoTicket;
     }
 
     /**
-     * Atualiza o status de um ticket (ex: EM_ANDAMENTO, RESOLVIDO, FECHADO).
+     * Atualiza o status de um ticket (ex: EM_ANDAMENTO, AGUARDANDO_USUARIO, RESOLVIDO, FECHADO).
      * Registra a data de fechamento quando aplicavel e notifica as partes envolvidas.
      */
     @Transactional
     public Ticket atualizarStatus(Long id, String novoStatus, Usuario usuario) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket não encontrado"));
-        
+                .orElseThrow(() -> new RuntimeException("Ticket nao encontrado"));
+
+        String statusAnterior = ticket.getStatus();
         ticket.setStatus(novoStatus);
-        
+
         if ("FECHADO".equals(novoStatus) || "RESOLVIDO".equals(novoStatus)) {
             ticket.setDataFechamento(LocalDateTime.now());
         }
-        
+
         Ticket ticketAtualizado = ticketRepository.save(ticket);
-        String acao = "Status alterado para " + novoStatus;
-        
+        logger.info("Ticket #{} teve status alterado de {} para {} por {}",
+                ticketAtualizado.getId(), statusAnterior, novoStatus, usuario.getNome());
+
         // Notifica o solicitante sobre a mudanca de status
-        emailService.enviarNotificacaoTicket(ticketAtualizado, acao, ticketAtualizado.getSolicitante());
-        
-        // Se tiver um atendente atribuido, notifica ele tambem
-        if (ticketAtualizado.getAtendente() != null && 
+        emailService.enviarNotificacaoAtualizacaoTicket(ticketAtualizado, statusAnterior, ticketAtualizado.getSolicitante());
+
+        // Se tiver um atendente atribuido e for diferente do solicitante, notifica ele tambem
+        if (ticketAtualizado.getAtendente() != null &&
             !ticketAtualizado.getAtendente().getId().equals(ticketAtualizado.getSolicitante().getId())) {
-            emailService.enviarNotificacaoTicket(ticketAtualizado, acao, ticketAtualizado.getAtendente());
+            emailService.enviarNotificacaoAtualizacaoTicket(ticketAtualizado, statusAnterior, ticketAtualizado.getAtendente());
         }
-        
+
+        // Se o status for de encerramento, envia notificacao especifica de encerramento
+        if ("FECHADO".equals(novoStatus) || "RESOLVIDO".equals(novoStatus)) {
+            emailService.enviarNotificacaoEncerramentoTicket(ticketAtualizado, ticketAtualizado.getSolicitante());
+            if (ticketAtualizado.getAtendente() != null &&
+                !ticketAtualizado.getAtendente().getId().equals(ticketAtualizado.getSolicitante().getId())) {
+                emailService.enviarNotificacaoEncerramentoTicket(ticketAtualizado, ticketAtualizado.getAtendente());
+            }
+        }
+
         return ticketAtualizado;
     }
 
@@ -87,52 +100,82 @@ public class TicketService {
     @Transactional
     public Ticket atribuirAtendente(Long id, Usuario atendente) {
         Ticket ticket = ticketRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket não encontrado"));
-        
+                .orElseThrow(() -> new RuntimeException("Ticket nao encontrado"));
+
         ticket.setAtendente(atendente);
         if ("ABERTO".equals(ticket.getStatus())) {
             ticket.setStatus("EM_ANDAMENTO");
         }
-        
+
         Ticket ticketAtualizado = ticketRepository.save(ticket);
-        
+        logger.info("Ticket #{} atribuido ao atendente {}", ticketAtualizado.getId(), atendente.getNome());
+
         // Notifica o atendente sobre a nova atribuicao
-        emailService.enviarNotificacaoTicket(ticketAtualizado, "Ticket atribuído a você", atendente);
+        emailService.enviarNotificacaoAtribuicaoTicket(ticketAtualizado, atendente);
+
         // Notifica o solicitante sobre quem esta cuidando do chamado
-        emailService.enviarNotificacaoTicket(ticketAtualizado, "Ticket atribuído a " + atendente.getNome(), ticketAtualizado.getSolicitante());
-        
+        if (!atendente.getId().equals(ticketAtualizado.getSolicitante().getId())) {
+            emailService.enviarNotificacaoTicket(ticketAtualizado, "Ticket atribuido a " + atendente.getNome(), ticketAtualizado.getSolicitante());
+        }
+
         return ticketAtualizado;
+    }
+
+    /**
+     * Reabre um ticket encerrado ou resolvido.
+     */
+    @Transactional
+    public Ticket reabrirTicket(Long id, Usuario usuario) {
+        Ticket ticket = ticketRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Ticket nao encontrado"));
+
+        ticket.setStatus("REABERTO");
+        ticket.setDataFechamento(null);
+
+        Ticket ticketReaberto = ticketRepository.save(ticket);
+        logger.info("Ticket #{} reaberto por {}", ticketReaberto.getId(), usuario.getNome());
+
+        // Notifica o solicitante e o atendente sobre a reabertura
+        emailService.enviarNotificacaoReaberturaTicket(ticketReaberto, ticketReaberto.getSolicitante());
+        if (ticketReaberto.getAtendente() != null &&
+            !ticketReaberto.getAtendente().getId().equals(ticketReaberto.getSolicitante().getId())) {
+            emailService.enviarNotificacaoReaberturaTicket(ticketReaberto, ticketReaberto.getAtendente());
+        }
+
+        return ticketReaberto;
     }
 
     /**
      * Adiciona um novo comentario (interacao) ao ticket.
      * Suporta notas internas (restritas a equipe) e respostas publicas.
+     * Notifica as partes envolvidas apenas para comentarios publicos.
      */
     @Transactional
     public ComentarioTicket adicionarComentario(Long ticketId, String texto, boolean notaInterna, Usuario autor) {
         Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new RuntimeException("Ticket não encontrado"));
-        
+                .orElseThrow(() -> new RuntimeException("Ticket nao encontrado"));
+
         ComentarioTicket comentario = new ComentarioTicket();
         comentario.setTexto(texto);
         comentario.setNotaInterna(notaInterna);
         comentario.setAutor(autor);
         comentario.setTicket(ticket);
-        
+
         ComentarioTicket novoComentario = comentarioRepository.save(comentario);
-        
+        logger.info("Comentario #{} adicionado ao ticket #{} por {}", novoComentario.getId(), ticketId, autor.getNome());
+
         // Logica de notificacao de comentarios (apenas para interacoes publicas)
         if (!notaInterna) {
             // Se o autor for o solicitante, notifica o atendente
             if (ticket.getAtendente() != null && !autor.getId().equals(ticket.getAtendente().getId())) {
-                emailService.enviarNotificacaoTicket(ticket, "Novo comentário do solicitante", ticket.getAtendente());
-            } 
+                emailService.enviarNotificacaoComentarioTicket(ticket, novoComentario, ticket.getAtendente());
+            }
             // Se o autor for o atendente (ou gerente), notifica o solicitante
             else if (!autor.getId().equals(ticket.getSolicitante().getId())) {
-                emailService.enviarNotificacaoTicket(ticket, "Novo comentário da equipe de suporte", ticket.getSolicitante());
+                emailService.enviarNotificacaoComentarioTicket(ticket, novoComentario, ticket.getSolicitante());
             }
         }
-        
+
         return novoComentario;
     }
 
@@ -159,12 +202,12 @@ public class TicketService {
     public Optional<Ticket> buscarPorId(Long id) {
         return ticketRepository.findById(id);
     }
-    
+
     /**
      * Recupera o historico de comentarios de um ticket.
      * Filtra notas internas caso o usuario logado seja apenas o solicitante (cliente).
      */
-    public List<ComentarioTicket> buscarHistoricoTicket(Ticket ticket, boolean incluirNotasInternas) {
+    public List<<ComentarioTicket> buscarHistoricoTicket(Ticket ticket, boolean incluirNotasInternas) {
         if (incluirNotasInternas) {
             return comentarioRepository.findByTicketOrderByDataCriacaoAsc(ticket);
         } else {
