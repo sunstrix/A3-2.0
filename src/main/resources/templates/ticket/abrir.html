@@ -3,7 +3,7 @@
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
       layout:decorate="~{layout/main}">
 <head>
-    <title>Abrir Chamado</title>
+    <title th:text="#{ticket.open}">Abrir Chamado</title>
 </head>
 <body>
     <!-- O conteudo desta section sera injetado dentro do layout main.html -->
@@ -13,58 +13,119 @@
                 <div class="col-lg-8">
                     <div class="card shadow-sm border-0">
                         <div class="card-header bg-primary text-white py-3">
-                            <h4 class="mb-0"><i class="bi bi-plus-circle-fill me-2"></i> Abrir Novo Chamado</h4>
+                            <h4 class="mb-0"><i class="bi bi-plus-circle-fill me-2"></i> <span th:text="#{ticket.open}">Abrir Novo Chamado</span></h4>
                         </div>
                         <div class="card-body p-4">
-                            <p class="text-muted mb-4">Descreva o problema ou solicitação detalhadamente para que nossa equipe possa ajudar você o mais rápido possível.</p>
+                            <p class="text-muted mb-4">
+                                Descreva o problema ou solicitacao detalhadamente para que nossa equipe possa ajudar voce o mais rapido possivel. 
+                                Inclua prints, logs ou arquivos relevantes nos anexos.
+                            </p>
                             
-                            <form th:action="@{/tickets/abrir}" th:object="${ticket}" method="post">
+                            <form th:action="@{/tickets/abrir}" th:object="${ticket}" method="post" enctype="multipart/form-data" novalidate>
                                 
                                 <!-- Campo Titulo -->
                                 <div class="mb-3">
-                                    <label for="titulo" class="form-label fw-bold">Título do Chamado <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="titulo" th:field="*{titulo}" placeholder="Ex: Impressora do 2º andar não funciona" required>
+                                    <label for="titulo" class="form-label fw-bold">
+                                        <span th:text="#{ticket.article.title}">Titulo do Chamado</span> 
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="titulo" 
+                                           th:field="*{titulo}" 
+                                           placeholder="Ex: Impressora do 2o andar nao funciona" 
+                                           maxlength="150"
+                                           required
+                                           aria-describedby="titulo-help">
+                                    <div id="titulo-help" class="form-text small">Resuma o problema em ate 150 caracteres.</div>
                                     <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('titulo')}" th:errors="*{titulo}"></div>
                                 </div>
                                 
                                 <!-- Campos Categoria e Prioridade -->
                                 <div class="row mb-3">
                                     <div class="col-md-6 mb-3 mb-md-0">
-                                        <label for="categoria" class="form-label fw-bold">Categoria</label>
+                                        <label for="categoria" class="form-label fw-bold" th:text="#{ticket.category}">Categoria</label>
                                         <select class="form-select" id="categoria" th:field="*{categoria}">
-                                            <option value="">Selecione uma categoria...</option>
-                                            <option value="Hardware">Hardware</option>
-                                            <option value="Software">Software</option>
-                                            <option value="Rede">Rede / Internet</option>
-                                            <option value="Acessos">Acessos e Permissões</option>
-                                            <option value="Outros">Outros</option>
+                                            <option value="" th:text="#{kb.category.all}">Selecione uma categoria...</option>
+                                            <option value="HARDWARE" th:text="#{kb.category.hardware}">Hardware</option>
+                                            <option value="SOFTWARE" th:text="#{kb.category.software}">Software</option>
+                                            <option value="REDE" th:text="#{kb.category.network}">Rede / Internet</option>
+                                            <option value="ACESSO" th:text="#{kb.category.access}">Acessos e Permissoes</option>
+                                            <option value="GERAL" th:text="#{kb.category.general}">Geral</option>
                                         </select>
                                     </div>
                                     <div class="col-md-6">
-                                        <label for="prioridade" class="form-label fw-bold">Prioridade <span class="text-danger">*</span></label>
-                                        <select class="form-select" id="prioridade" th:field="*{prioridade}" required>
-                                            <option value="BAIXA">Baixa</option>
-                                            <option value="MEDIA" selected>Média</option>
-                                            <option value="ALTA">Alta</option>
-                                            <option value="URGENTE">Urgente</option>
+                                        <label for="prioridade" class="form-label fw-bold">
+                                            <span th:text="#{ticket.priority}">Prioridade</span> 
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <select class="form-select" id="prioridade" th:field="*{prioridade}" required onchange="atualizarSlaPreview()">
+                                            <option value="BAIXA" th:text="#{ticket.priority.low}">Baixa</option>
+                                            <option value="MEDIA" selected th:text="#{ticket.priority.medium}">Media</option>
+                                            <option value="ALTA" th:text="#{ticket.priority.high}">Alta</option>
+                                            <option value="CRITICA" th:text="#{ticket.priority.critical}">Critica</option>
                                         </select>
+                                    </div>
+                                </div>
+
+                                <!-- Preview de SLA -->
+                                <div class="alert alert-info d-flex align-items-start mb-3" id="sla-preview">
+                                    <i class="bi bi-clock-history me-2 mt-1 flex-shrink-0"></i>
+                                    <div>
+                                        <strong>Prazo de resolucao (SLA):</strong>
+                                        <span id="sla-texto">24 horas</span>
+                                        <div class="small mt-1">Baixa: 72h | Media: 24h | Alta: 8h | Critica: 2h</div>
                                     </div>
                                 </div>
                                 
                                 <!-- Campo Descricao -->
-                                <div class="mb-4">
-                                    <label for="descricao" class="form-label fw-bold">Descrição Detalhada <span class="text-danger">*</span></label>
-                                    <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="6" placeholder="Inclua passos para reproduzir o erro, mensagens exibidas, etc." required></textarea>
+                                <div class="mb-3">
+                                    <label for="descricao" class="form-label fw-bold">
+                                        <span th:text="#{ticket.description}">Descricao Detalhada</span> 
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <textarea class="form-control" 
+                                              id="descricao" 
+                                              th:field="*{descricao}" 
+                                              rows="6" 
+                                              placeholder="Inclua passos para reproduzir o erro, mensagens exibidas, numero do equipamento, setor, etc." 
+                                              required
+                                              maxlength="5000"
+                                              aria-describedby="descricao-help"
+                                              oninput="atualizarContador()"></textarea>
+                                    <div class="d-flex justify-content-between">
+                                        <div id="descricao-help" class="form-text small">Quanto mais detalhes, mais rapido sera a resolucao.</div>
+                                        <div class="form-text small"><span id="contador-caracteres">0</span> / 5000</div>
+                                    </div>
                                     <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('descricao')}" th:errors="*{descricao}"></div>
+                                </div>
+
+                                <!-- Upload de Anexos -->
+                                <div class="mb-4">
+                                    <label for="arquivos" class="form-label fw-bold">
+                                        <i class="bi bi-paperclip me-1"></i> Anexos (Opcional)
+                                    </label>
+                                    <input type="file" 
+                                           class="form-control" 
+                                           id="arquivos" 
+                                           name="arquivos" 
+                                           multiple 
+                                           accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip"
+                                           aria-describedby="arquivos-help">
+                                    <div id="arquivos-help" class="form-text small">
+                                        Formatos aceitos: JPG, PNG, PDF, DOC, XLS, TXT, ZIP. 
+                                        Tamanho maximo: 10MB por arquivo.
+                                    </div>
+                                    <div class="mt-2" id="lista-arquivos"></div>
                                 </div>
                                 
                                 <!-- Botoes de Acao -->
                                 <div class="d-flex justify-content-between align-items-center">
                                     <a th:href="@{/tickets/meus}" class="btn btn-outline-secondary">
-                                        <i class="bi bi-arrow-left"></i> Cancelar
+                                        <i class="bi bi-arrow-left me-1"></i> <span th:text="#{app.cancel}">Cancelar</span>
                                     </a>
                                     <button type="submit" class="btn btn-primary px-4">
-                                        <i class="bi bi-send-fill me-2"></i> Enviar Chamado
+                                        <i class="bi bi-send-fill me-2"></i> <span th:text="#{ticket.create.success}">Enviar Chamado</span>
                                     </button>
                                 </div>
                             </form>
@@ -73,6 +134,64 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            // Atualiza o preview de SLA baseado na prioridade selecionada
+            function atualizarSlaPreview() {
+                var prioridade = document.getElementById('prioridade').value;
+                var slaTexto = document.getElementById('sla-texto');
+                var slaPreview = document.getElementById('sla-preview');
+                
+                var slas = {
+                    'BAIXA': '72 horas',
+                    'MEDIA': '24 horas',
+                    'ALTA': '8 horas',
+                    'CRITICA': '2 horas'
+                };
+                
+                slaTexto.textContent = slas[prioridade] || '24 horas';
+                
+                // Muda a cor do alerta conforme a prioridade
+                slaPreview.className = 'alert d-flex align-items-start mb-3';
+                if (prioridade === 'CRITICA') {
+                    slaPreview.classList.add('alert-danger');
+                } else if (prioridade === 'ALTA') {
+                    slaPreview.classList.add('alert-warning');
+                } else {
+                    slaPreview.classList.add('alert-info');
+                }
+            }
+
+            // Atualiza o contador de caracteres da descricao
+            function atualizarContador() {
+                var textarea = document.getElementById('descricao');
+                var contador = document.getElementById('contador-caracteres');
+                contador.textContent = textarea.value.length;
+            }
+
+            // Mostra os arquivos selecionados
+            document.getElementById('arquivos').addEventListener('change', function() {
+                var lista = document.getElementById('lista-arquivos');
+                lista.innerHTML = '';
+                if (this.files.length > 0) {
+                    var ul = document.createElement('ul');
+                    ul.className = 'list-group list-group-flush';
+                    for (var i = 0; i < this.files.length; i++) {
+                        var li = document.createElement('li');
+                        li.className = 'list-group-item py-1 px-2 small d-flex justify-content-between align-items-center';
+                        var tamanho = (this.files[i].size / 1024 / 1024).toFixed(2);
+                        li.innerHTML = '<span><i class="bi bi-file-earmark me-1"></i> ' + this.files[i].name + '</span>' +
+                                       '<span class="badge bg-secondary">' + tamanho + ' MB</span>';
+                        ul.appendChild(li);
+                    }
+                    lista.appendChild(ul);
+                }
+            });
+
+            // Inicializa
+            atualizarSlaPreview();
+            atualizarContador();
+        </script>
     </section>
 </body>
 </html>
