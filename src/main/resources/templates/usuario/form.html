@@ -1,150 +1,204 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${usuario.id} != null ? 'Editar Usuário' : 'Novo Usuário'">Formulário de Usuário</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/main.css">
+    <title th:text="${usuario.id} != null ? 'Editar Usuario' : 'Novo Usuario'">Formulario de Usuario</title>
     <style>
-        body { background-color: var(--bg-secondary); color: var(--text-primary); }
-        .page-header { 
-            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); 
-            color: white; 
-            padding: 1.5rem 0; 
-            margin-bottom: 2rem; 
-            border-radius: 0 0 12px 12px;
-            box-shadow: var(--shadow-md);
-        }
         .form-container { 
             background-color: var(--bg-primary); 
             padding: 2rem; 
             border-radius: 12px; 
             border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-lg); 
+            box-shadow: var(--shadow-sm); 
         }
         .form-label { color: var(--text-secondary); font-weight: 600; }
-        .form-control, .form-select {
-            background-color: var(--bg-tertiary);
-            border: 1px solid var(--border-color);
-            color: var(--text-primary) !important;
-        }
-        .form-control:focus, .form-select:focus {
-            background-color: var(--bg-tertiary);
-            border-color: var(--primary);
-            box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.2);
-        }
-        .form-check-input {
-            background-color: var(--bg-tertiary);
-            border-color: var(--border-color);
-        }
-        .form-check-input:checked {
-            background-color: var(--primary);
-            border-color: var(--primary);
+        .avatar-preview {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
         }
     </style>
 </head>
 <body>
-    <!-- Navbar customizada conforme fragmento central -->
-    <div th:replace="~{common/navbar :: navbar}"></div>
+    <section layout:fragment="content">
+        <div class="container mb-5">
+            <!-- Cabecalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i th:class="${usuario.id != null} ? 'bi bi-pencil-square me-2' : 'bi bi-person-plus-fill me-2'"></i>
+                        <span th:text="${usuario.id} != null ? 'Editar Usuario' : 'Novo Usuario'">Formulario</span>
+                    </h2>
+                    <p class="text-muted mb-0 small" th:if="${usuario.id} != null">
+                        ID: <span th:text="${usuario.id}">0</span> | 
+                        Cadastrado em: <span th:text="${#temporals.format(usuario.dataCadastro, 'dd/MM/yyyy')}">data</span>
+                    </p>
+                </div>
+                <a th:href="@{/usuarios}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
+            </div>
 
-    <div class="container fade-in">
-        <div class="page-header px-4">
-            <h2 class="mb-0">
-                <i th:class="${usuario.id != null} ? 'bi bi-pencil-square me-2' : 'bi bi-person-plus-fill me-2'"></i>
-                <span th:text="${usuario.id} != null ? 'Editar Usuário' : 'Novo Usuário'">Formulário</span>
-            </h2>
-        </div>
+            <div class="form-container">
+                <!-- Ação dinâmica: cria novo ou atualiza existente -->
+                <form th:action="${usuario.id} != null ? @{/usuarios/atualizar/{id}(id=${usuario.id})} : @{/usuarios}"
+                      th:object="${usuario}" method="post">
 
-        <div class="form-container mb-5">
-            <!-- Ação dinâmica: cria novo ou atualiza existente -->
-            <form th:action="${usuario.id} != null ? @{/usuarios/atualizar/{id}(id=${usuario.id})} : @{/usuarios}"
-                  th:object="${usuario}" method="post">
+                    <div class="row g-4">
+                        <!-- Avatar (apenas visual, em edicao) -->
+                        <div class="col-12" th:if="${usuario.id} != null">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-preview" th:text="${usuario.iniciais}">U</div>
+                                <div>
+                                    <h5 class="mb-0 fw-bold" th:text="${usuario.nome}">Nome</h5>
+                                    <p class="text-muted mb-0 small" th:text="${usuario.perfil?.descricao} + ' | ' + (${usuario.ativo} ? 'Ativo' : 'Inativo')">Perfil</p>
+                                </div>
+                            </div>
+                            <hr>
+                        </div>
 
-                <div class="row g-4">
-                    <div class="col-md-6">
-                        <label for="nome" class="form-label">Nome Completo</label>
-                        <input type="text" class="form-control" id="nome" th:field="*{nome}" 
-                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" 
-                               placeholder="Digite o nome completo" required>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
-                    </div>
+                        <div class="col-md-6">
+                            <label for="nome" class="form-label">Nome Completo <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="nome" th:field="*{nome}" 
+                                   th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" 
+                                   placeholder="Digite o nome completo" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
+                        </div>
 
-                    <div class="col-md-6">
-                        <label for="cpf" class="form-label">CPF</label>
-                        <input type="text" class="form-control" id="cpf" th:field="*{cpf}" 
-                               th:classappend="${#fields.hasErrors('cpf')} ? 'is-invalid'" 
-                               required placeholder="Ex: 12345678901">
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}"></div>
-                    </div>
+                        <div class="col-md-6">
+                            <label for="cpf" class="form-label">CPF <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="cpf" th:field="*{cpf}" 
+                                   th:classappend="${#fields.hasErrors('cpf')} ? 'is-invalid'" 
+                                   required placeholder="Ex: 12345678901" maxlength="11" pattern="\d{11}">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}"></div>
+                            <div class="form-text small">Apenas numeros, 11 digitos.</div>
+                        </div>
 
-                    <div class="col-md-6">
-                        <label for="email" class="form-label">E-mail Corporativo</label>
-                        <input type="email" class="form-control" id="email" th:field="*{email}" 
-                               th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" 
-                               placeholder="email@empresa.com.br" required>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
-                    </div>
+                        <div class="col-md-6">
+                            <label for="email" class="form-label">E-mail Corporativo <span class="text-danger">*</span></label>
+                            <input type="email" class="form-control" id="email" th:field="*{email}" 
+                                   th:classappend="${#fields.hasErrors('email')} ? 'is-invalid'" 
+                                   placeholder="email@empresa.com.br" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                            <div class="form-text small">O e-mail de boas-vindas sera enviado para este endereco.</div>
+                        </div>
 
-                    <div class="col-md-6">
-                        <label for="cargo" class="form-label">Cargo / Função</label>
-                        <input type="text" class="form-control" id="cargo" th:field="*{cargo}" 
-                               th:classappend="${#fields.hasErrors('cargo')} ? 'is-invalid'" 
-                               placeholder="Ex: Desenvolvedor Senior" required>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('cargo')}" th:errors="*{cargo}"></div>
-                    </div>
+                        <div class="col-md-6">
+                            <label for="telefone" class="form-label">Telefone</label>
+                            <input type="tel" class="form-control" id="telefone" th:field="*{telefone}" 
+                                   placeholder="Ex: 11999998888" maxlength="20">
+                            <div class="form-text small">Opcional. Para contato direto do suporte.</div>
+                        </div>
 
-                    <div class="col-md-6">
-                        <label for="login" class="form-label">Nome de Usuário (Login)</label>
-                        <input type="text" class="form-control" id="login" th:field="*{login}" 
-                               th:classappend="${#fields.hasErrors('login')} ? 'is-invalid'" 
-                               placeholder="Ex: joao.silva" required>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></div>
-                    </div>
+                        <div class="col-md-6">
+                            <label for="cargo" class="form-label">Cargo / Funcao <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="cargo" th:field="*{cargo}" 
+                                   th:classappend="${#fields.hasErrors('cargo')} ? 'is-invalid'" 
+                                   placeholder="Ex: Desenvolvedor Senior" required>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('cargo')}" th:errors="*{cargo}"></div>
+                        </div>
 
-                    <div class="col-md-6">
-                        <label for="senha" class="form-label">Senha de Acesso</label>
-                        <input type="password" class="form-control" id="senha" th:field="*{senha}" 
-                               th:classappend="${#fields.hasErrors('senha')} ? 'is-invalid'"
-                               th:placeholder="${usuario.id} != null ? 'Deixe em branco para manter a atual' : 'Mínimo 6 caracteres'">
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}"></div>
-                        <small style="color: var(--text-muted);" th:if="${usuario.id} != null">
-                            <i class="bi bi-info-circle me-1"></i> Preencha apenas se desejar alterar a senha.
-                        </small>
-                    </div>
+                        <div class="col-md-6">
+                            <label for="login" class="form-label">Nome de Usuario (Login) <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="login" th:field="*{login}" 
+                                   th:classappend="${#fields.hasErrors('login')} ? 'is-invalid'" 
+                                   placeholder="Ex: joao.silva" required
+                                   th:attr="readonly=${usuario.id} != null ? 'readonly' : null">
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('login')}" th:errors="*{login}"></div>
+                            <div class="form-text small" th:if="${usuario.id} != null">O login nao pode ser alterado.</div>
+                        </div>
 
-                    <div class="col-md-6">
-                        <label for="perfil" class="form-label">Perfil de Acesso</label>
-                        <select class="form-select" id="perfil" th:field="*{perfil}" 
-                                th:classappend="${#fields.hasErrors('perfil')} ? 'is-invalid'" required>
-                            <option value="">Selecione um nível...</option>
-                            <option th:each="p : ${perfis}" th:value="${p}" th:text="${p.descricao}"></option>
-                        </select>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('perfil')}" th:errors="*{perfil}"></div>
-                    </div>
+                        <div class="col-md-6">
+                            <label for="senha" class="form-label">
+                                <span th:text="${usuario.id} != null ? 'Nova Senha' : 'Senha de Acesso'">Senha</span>
+                                <span class="text-danger" th:if="${usuario.id} == null">*</span>
+                            </label>
+                            <div class="input-group">
+                                <input type="password" class="form-control" id="senha" th:field="*{senha}" 
+                                       th:classappend="${#fields.hasErrors('senha')} ? 'is-invalid'"
+                                       th:placeholder="${usuario.id} != null ? 'Deixe em branco para manter a atual' : 'Minimo 8 caracteres'"
+                                       th:required="${usuario.id} == null">
+                                <button class="btn btn-outline-secondary" type="button" onclick="toggleSenha()" title="Mostrar senha">
+                                    <i class="bi bi-eye" id="icon-senha"></i>
+                                </button>
+                            </div>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('senha')}" th:errors="*{senha}"></div>
+                            <div class="form-text small" th:if="${usuario.id} != null">
+                                <i class="bi bi-info-circle me-1"></i> Preencha apenas se desejar alterar a senha.
+                            </div>
+                            <div class="form-text small text-danger" th:if="${usuario.id} == null}">
+                                <i class="bi bi-exclamation-triangle me-1"></i> A senha deve ter no minimo 8 caracteres, incluindo letras e numeros.
+                            </div>
+                        </div>
 
-                    <div class="col-md-6 d-flex align-items-center">
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="ativo" th:field="*{ativo}" style="width: 3em; height: 1.5em; cursor: pointer;">
-                            <label class="form-check-label ms-2 fw-semibold" for="ativo" style="color: var(--text-primary);">Usuário Ativo</label>
+                        <div class="col-md-6">
+                            <label for="perfil" class="form-label">Perfil de Acesso <span class="text-danger">*</span></label>
+                            <select class="form-select" id="perfil" th:field="*{perfil}" 
+                                    th:classappend="${#fields.hasErrors('perfil')} ? 'is-invalid'" required>
+                                <option value="">Selecione um nivel...</option>
+                                <option th:each="p : ${perfis}" th:value="${p}" th:text="${p.descricao}"></option>
+                            </select>
+                            <div class="invalid-feedback" th:if="${#fields.hasErrors('perfil')}" th:errors="*{perfil}"></div>
+                            <div class="form-text small">
+                                <span class="badge bg-dark">Admin</span> Acesso total | 
+                                <span class="badge bg-info text-dark">Gerente</span> Gestao | 
+                                <span class="badge bg-success">Atendente</span> Suporte | 
+                                <span class="badge bg-secondary">Colaborador</span> Basico
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check form-switch me-4">
+                                <input class="form-check-input" type="checkbox" id="ativo" th:field="*{ativo}" style="width: 3em; height: 1.5em; cursor: pointer;">
+                                <label class="form-check-label ms-2 fw-semibold" for="ativo">Usuario Ativo</label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6 d-flex align-items-center">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="notificacoesEmail" th:field="*{notificacoesEmail}" style="width: 3em; height: 1.5em; cursor: pointer;">
+                                <label class="form-check-label ms-2 fw-semibold" for="notificacoesEmail">
+                                    <i class="bi bi-envelope me-1"></i> Receber notificacoes por e-mail
+                                </label>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="mt-5 d-flex gap-3 border-top pt-4">
-                    <button type="submit" class="btn btn-primary px-5">
-                        <i class="bi bi-save me-2"></i> Confirmar e Salvar
-                    </button>
-                    <a href="/usuarios" class="btn btn-outline-secondary px-4">
-                        Cancelar
-                    </a>
-                </div>
-            </form>
+                    <div class="mt-5 d-flex gap-3 border-top pt-4">
+                        <button type="submit" class="btn btn-primary px-5">
+                            <i class="bi bi-save me-2"></i> 
+                            <span th:text="${usuario.id} != null ? 'Salvar Alteracoes' : 'Cadastrar Usuario'">Confirmar</span>
+                        </button>
+                        <a th:href="@{/usuarios}" class="btn btn-outline-secondary px-4">
+                            <i class="bi bi-x-circle me-1"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 
-    <div th:replace="~{common/footer :: footer}"></div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            function toggleSenha() {
+                var input = document.getElementById('senha');
+                var icon = document.getElementById('icon-senha');
+                if (input.type === 'password') {
+                    input.type = 'text';
+                    icon.className = 'bi bi-eye-slash';
+                } else {
+                    input.type = 'password';
+                    icon.className = 'bi bi-eye';
+                }
+            }
+        </script>
+    </section>
 </body>
 </html>
