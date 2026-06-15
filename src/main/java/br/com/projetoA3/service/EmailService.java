@@ -1,67 +1,119 @@
 package br.com.projetoA3.service;
 
-import jakarta.mail.*;
-import jakarta.mail.internet.*;
+import br.com.projetoA3.model.Ticket;
+import br.com.projetoA3.model.Usuario;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import java.util.Properties;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
 
+import java.io.UnsupportedEncodingException;
+import java.util.Locale;
+
+/**
+ * Servico responsavel pelo processamento e envio de e-mails do sistema.
+ * Utiliza o Thymeleaf para renderizar templates HTML dinamicos e o JavaMailSender
+ * para a transmissao via SMTP.
+ */
 @Service
 public class EmailService {
 
-    private final ConfiguracaoService configuracaoService;
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
-    public EmailService(ConfiguracaoService configuracaoService) {
-        this.configuracaoService = configuracaoService;
+    @Autowired
+    private JavaMailSender mailSender;
+
+    @Autowired
+    private TemplateEngine templateEngine;
+
+    @Value("${spring.mail.username}")
+    private String remetente;
+
+    /**
+     * Envia o e-mail de boas-vindas para um novo usuario cadastrado no sistema.
+     * O envio e assincrono para nao bloquear a thread principal da aplicacao.
+     *
+     * @param usuario O usuario recem-cadastrado.
+     */
+    @Async
+    public void enviarEmailBoasVindas(Usuario usuario) {
+        try {
+            Context context = new Context(new Locale("pt", "BR"));
+            context.setVariable("nome", usuario.getNome());
+            context.setVariable("email", usuario.getEmail());
+            
+            String html = templateEngine.process("emails/boas-vindas", context);
+            
+            enviarEmailHtml(
+                usuario.getEmail(), 
+                "Bem-vindo ao A3-2.0 Help Desk!", 
+                html
+            );
+            logger.info("E-mail de boas-vindas enviado com sucesso para: {}", usuario.getEmail());
+            
+        } catch (Exception e) {
+            logger.error("Erro ao processar ou enviar e-mail de boas-vindas para {}: {}", usuario.getEmail(), e.getMessage());
+        }
     }
 
     /**
-     * Envia um e-mail com anexo usando as configurações de SMTP salvas no banco.
-     * @param assunto Assunto do e-mail
-     * @param corpo Texto do corpo da mensagem
-     * @param anexoBytes Conteúdo do arquivo em bytes (PDF ou Excel)
-     * @param nomeAnexo Nome do arquivo com extensão (ex: "relatorio.pdf")
-     * @throws Exception Caso falhe na conexão ou envio
+     * Envia notificacoes sobre movimentacoes em um ticket (criacao, mudanca de status, novos comentarios).
+     *
+     * @param ticket O ticket que sofreu a alteracao.
+     * @param acao Uma descricao da acao ocorrida (ex: "Novo comentario", "Status alterado para EM_ANDAMENTO").
+     * @param destinatario O usuario que deve receber a notificacao.
      */
-    public void enviarRelatorioComAnexo(String assunto, String corpo, byte[] anexoBytes, String nomeAnexo) throws Exception {
-        // 1. Obtém as propriedades de SMTP do banco de dados
-        Properties props = configuracaoService.getMailProperties();
-        if (props == null) {
-            throw new Exception("Configurações de SMTP (Host, Porta, Usuário, Senha) estão incompletas. Acesse /configuracoes para preenchê-las.");
+    @Async
+    public void enviarNotificacaoTicket(Ticket ticket, String acao, Usuario destinatario) {
+        if (destinatario == null || destinatario.getEmail() == null) {
+            logger.warn("Tentativa de enviar notificacao de ticket para um destinatario nulo ou sem e-mail.");
+            return;
         }
 
-        // 2. Obtém o destinatário configurado
-        String destinatario = configuracaoService.getValor("EMAIL_DESTINATARIO");
-        if (destinatario == null || destinatario.trim().isEmpty()) {
-            throw new Exception("O campo EMAIL_DESTINATARIO não está configurado na tela de configurações.");
+        try {
+            Context context = new Context(new Locale("pt", "BR"));
+            context.setVariable("nomeDestinatario", destinatario.getNome());
+            context.setVariable("ticket", ticket);
+            context.setVariable("acao", acao);
+            // Link ficticio para acesso rapido, sera adaptado no Controller/Template
+            context.setVariable("linkTicket", "http://localhost:8080/tickets/detalhar/" + ticket.getId()); 
+            
+            String html = templateEngine.process("emails/notificacao-ticket", context);
+            
+            String assunto = String.format("[Ticket #%d] %s - %s", ticket.getId(), acao, ticket.getTitulo());
+            
+            enviarEmailHtml(
+                destinatario.getEmail(), 
+                assunto, 
+                html
+            );
+            logger.info("Notificacao de ticket enviada para {} referente ao Ticket #{}", destinatario.getEmail(), ticket.getId());
+            
+        } catch (Exception e) {
+            logger.error("Erro ao enviar notificacao do ticket #{} para {}: {}", ticket.getId(), destinatario.getEmail(), e.getMessage());
         }
+    }
 
-        // 3. Cria a sessão de e-mail
-        Session session = Session.getInstance(props);
-        MimeMessage message = new MimeMessage(session);
+    /**
+     * Metodo central e privado para a montagem e envio real da mensagem via SMTP.
+     */
+    private void enviarEmailHtml(String para, String assunto, String html) throws MessagingException, UnsupportedEncodingException {
+        MimeMessage message = mailSender.createMimeMessage();
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-        // 4. Configura remetente e destinatário
-        String remetente = configuracaoService.getValor("EMAIL_USUARIO");
-        message.setFrom(new InternetAddress(remetente));
-        message.addRecipient(Message.RecipientType.TO, new InternetAddress(destinatario));
-        message.setSubject(assunto);
+        helper.setFrom(remetente, "A3-2.0 Help Desk");
+        helper.setTo(para);
+        helper.setSubject(assunto);
+        helper.setText(html, true); // true indica que o texto e HTML
 
-        // 5. Cria o conteúdo multipart (texto + anexo)
-        Multipart multipart = new MimeMultipart();
-
-        // Parte de texto
-        MimeBodyPart textPart = new MimeBodyPart();
-        textPart.setText(corpo, "utf-8");
-        multipart.addBodyPart(textPart);
-
-        // Parte de anexo
-        MimeBodyPart attachmentPart = new MimeBodyPart();
-        attachmentPart.setContent(anexoBytes, "application/octet-stream");
-        attachmentPart.setFileName(nomeAnexo);
-        multipart.addBodyPart(attachmentPart);
-
-        message.setContent(multipart);
-
-        // 6. Envia o e-mail
-        Transport.send(message);
+        mailSender.send(message);
     }
 }
