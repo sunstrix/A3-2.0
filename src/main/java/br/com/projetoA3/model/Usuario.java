@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
+import java.time.LocalDateTime;
+
 @Entity
 @Table(name = "usuarios")
 public class Usuario {
@@ -13,34 +15,31 @@ public class Usuario {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Nome é obrigatório")
+    @NotBlank(message = "Nome e obrigatorio")
     @Column(nullable = false)
     private String nome;
 
-    @NotBlank(message = "CPF é obrigatório")
+    @NotBlank(message = "CPF e obrigatorio")
     @Column(unique = true, nullable = false)
-    // ✅ Ajuste na mensagem para ficar claro ao usuário no console
-    @Pattern(regexp = "\\d{11}", message = "CPF deve conter exatamente 11 dígitos numéricos")
+    @Pattern(regexp = "\\d{11}", message = "CPF deve conter exatamente 11 digitos numericos")
     private String cpf;
 
-    @Email(message = "Email inválido")
-    @NotBlank(message = "Email é obrigatório")
+    @Email(message = "Email invalido")
+    @NotBlank(message = "Email e obrigatorio")
     @Column(unique = true, nullable = false)
     private String email;
 
-    @NotBlank(message = "Cargo é obrigatório")
+    @Column(length = 20)
+    private String telefone;
+
+    @NotBlank(message = "Cargo e obrigatorio")
     @Column(nullable = false)
     private String cargo;
 
-    @NotBlank(message = "Login é obrigatório")
+    @NotBlank(message = "Login e obrigatorio")
     @Column(unique = true, nullable = false)
     private String login;
 
-    /**
-     * ✅ Alterado: Removido @NotBlank para permitir a lógica de "deixar em branco para manter a atual" 
-     * no formulário de edição. A obrigatoriedade para NOVOS usuários agora é validada 
-     * via código no UsuarioService.save().
-     */
     @Column(nullable = false)
     private String senha;
 
@@ -51,11 +50,24 @@ public class Usuario {
     @Column(nullable = false)
     private Boolean ativo = true;
 
+    @Column(name = "avatar")
+    private String avatar; // Nome do arquivo de imagem do avatar
+
+    @Column(name = "notificacoes_email")
+    private Boolean notificacoesEmail = true; // Opt-in para receber e-mails de notificacao
+
+    @Column(name = "data_cadastro", nullable = false, updatable = false)
+    private LocalDateTime dataCadastro;
+
+    @Column(name = "ultimo_acesso")
+    private LocalDateTime ultimoAcesso;
+
     // Enum de Perfis de Acesso
     public enum Perfil {
         ADMINISTRADOR("Administrador"),
         GERENTE("Gerente"),
-        COLABORADOR("Colaborador");
+        COLABORADOR("Colaborador"),
+        ATENDENTE("Atendente");
 
         private final String descricao;
 
@@ -68,7 +80,18 @@ public class Usuario {
         }
     }
 
-    // Construtores (Preservados)
+    @PrePersist
+    protected void onCreate() {
+        dataCadastro = LocalDateTime.now();
+        if (ativo == null) {
+            ativo = true;
+        }
+        if (notificacoesEmail == null) {
+            notificacoesEmail = true;
+        }
+    }
+
+    // Construtores
     public Usuario() {
     }
 
@@ -82,23 +105,86 @@ public class Usuario {
         this.perfil = perfil;
     }
 
-    // Getters e Setters (Preservados)
+    // Getters e Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+
     public String getNome() { return nome; }
     public void setNome(String nome) { this.nome = nome; }
+
     public String getCpf() { return cpf; }
     public void setCpf(String cpf) { this.cpf = cpf; }
+
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+
+    public String getTelefone() { return telefone; }
+    public void setTelefone(String telefone) { this.telefone = telefone; }
+
     public String getCargo() { return cargo; }
     public void setCargo(String cargo) { this.cargo = cargo; }
+
     public String getLogin() { return login; }
     public void setLogin(String login) { this.login = login; }
+
     public String getSenha() { return senha; }
     public void setSenha(String senha) { this.senha = senha; }
+
     public Perfil getPerfil() { return perfil; }
     public void setPerfil(Perfil perfil) { this.perfil = perfil; }
+
     public Boolean getAtivo() { return ativo; }
     public void setAtivo(Boolean ativo) { this.ativo = ativo; }
+
+    public String getAvatar() { return avatar; }
+    public void setAvatar(String avatar) { this.avatar = avatar; }
+
+    public Boolean getNotificacoesEmail() { return notificacoesEmail; }
+    public void setNotificacoesEmail(Boolean notificacoesEmail) { this.notificacoesEmail = notificacoesEmail; }
+
+    public LocalDateTime getDataCadastro() { return dataCadastro; }
+    public void setDataCadastro(LocalDateTime dataCadastro) { this.dataCadastro = dataCadastro; }
+
+    public LocalDateTime getUltimoAcesso() { return ultimoAcesso; }
+    public void setUltimoAcesso(LocalDateTime ultimoAcesso) { this.ultimoAcesso = ultimoAcesso; }
+
+    /**
+     * Verifica se o usuario possui perfil de administrador.
+     */
+    public boolean isAdministrador() {
+        return Perfil.ADMINISTRADOR.equals(this.perfil);
+    }
+
+    /**
+     * Verifica se o usuario possui perfil de gerente.
+     */
+    public boolean isGerente() {
+        return Perfil.GERENTE.equals(this.perfil);
+    }
+
+    /**
+     * Verifica se o usuario possui perfil de atendente.
+     */
+    public boolean isAtendente() {
+        return Perfil.ATENDENTE.equals(this.perfil);
+    }
+
+    /**
+     * Retorna o nome completo formatado para exibicao.
+     */
+    public String getNomeExibicao() {
+        return nome != null ? nome : login;
+    }
+
+    /**
+     * Retorna as iniciais do nome para avatares genericos.
+     */
+    public String getIniciais() {
+        if (nome == null || nome.isBlank()) return "?";
+        String[] partes = nome.trim().split("\\s+");
+        if (partes.length == 1) {
+            return partes[0].substring(0, 1).toUpperCase();
+        }
+        return (partes[0].substring(0, 1) + partes[partes.length - 1].substring(0, 1)).toUpperCase();
+    }
 }
