@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - A3 2.0</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/main.css">
+    <meta name="description" content="A3 2.0 - Sistema de Help Desk e Gestao de Projetos">
+    <title>Login - A3 2.0 Help Desk</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
     <style>
         body {
             background-color: var(--bg-secondary);
@@ -16,6 +17,7 @@
             justify-content: center;
             font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
             color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
         }
         .login-container {
             max-width: 420px;
@@ -28,6 +30,7 @@
             border-radius: 16px;
             padding: 2.5rem 2rem;
             box-shadow: var(--shadow-lg);
+            transition: background-color 0.3s ease, border-color 0.3s ease;
         }
         .login-header {
             text-align: center;
@@ -53,6 +56,7 @@
             color: var(--text-primary);
             padding: 0.75rem 1rem;
             border-radius: 8px;
+            transition: all 0.2s ease;
         }
         .form-control:focus {
             background-color: var(--bg-tertiary);
@@ -75,6 +79,9 @@
             box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
             color: white;
         }
+        .btn-login:active {
+            transform: translateY(0);
+        }
         .input-group-text {
             background-color: var(--bg-tertiary);
             border: 1px solid var(--border-color);
@@ -83,6 +90,12 @@
         }
         .input-group .form-control {
             border-left: none;
+        }
+        .input-group:focus-within .input-group-text {
+            border-color: var(--primary);
+        }
+        .input-group:focus-within .form-control {
+            border-color: var(--primary);
         }
         .credentials-hint {
             background-color: var(--bg-tertiary);
@@ -100,6 +113,59 @@
             background: rgba(0,0,0,0.2);
             padding: 2px 4px;
             border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+        .login-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        .login-footer a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+        /* Tema escuro automatico para login */
+        html[data-bs-theme="dark"] body {
+            background-color: #1a1a2e !important;
+        }
+        html[data-bs-theme="dark"] .login-card {
+            background-color: #16213e !important;
+            border-color: #0f3460 !important;
+        }
+        html[data-bs-theme="dark"] .form-control,
+        html[data-bs-theme="dark"] .input-group-text {
+            background-color: #0f3460 !important;
+            border-color: #1e293b !important;
+            color: #e0e0e0 !important;
+        }
+        html[data-bs-theme="dark"] .credentials-hint {
+            background-color: #0f3460 !important;
+            border-color: #1e293b !important;
+        }
+        html[data-bs-theme="dark"] code {
+            background: rgba(255,255,255,0.1);
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        /* Botao de mostrar/esconder senha */
+        .btn-toggle-password {
+            border: 1px solid var(--border-color);
+            border-left: none;
+            background-color: var(--bg-tertiary);
+            color: var(--text-muted);
+        }
+        .btn-toggle-password:hover {
+            background-color: var(--bg-secondary);
+            color: var(--text-primary);
         }
     </style>
 </head>
@@ -107,39 +173,48 @@
     <div class="login-container">
         <div class="login-card fade-in">
             <div class="login-header">
-                <i class="bi bi-kanban-fill"></i>
+                <i class="bi bi-headset"></i>
                 <h2>A3 2.0</h2>
-                <p class="mb-0" style="color: var(--text-secondary);">Sistema de Gestão de Projetos</p>
+                <p class="mb-0" style="color: var(--text-secondary);">Help Desk e Gestao de Projetos</p>
             </div>
 
             <!-- Mensagem de Erro -->
             <div th:if="${param.error}" class="alert alert-danger d-flex align-items-center" role="alert">
-                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <i class="bi bi-exclamation-triangle-fill me-2 flex-shrink-0"></i>
                 <div>
-                    <strong class="small">Login ou senha inválidos.</strong>
+                    <strong class="small">Usuario ou senha invalidos.</strong>
+                    <div class="small">Por favor, verifique suas credenciais e tente novamente.</div>
                 </div>
             </div>
 
             <!-- Mensagem de Logout -->
-            <div th:if="${param.logout}" class="alert alert-info d-flex align-items-center" role="alert">
-                <i class="bi bi-info-circle-fill me-2"></i>
-                <div class="small">Você saiu do sistema com sucesso.</div>
+            <div th:if="${param.logout}" class="alert alert-success d-flex align-items-center" role="alert">
+                <i class="bi bi-check-circle-fill me-2 flex-shrink-0"></i>
+                <div class="small">Voce saiu do sistema com sucesso.</div>
             </div>
 
-            <form th:action="@{/login}" method="post">
+            <!-- Mensagem de Sessao Expirada -->
+            <div th:if="${param.expired}" class="alert alert-warning d-flex align-items-center" role="alert">
+                <i class="bi bi-clock-history me-2 flex-shrink-0"></i>
+                <div class="small">Sua sessao expirou por inatividade. Faca login novamente.</div>
+            </div>
+
+            <form th:action="@{/login}" method="post" novalidate>
                 <div class="mb-3">
-                    <label for="login" class="form-label">Usuário</label>
+                    <label for="login" class="form-label">Usuario</label>
                     <div class="input-group">
                         <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
                         <input type="text" 
                                class="form-control" 
                                id="login" 
                                name="login" 
-                               placeholder="Digite seu usuário"
+                               placeholder="Digite seu usuario"
                                autocomplete="username"
                                required 
-                               autofocus>
+                               autofocus
+                               aria-describedby="login-help">
                     </div>
+                    <div id="login-help" class="form-text small" style="color: var(--text-muted);">Use seu login ou e-mail cadastrado.</div>
                 </div>
 
                 <div class="mb-4">
@@ -152,8 +227,21 @@
                                name="senha" 
                                placeholder="Digite sua senha"
                                autocomplete="current-password"
-                               required>
+                               required
+                               aria-describedby="senha-help">
+                        <button class="btn btn-toggle-password" type="button" id="btn-toggle-senha" title="Mostrar senha" aria-label="Mostrar ou esconder senha">
+                            <i class="bi bi-eye" id="icon-senha"></i>
+                        </button>
                     </div>
+                    <div id="senha-help" class="form-text small" style="color: var(--text-muted);">Senha fornecida pelo administrador.</div>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="lembrar-me" name="remember-me">
+                        <label class="form-check-label small" for="lembrar-me" style="color: var(--text-secondary);">Lembrar-me</label>
+                    </div>
+                    <a href="#" class="small text-decoration-none" style="color: var(--primary);">Esqueceu a senha?</a>
                 </div>
 
                 <button type="submit" class="btn btn-primary btn-login w-100">
@@ -161,16 +249,66 @@
                 </button>
             </form>
 
+            <!-- Usuarios de Teste -->
             <div class="credentials-hint">
-                <strong>🔑 Usuários de teste:</strong>
+                <strong><i class="bi bi-key-fill me-1"></i> Usuarios de teste:</strong>
                 <div class="mt-2" style="color: var(--text-secondary);">
-                    <div><code>admin</code> / <code>admin123</code></div>
-                    <div><code>gerente</code> / <code>gerente123</code></div>
+                    <div class="d-flex justify-content-between">
+                        <span><code>admin</code> / <code>admin123</code></span>
+                        <span class="badge bg-primary">Admin</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <span><code>gerente</code> / <code>gerente123</code></span>
+                        <span class="badge bg-info text-dark">Gerente</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <span><code>atendente</code> / <code>atendente123</code></span>
+                        <span class="badge bg-success">Atendente</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-1">
+                        <span><code>colaborador</code> / <code>colab123</code></span>
+                        <span class="badge bg-secondary">Colaborador</span>
+                    </div>
                 </div>
+            </div>
+
+            <div class="login-footer">
+                <p class="mb-1">
+                    <i class="bi bi-question-circle me-1"></i>
+                    <a th:href="@{/base-conhecimento}">Base de Conhecimento</a>
+                    <span class="mx-1">|</span>
+                    <a href="#">Suporte Tecnico</a>
+                </p>
+                <p class="mb-0 small">&copy; 2026 A3 2.0. Todos os direitos reservados.</p>
             </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Toggle de mostrar/esconder senha
+        document.getElementById('btn-toggle-senha').addEventListener('click', function() {
+            var senhaInput = document.getElementById('senha');
+            var icon = document.getElementById('icon-senha');
+            if (senhaInput.type === 'password') {
+                senhaInput.type = 'text';
+                icon.className = 'bi bi-eye-slash';
+                this.setAttribute('aria-label', 'Esconder senha');
+            } else {
+                senhaInput.type = 'password';
+                icon.className = 'bi bi-eye';
+                this.setAttribute('aria-label', 'Mostrar senha');
+            }
+        });
+
+        // Tema escuro automatico (le localStorage ou preferencia do sistema)
+        (function() {
+            const salvo = localStorage.getItem('a3-theme');
+            if (salvo === 'dark' || (!salvo && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.setAttribute('data-bs-theme', 'dark');
+            }
+        })();
+    </script>
 </body>
 </html>
