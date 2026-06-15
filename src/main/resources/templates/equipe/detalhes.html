@@ -1,30 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="'Detalhes da Equipe: ' + ${equipe.nome}">Detalhes da Equipe</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/main.css">
+    <title th:text="'Equipe: ' + ${equipe.nome}">Detalhes da Equipe</title>
     <style>
-        body { background-color: var(--bg-secondary); color: var(--text-primary); }
-        .page-header { 
-            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); 
-            color: white; 
-            padding: 1.5rem 0; 
-            margin-bottom: 2rem; 
-            border-radius: 0 0 12px 12px;
-            box-shadow: var(--shadow-md);
-        }
-        .card-custom { 
-            background-color: var(--bg-primary); 
-            padding: 1.5rem; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-md); 
-            margin-bottom: 1.5rem; 
-        }
         .membro-card { 
             border-left: 4px solid var(--primary); 
             background-color: var(--bg-tertiary); 
@@ -41,123 +21,154 @@
             border-radius: 20px; 
             font-size: 0.85rem; 
         }
-        .navbar-custom {
-            background-color: var(--bg-primary);
-            border-bottom: 1px solid var(--border-color);
+        .avatar-membro {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), #7c3aed);
+            color: white; display: inline-flex; align-items: center; justify-content: center;
+            font-size: 0.85rem; font-weight: 600;
         }
-        .form-label { color: var(--text-secondary); font-weight: 600; }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm mb-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/equipes" style="color: var(--primary);">
-                <i class="bi bi-arrow-left-circle me-1"></i> Voltar para Equipes
-            </a>
-        </div>
-    </nav>
-
-    <div class="container fade-in">
-        <div class="page-header px-4 d-flex justify-content-between align-items-center">
-            <h2 class="mb-0 fw-bold"><i class="bi bi-people-fill me-2"></i><span th:text="${equipe.nome}">Nome da Equipe</span></h2>
-            <a th:href="@{/equipes/editar/{id}(id=${equipe.id})}" class="btn btn-light fw-semibold" style="color: var(--primary);">
-                <i class="bi bi-pencil-square me-1"></i> Editar Equipe
-            </a>
-        </div>
-
-        <!-- Mensagens de Feedback -->
-        <div th:if="${sucesso}" class="alert alert-success alert-dismissible fade show" role="alert" style="background-color: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid var(--success);">
-            <i class="bi bi-check-circle-fill me-2"></i> <span th:text="${sucesso}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-        <div th:if="${erro}" class="alert alert-danger alert-dismissible fade show" role="alert" style="background-color: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid var(--danger);">
-            <i class="bi bi-exclamation-triangle-fill me-2"></i> <span th:text="${erro}"></span>
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-
-        <div class="row">
-            <!-- Informações da Equipe -->
-            <div class="col-lg-4">
-                <div class="card-custom">
-                    <h5 class="mb-4 fw-bold border-bottom pb-2" style="color: var(--text-primary);">
-                        <i class="bi bi-info-circle me-2 text-primary"></i> Informações
-                    </h5>
-                    <div class="mb-3">
-                        <small class="text-uppercase fw-bold text-muted d-block mb-1">Líder Responsável</small>
-                        <p class="mb-0 fw-semibold" th:text="${equipe.lider?.nome ?: 'Não definido'}"></p>
-                    </div>
-                    <div class="mb-3">
-                        <small class="text-uppercase fw-bold text-muted d-block mb-1">Tamanho do Time</small>
-                        <span class="badge" style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--primary);">
-                            <i class="bi bi-person-fill me-1"></i> <span th:text="${#lists.size(membros)}">0</span> membro(s)
-                        </span>
-                    </div>
-                    <div th:if="${equipe.descricao}">
-                        <small class="text-uppercase fw-bold text-muted d-block mb-1">Descrição</small>
-                        <p class="mb-0 small text-secondary" th:text="${equipe.descricao}"></p>
-                    </div>
+    <section layout:fragment="content">
+        <div class="container mb-5">
+            <!-- Cabecalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i class="bi bi-people-fill text-primary me-2"></i>
+                        <span th:text="${equipe.nome}">Nome da Equipe</span>
+                    </h2>
+                    <p class="text-muted mb-0 small" th:text="'ID: #' + ${equipe.id}">ID: #0</p>
+                </div>
+                <div class="d-flex gap-2">
+                    <a th:href="@{/equipes/editar/{id}(id=${equipe.id})}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-pencil-square me-1"></i> Editar Equipe
+                    </a>
+                    <a th:href="@{/equipes}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-arrow-left me-1"></i> Voltar
+                    </a>
                 </div>
             </div>
 
-            <!-- Gestão de Membros -->
-            <div class="col-lg-8">
-                <!-- Adicionar Novo Membro -->
-                <div class="card-custom">
-                    <h5 class="mb-4 fw-bold" style="color: var(--text-primary);"><i class="bi bi-person-plus me-2 text-success"></i> Adicionar Membro</h5>
-                    <form th:action="@{/equipes/{id}/adicionar-membro(id=${equipe.id})}" method="post" class="row g-3">
-                        <div class="col-md-5">
-                            <label for="usuarioId" class="form-label">Colaborador</label>
-                            <select class="form-select" id="usuarioId" name="usuarioId" required>
-                                <option value="">Selecione...</option>
-                                <option th:each="user : ${usuariosDisponiveis}" 
-                                        th:value="${user.id}" 
-                                        th:text="${user.nome} + ' - ' + ${user.cargo}">
-                                </option>
-                            </select>
+            <div class="row g-4">
+                <!-- Informacoes da Equipe -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm border-0 h-100">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold border-bottom pb-2 mb-3">
+                                <i class="bi bi-info-circle me-2 text-primary"></i> Informacoes
+                            </h5>
+                            
+                            <!-- Lider -->
+                            <div class="mb-3">
+                                <small class="text-uppercase fw-bold text-muted d-block mb-1">Lider Responsavel</small>
+                                <div th:if="${equipe.lider != null}" class="d-flex align-items-center">
+                                    <div class="avatar-membro me-2" th:text="${equipe.lider.iniciais}">L</div>
+                                    <div>
+                                        <span class="fw-semibold d-block" th:text="${equipe.lider.nome}">Nome</span>
+                                        <small class="text-muted" th:text="${equipe.lider.cargo}">Cargo</small>
+                                    </div>
+                                </div>
+                                <span th:unless="${equipe.lider != null}" class="text-muted fst-italic">Nao definido</span>
+                            </div>
+
+                            <!-- Tamanho -->
+                            <div class="mb-3">
+                                <small class="text-uppercase fw-bold text-muted d-block mb-1">Tamanho do Time</small>
+                                <span class="badge bg-light text-dark border">
+                                    <i class="bi bi-person-fill me-1"></i> 
+                                    <span th:text="${membros != null ? #lists.size(membros) : 0}">0</span> 
+                                    <span th:text="${(membros != null ? #lists.size(membros) : 0) == 1 ? 'membro' : 'membros'}">membros</span>
+                                </span>
+                            </div>
+
+                            <!-- Descricao -->
+                            <div class="mb-3" th:if="${equipe.descricao != null and !equipe.descricao.isEmpty()}">
+                                <small class="text-uppercase fw-bold text-muted d-block mb-1">Descricao</small>
+                                <p class="mb-0 small text-secondary" th:text="${equipe.descricao}">Descricao</p>
+                            </div>
+
+                            <!-- Data -->
+                            <div class="mb-0">
+                                <small class="text-uppercase fw-bold text-muted d-block mb-1">Criada em</small>
+                                <span class="small" th:text="${equipe.dataCriacao != null ? #temporals.format(equipe.dataCriacao, 'dd/MM/yyyy') : '-'}">data</span>
+                            </div>
                         </div>
-                        <div class="col-md-5">
-                            <label for="funcao" class="form-label">Função na Equipe</label>
-                            <input type="text" class="form-control" id="funcao" name="funcao" 
-                                   placeholder="Ex: Desenvolvedor, Designer..." required>
-                        </div>
-                        <div class="col-md-2 d-flex align-items-end">
-                            <button type="submit" class="btn btn-primary w-100">
-                                <i class="bi bi-plus-lg"></i>
-                            </button>
-                        </div>
-                    </form>
+                    </div>
                 </div>
 
-                <!-- Lista de Membros -->
-                <div class="card-custom">
-                    <h5 class="mb-4 fw-bold" style="color: var(--text-primary);"><i class="bi bi-people me-2 text-info"></i> Membros Atuais</h5>
-                    
-                    <div th:if="${#lists.isEmpty(membros)}" class="text-center py-5" style="border: 1px dashed var(--border-color); border-radius: 8px;">
-                        <i class="bi bi-people fs-1 text-muted"></i>
-                        <p class="mt-2 mb-0 text-secondary">Nenhum membro adicionado ainda.</p>
+                <!-- Gestao de Membros -->
+                <div class="col-lg-8">
+                    <!-- Adicionar Novo Membro -->
+                    <div class="card shadow-sm border-0 mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-3">
+                                <i class="bi bi-person-plus me-2 text-success"></i> Adicionar Membro
+                            </h5>
+                            <form th:action="@{/equipes/{id}/adicionar-membro(id=${equipe.id})}" method="post" class="row g-3">
+                                <div class="col-md-5">
+                                    <label for="usuarioId" class="form-label small">Colaborador</label>
+                                    <select class="form-select form-select-sm" id="usuarioId" name="usuarioId" required>
+                                        <option value="">Selecione...</option>
+                                        <option th:each="user : ${usuariosDisponiveis}" 
+                                                th:value="${user.id}" 
+                                                th:text="${user.nome} + ' - ' + ${user.cargo}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="col-md-5">
+                                    <label for="funcao" class="form-label small">Funcao na Equipe</label>
+                                    <input type="text" class="form-control form-control-sm" id="funcao" name="funcao" 
+                                           placeholder="Ex: Desenvolvedor, Designer..." required maxlength="50">
+                                </div>
+                                <div class="col-md-2 d-flex align-items-end">
+                                    <button type="submit" class="btn btn-primary btn-sm w-100">
+                                        <i class="bi bi-plus-lg me-1"></i> Add
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
 
-                    <div th:each="membro : ${membros}" class="membro-card d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="mb-1 fw-bold" th:text="${membro.usuario.nome}">Nome do Membro</h6>
-                            <p class="mb-0 text-muted small"><i class="bi bi-briefcase me-1"></i> [[${membro.usuario.cargo}]]</p>
-                        </div>
-                        <div class="d-flex align-items-center gap-3">
-                            <span class="funcao-badge shadow-sm" th:text="${membro.funcao}">Função</span>
-                            <a th:href="@{/equipes/{equipeId}/remover-membro/{membroId}(equipeId=${equipe.id}, membroId=${membro.id})}" 
-                               class="btn btn-sm btn-outline-danger border-0"
-                               title="Remover da equipe"
-                               onclick="return confirm('Remover este membro da equipe?');">
-                                <i class="bi bi-trash3-fill"></i>
-                            </a>
+                    <!-- Lista de Membros -->
+                    <div class="card shadow-sm border-0">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold mb-3">
+                                <i class="bi bi-people me-2 text-info"></i> Membros Atuais
+                            </h5>
+                            
+                            <div th:if="${membros == null or #lists.isEmpty(membros)}" class="text-center py-5 border rounded bg-light">
+                                <i class="bi bi-people fs-1 text-muted mb-2 d-block"></i>
+                                <p class="mb-0 text-secondary">Nenhum membro adicionado ainda.</p>
+                            </div>
+
+                            <div th:each="membro : ${membros}" class="membro-card d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center">
+                                    <div class="avatar-membro me-3" th:text="${membro.usuario != null ? membro.usuario.iniciais : '?'}">U</div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold" th:text="${membro.usuario != null ? membro.usuario.nome : 'Desconhecido'}">Nome</h6>
+                                        <p class="mb-0 text-muted small">
+                                            <i class="bi bi-briefcase me-1"></i> 
+                                            <span th:text="${membro.usuario != null ? membro.usuario.cargo : '-'}">Cargo</span>
+                                        </p>
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-3">
+                                    <span class="funcao-badge shadow-sm" th:text="${membro.funcao}">Funcao</span>
+                                    <a th:href="@{/equipes/{equipeId}/remover-membro/{membroId}(equipeId=${equipe.id}, membroId=${membro.id})}" 
+                                       class="btn btn-sm btn-outline-danger border-0"
+                                       title="Remover da equipe"
+                                       th:onclick="'return confirm(\'' + #{app.delete.confirm} + '\')'">
+                                        <i class="bi bi-trash3-fill"></i>
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <div th:replace="~{common/footer :: footer}"></div>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </section>
 </body>
 </html>
