@@ -2,8 +2,11 @@
 # A3 2.0 - Git Ignore Profissional
 # ==========================================
 
-# Compilação e Build
+# -------------------------------------------------
+# Compilacao e Build
+# -------------------------------------------------
 target/
+build/
 *.class
 *.jar
 *.war
@@ -13,18 +16,24 @@ target/
 *.tar.gz
 *.rar
 
+# -------------------------------------------------
 # Maven Wrapper
+# -------------------------------------------------
 .mvn/wrapper/maven-wrapper.jar
 .mvn/timing.properties
 !.mvn/wrapper/maven-wrapper.properties
 
+# -------------------------------------------------
 # Logs
+# -------------------------------------------------
 *.log
 logs/
 hs_err_pid*
 replay_pid*
 
+# -------------------------------------------------
 # IDEs e Editores
+# -------------------------------------------------
 .idea/
 .vscode/
 *.iml
@@ -39,29 +48,90 @@ replay_pid*
 bin/
 out/
 
-# Banco de Dados SQLite (Segurança e Isolamento)
+# -------------------------------------------------
+# Banco de Dados SQLite e H2 (Seguranca e Isolamento)
+# -------------------------------------------------
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
+*.sqlite
+*.sqlite3
+*.mv.db
+*.trace.db
+*.h2.db
+*.lck
 data/
 
-# Arquivos de Sistema
+# -------------------------------------------------
+# Arquivos de Ambiente e Configuracoes Locais
+# -------------------------------------------------
+*.env
+.env.*
+application-local.properties
+application-secrets.properties
+*.key
+*.pem
+*.jks
+*.p12
+
+# -------------------------------------------------
+# Arquivos de Upload e Temporarios
+# -------------------------------------------------
+uploads/
+temp/
+tmp/
+*.tmp
+*.tmp.*
+*.bak
+*.backup
+*.orig
+*.patch
+*.diff
+*.rej
+*.swp
+*.swo
+*~
+
+# -------------------------------------------------
+# Arquivos de Sistema Operacional
+# -------------------------------------------------
 .DS_Store
 Thumbs.db
 desktop.ini
+*.lnk
 
-# Spring Boot & Temporários
+# -------------------------------------------------
+# Spring Boot e Temporarios
+# -------------------------------------------------
 HELP.md
 .apt_generated
-.classpath
-.factorypath
-.project
-.settings
 .springBeans
 .sts4-cache
+.apt_generated_tests/
 
-# Backup de versões do Maven
+# -------------------------------------------------
+# Node / Frontend (caso build local com npm)
+# -------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# -------------------------------------------------
+# Relatorios, Dumps e Exportacoes Gerados
+# -------------------------------------------------
+*.csv
+*.xlsx
+*.pdf
+*.sql
+*.dump
+
+# -------------------------------------------------
+# Backup de versoes do Maven
+# -------------------------------------------------
 pom.xml.tag
 pom.xml.releaseBackup
 pom.xml.versionsBackup
