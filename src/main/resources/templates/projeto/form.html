@@ -1,122 +1,119 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title th:text="${projeto.id} != null ? 'Editar Projeto' : 'Novo Projeto'">Formulário de Projeto</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/main.css">
-    <style>
-        body { background-color: var(--bg-secondary); color: var(--text-primary); }
-        .page-header { 
-            background: linear-gradient(135deg, var(--primary) 0%, #7c3aed 100%); 
-            color: white; 
-            padding: 1.5rem 0; 
-            margin-bottom: 2rem; 
-            border-radius: 0 0 12px 12px;
-            box-shadow: var(--shadow-md);
-        }
-        .form-container { 
-            background-color: var(--bg-primary); 
-            padding: 2rem; 
-            border-radius: 12px; 
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-lg); 
-        }
-        .navbar-custom {
-            background-color: var(--bg-primary);
-            border-bottom: 1px solid var(--border-color);
-        }
-    </style>
+    <title th:text="${projeto.id} != null ? 'Editar Projeto' : 'Novo Projeto'">Formulario de Projeto</title>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom shadow-sm mb-3">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/projetos" style="color: var(--primary);">
-                <i class="bi bi-arrow-left-circle me-1"></i> Voltar para Lista
-            </a>
-        </div>
-    </nav>
-
-    <div class="container fade-in">
-        <div class="page-header px-4">
-            <h2 class="mb-0" th:text="${projeto.id} != null ? '✏️ Editar Projeto' : '➕ Novo Projeto'"></h2>
-        </div>
-
-        <div class="form-container">
-            <form th:action="${projeto.id} != null ? @{/projetos/atualizar/{id}(id=${projeto.id})} : @{/projetos}"
-                  th:object="${projeto}" method="post">
-
-                <div class="row g-3">
-                    <!-- Nome do Projeto -->
-                    <div class="col-12">
-                        <label for="nome" class="form-label fw-semibold" style="color: var(--text-secondary);">Nome do Projeto</label>
-                        <input type="text" class="form-control" id="nome" th:field="*{nome}" 
-                               th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" 
-                               placeholder="Ex: Redesenho do Portal Institucional" required>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
-                    </div>
-
-                    <!-- Descrição -->
-                    <div class="col-12">
-                        <label for="descricao" class="form-label fw-semibold" style="color: var(--text-secondary);">Descrição</label>
-                        <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="3" 
-                                  placeholder="Detalhes sobre o escopo e objetivos do projeto..."></textarea>
-                    </div>
-
-                    <!-- Data Início -->
-                    <div class="col-md-6">
-                        <label for="dataInicio" class="form-label fw-semibold" style="color: var(--text-secondary);">Data de Início</label>
-                        <input type="date" class="form-control" id="dataInicio" th:field="*{dataInicio}" 
-                               th:classappend="${#fields.hasErrors('dataInicio')} ? 'is-invalid'" required>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}"></div>
-                    </div>
-
-                    <!-- Previsão Término -->
-                    <div class="col-md-6">
-                        <label for="dataTerminoPrevista" class="form-label fw-semibold" style="color: var(--text-secondary);">Previsão de Término</label>
-                        <input type="date" class="form-control" id="dataTerminoPrevista" th:field="*{dataTerminoPrevista}" 
-                               th:classappend="${#fields.hasErrors('dataTerminoPrevista')} ? 'is-invalid'" required>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('dataTerminoPrevista')}" th:errors="*{dataTerminoPrevista}"></div>
-                    </div>
-
-                    <!-- Status -->
-                    <div class="col-md-6">
-                        <label for="status" class="form-label fw-semibold" style="color: var(--text-secondary);">Status do Projeto</label>
-                        <select class="form-select" id="status" th:field="*{status}" required>
-                            <option value="PLANEJAMENTO">Em Planejamento</option>
-                            <option value="EM_ANDAMENTO">Em Andamento</option>
-                            <option value="CONCLUIDO">Concluído</option>
-                            <option value="CANCELADO">Cancelado</option>
-                        </select>
-                    </div>
-
-                    <!-- Equipe Responsável -->
-                    <div class="col-md-6">
-                        <label for="equipe" class="form-label fw-semibold" style="color: var(--text-secondary);">Equipe Responsável <span class="text-danger">*</span></label>
-                        <select class="form-select" id="equipe" th:field="*{equipe.id}" required>
-                            <option value="">Selecione uma equipe...</option>
-                            <option th:each="equipe : ${equipes}"
-                                    th:value="${equipe.id}"
-                                    th:text="${equipe.nome} + (${equipe.lider} != null ? ' — Líder: ' + ${equipe.lider.nome} : '')">
-                            </option>
-                        </select>
-                        <div class="form-text" style="color: var(--text-muted);">A equipe vinculada gerenciará as tarefas deste projeto.</div>
-                        <div class="invalid-feedback" th:if="${#fields.hasErrors('equipe')}" th:errors="*{equipe}"></div>
-                    </div>
+    <section layout:fragment="content">
+        <div class="container mb-5">
+            <!-- Cabecalho -->
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <div>
+                    <h2 class="fw-bold mb-1">
+                        <i th:class="${projeto.id != null} ? 'bi bi-pencil-square me-2' : 'bi bi-plus-circle-fill me-2'"></i>
+                        <span th:text="${projeto.id} != null ? 'Editar Projeto' : 'Novo Projeto'">Formulario</span>
+                    </h2>
+                    <p class="text-muted mb-0 small" th:if="${projeto.id} != null">
+                        ID: <span th:text="${projeto.id}">0</span> | 
+                        Criado em: <span th:text="${projeto.dataCriacao != null ? #temporals.format(projeto.dataCriacao, 'dd/MM/yyyy') : '-'}">data</span>
+                    </p>
                 </div>
+                <a th:href="@{/projetos}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
+                </a>
+            </div>
 
-                <div class="mt-4 d-flex gap-2">
-                    <button type="submit" class="btn btn-primary px-4">
-                        <i class="bi bi-save me-1"></i> Salvar Projeto
-                    </button>
-                    <a href="/projetos" class="btn btn-outline-secondary">Cancelar</a>
+            <div class="card shadow-sm border-0">
+                <div class="card-body p-4">
+                    <form th:action="${projeto.id} != null ? @{/projetos/atualizar/{id}(id=${projeto.id})} : @{/projetos}"
+                          th:object="${projeto}" method="post" novalidate>
+
+                        <div class="row g-4">
+                            <!-- Nome do Projeto -->
+                            <div class="col-12">
+                                <label for="nome" class="form-label fw-bold">Nome do Projeto <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="nome" th:field="*{nome}" 
+                                       th:classappend="${#fields.hasErrors('nome')} ? 'is-invalid'" 
+                                       placeholder="Ex: Redesenho do Portal Institucional" required maxlength="150">
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></div>
+                            </div>
+
+                            <!-- Descricao -->
+                            <div class="col-12">
+                                <label for="descricao" class="form-label fw-bold">Descricao</label>
+                                <textarea class="form-control" id="descricao" th:field="*{descricao}" rows="3" 
+                                          placeholder="Detalhes sobre o escopo e objetivos do projeto..." maxlength="1000"></textarea>
+                                <div class="form-text small">Maximo 1000 caracteres.</div>
+                            </div>
+
+                            <!-- Datas -->
+                            <div class="col-md-6">
+                                <label for="dataInicio" class="form-label fw-bold">Data de Inicio <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="dataInicio" th:field="*{dataInicio}" 
+                                       th:classappend="${#fields.hasErrors('dataInicio')} ? 'is-invalid'" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('dataInicio')}" th:errors="*{dataInicio}"></div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label for="dataTerminoPrevista" class="form-label fw-bold">Previsao de Termino <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" id="dataTerminoPrevista" th:field="*{dataTerminoPrevista}" 
+                                       th:classappend="${#fields.hasErrors('dataTerminoPrevista')} ? 'is-invalid'" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('dataTerminoPrevista')}" th:errors="*{dataTerminoPrevista}"></div>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-md-6">
+                                <label for="status" class="form-label fw-bold">Status do Projeto <span class="text-danger">*</span></label>
+                                <select class="form-select" id="status" th:field="*{status}" required>
+                                    <option value="PLANEJAMENTO" th:text="#{project.status.planning}">Planejamento</option>
+                                    <option value="EM_ANDAMENTO" th:text="#{project.status.active}">Em Andamento</option>
+                                    <option value="EM_ESPERA" th:text="#{project.status.onhold}">Em Espera</option>
+                                    <option value="CONCLUIDO" th:text="#{project.status.completed}">Concluido</option>
+                                    <option value="CANCELADO" th:text="#{project.status.cancelled}">Cancelado</option>
+                                </select>
+                            </div>
+
+                            <!-- Progresso (apenas edicao) -->
+                            <div class="col-md-6" th:if="${projeto.id} != null">
+                                <label for="progresso" class="form-label fw-bold">Progresso (%)</label>
+                                <input type="range" class="form-range" id="progresso" th:field="*{progresso}" min="0" max="100" step="5"
+                                       oninput="document.getElementById('progresso-valor').textContent = this.value + '%'">
+                                <div class="d-flex justify-content-between">
+                                    <span class="small text-muted">0%</span>
+                                    <span class="fw-bold text-primary" id="progresso-valor" th:text="(${projeto.progresso} ?: 0) + '%'">0%</span>
+                                    <span class="small text-muted">100%</span>
+                                </div>
+                            </div>
+
+                            <!-- Equipe Responsavel -->
+                            <div class="col-12">
+                                <label for="equipe" class="form-label fw-bold">Equipe Responsavel <span class="text-danger">*</span></label>
+                                <select class="form-select" id="equipe" th:field="*{equipe.id}" required>
+                                    <option value="">Selecione uma equipe...</option>
+                                    <option th:each="eq : ${equipes}"
+                                            th:value="${eq.id}"
+                                            th:text="${eq.nome} + (${eq.lider != null} ? ' — Lider: ' + ${eq.lider.nome} : '')">
+                                    </option>
+                                </select>
+                                <div class="form-text small text-muted">A equipe vinculada gerenciara as tarefas deste projeto.</div>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('equipe')}" th:errors="*{equipe}"></div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 d-flex gap-2 border-top pt-4">
+                            <button type="submit" class="btn btn-primary px-4">
+                                <i class="bi bi-save me-1"></i> Salvar Projeto
+                            </button>
+                            <a th:href="@{/projetos}" class="btn btn-outline-secondary">
+                                <i class="bi bi-x-circle me-1"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
         </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    </section>
 </body>
 </html>
