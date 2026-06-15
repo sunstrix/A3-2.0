@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Analítico - A3 2.0</title>
+    <title>Dashboard - A3 2.0 Help Desk</title>
     
     <!-- CSS Core -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="/css/main.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/main.css}">
     
-    <!-- Bibliotecas de Visualização -->
+    <!-- Bibliotecas de Visualizacao -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
     <div th:replace="~{common/csrf-meta :: csrf}"></div>
@@ -24,13 +24,44 @@
         .analitico-card {
             background-color: var(--bg-primary);
             border: 1px solid var(--border-color);
-            border-radius: 12px; height: 100%; transition: transform 0.2s;
+            border-radius: 12px; height: 100%; transition: transform 0.2s, box-shadow 0.2s;
         }
-        .analitico-card:hover { transform: translateY(-3px); }
+        .analitico-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
         .chart-container { position: relative; height: 300px; width: 100%; }
         .deadline-item { border-left: 4px solid var(--primary); background: var(--bg-tertiary); margin-bottom: 0.5rem; padding: 0.75rem; border-radius: 4px; }
         .deadline-atrasada { border-left-color: var(--danger); }
         .taxa-valor { font-size: 2.5rem; font-weight: 800; color: var(--success); }
+        .ticket-card {
+            border-left: 4px solid var(--primary);
+            transition: all 0.2s;
+        }
+        .ticket-card:hover { transform: translateX(4px); }
+        .ticket-card.prioridade-critica { border-left-color: #dc3545; }
+        .ticket-card.prioridade-alta { border-left-color: #fd7e14; }
+        .ticket-card.prioridade-media { border-left-color: #ffc107; }
+        .ticket-card.prioridade-baixa { border-left-color: #198754; }
+        .quick-action-btn {
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1rem;
+            text-align: center;
+            transition: all 0.2s;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            text-decoration: none;
+            display: block;
+        }
+        .quick-action-btn:hover {
+            background-color: var(--bg-tertiary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-sm);
+        }
+        .quick-action-btn i {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: block;
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
@@ -43,48 +74,132 @@
         <div class="welcome-card">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <div>
-                    <h1 class="display-6 fw-bold mb-1">Olá, <span sec:authentication="name">Usuário</span>! 👋</h1>
-                    <!-- ✅ CORREÇÃO: Removido #auth para evitar erro de parsing -->
-                    <p class="mb-0 opacity-75" sec:authorize="hasRole('COLABORADOR')">Confira suas entregas pessoais hoje.</p>
-                    <p class="mb-0 opacity-75" sec:authorize="!hasRole('COLABORADOR')">Visão geral do desempenho da organização.</p>
+                    <h1 class="display-6 fw-bold mb-1">
+                        <i class="bi bi-hand-waving me-2"></i>
+                        Ola, <span sec:authentication="name">Usuario</span>!
+                    </h1>
+                    <p class="mb-0 opacity-75" sec:authorize="hasRole('COLABORADOR')">Confira suas entregas pessoais e chamados de suporte.</p>
+                    <p class="mb-0 opacity-75" sec:authorize="hasRole('ATENDENTE')">Painel de atendimento ao cliente e chamados.</p>
+                    <p class="mb-0 opacity-75" sec:authorize="!hasAnyRole('COLABORADOR', 'ATENDENTE')">Visao geral do desempenho da organizacao.</p>
                 </div>
-                <div class="d-flex gap-2" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE')">
-                    <a href="/projetos/novo" class="btn btn-light fw-bold"><i class="bi bi-plus-circle me-1"></i> Novo Projeto</a>
+                <div class="d-flex gap-2">
+                    <a th:href="@{/tickets/abrir}" class="btn btn-light fw-bold" sec:authorize="!hasAnyRole('ADMINISTRADOR', 'GERENTE', 'ATENDENTE')">
+                        <i class="bi bi-plus-circle me-1"></i> Novo Chamado
+                    </a>
+                    <a th:href="@{/projetos/novo}" class="btn btn-light fw-bold" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE')">
+                        <i class="bi bi-plus-circle me-1"></i> Novo Projeto
+                    </a>
                 </div>
             </div>
         </div>
 
-        <!-- 1. SEÇÃO PARA GESTORES (ADMIN / GERENTE) -->
+        <!-- ACOES RAPIDAS -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-4 col-lg-2">
+                <a th:href="@{/tickets/meus}" class="quick-action-btn">
+                    <i class="bi bi-ticket-detailed"></i>
+                    <span class="small fw-semibold">Meus Chamados</span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a th:href="@{/base-conhecimento}" class="quick-action-btn">
+                    <i class="bi bi-book-half"></i>
+                    <span class="small fw-semibold">Base de Conhecimento</span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE', 'ATENDENTE')">
+                <a th:href="@{/painel/atendente}" class="quick-action-btn">
+                    <i class="bi bi-headset"></i>
+                    <span class="small fw-semibold">Painel do Atendente</span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE')">
+                <a th:href="@{/relatorios}" class="quick-action-btn">
+                    <i class="bi bi-graph-up"></i>
+                    <span class="small fw-semibold">Relatorios</span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2" sec:authorize="hasRole('ADMINISTRADOR')">
+                <a th:href="@{/usuarios}" class="quick-action-btn">
+                    <i class="bi bi-person-gear"></i>
+                    <span class="small fw-semibold">Usuarios</span>
+                </a>
+            </div>
+            <div class="col-6 col-md-4 col-lg-2">
+                <a th:href="@{/configuracoes}" class="quick-action-btn">
+                    <i class="bi bi-gear-fill"></i>
+                    <span class="small fw-semibold">Configuracoes</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 1. SECAO PARA GESTORES (ADMIN / GERENTE) -->
         <div sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE')">
+            
+            <!-- Cards de Help Desk -->
+            <h5 class="fw-bold mb-3"><i class="bi bi-headset me-2"></i>Help Desk - Visao Geral</h5>
             <div class="row g-3 mb-4">
                 <div class="col-md-3">
                     <div class="analitico-card p-3">
-                        <small class="text-muted text-uppercase fw-bold">Projetos Ativos</small>
-                        <div class="fs-2 fw-bold" th:text="${stats.totalProjetos()}">0</div>
+                        <small class="text-muted text-uppercase fw-bold">Chamados Abertos</small>
+                        <div class="fs-2 fw-bold" th:text="${ticketStats != null ? ticketStats.abertos : 0}">0</div>
+                        <small class="text-muted">Aguardando atendimento</small>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="analitico-card p-3">
-                        <small class="text-muted text-uppercase fw-bold">Eficiência (Conclusão)</small>
-                        <div class="taxa-valor" th:text="${#numbers.formatDecimal(stats.taxaConclusaoPercentual(), 1, 1)} + '%'">0%</div>
+                        <small class="text-muted text-uppercase fw-bold">Em Andamento</small>
+                        <div class="fs-2 fw-bold text-primary" th:text="${ticketStats != null ? ticketStats.emAndamento : 0}">0</div>
+                        <small class="text-muted">Sendo atendidos</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="analitico-card p-3">
+                        <small class="text-muted text-uppercase fw-bold">SLA no Prazo</small>
+                        <div class="taxa-valor" th:text="${ticketStats != null ? ticketStats.slaCumprido + '%' : '0%'}">0%</div>
+                        <small class="text-muted">Taxa de cumprimento</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="analitico-card p-3">
+                        <small class="text-muted text-uppercase fw-bold">Resolvidos Hoje</small>
+                        <div class="fs-2 fw-bold text-success" th:text="${ticketStats != null ? ticketStats.resolvidosHoje : 0}">0</div>
+                        <small class="text-muted">Encerrados nas ultimas 24h</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cards de Projetos -->
+            <h5 class="fw-bold mb-3"><i class="bi bi-folder-fill me-2"></i>Gestao de Projetos</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="analitico-card p-3">
+                        <small class="text-muted text-uppercase fw-bold">Projetos Ativos</small>
+                        <div class="fs-2 fw-bold" th:text="${stats != null ? stats.totalProjetos() : 0}">0</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="analitico-card p-3">
+                        <small class="text-muted text-uppercase fw-bold">Eficiencia</small>
+                        <div class="taxa-valor" th:text="${stats != null ? #numbers.formatDecimal(stats.taxaConclusaoPercentual(), 1, 1) + '%' : '0%'}">0%</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="analitico-card p-3">
                         <small class="text-muted text-uppercase fw-bold">Tarefas Atrasadas</small>
-                        <div class="fs-2 fw-bold text-danger" th:text="${stats.tarefasAtrasadas()}">0</div>
+                        <div class="fs-2 fw-bold text-danger" th:text="${stats != null ? stats.tarefasAtrasadas() : 0}">0</div>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="analitico-card p-3">
-                        <small class="text-muted text-uppercase fw-bold">Usuários no Sistema</small>
-                        <div class="fs-2 fw-bold" th:text="${stats.totalUsuarios()}">0</div>
+                        <small class="text-muted text-uppercase fw-bold">Usuarios</small>
+                        <div class="fs-2 fw-bold" th:text="${stats != null ? stats.totalUsuarios() : 0}">0</div>
                     </div>
                 </div>
             </div>
 
             <div class="row g-4 mb-4">
-                <!-- Gráfico de Status -->
+                <!-- Grafico de Status -->
                 <div class="col-lg-6">
                     <div class="analitico-card p-4">
                         <h5 class="fw-bold mb-4"><i class="bi bi-pie-chart me-2"></i>Status das Tarefas</h5>
@@ -93,7 +208,7 @@
                         </div>
                     </div>
                 </div>
-                <!-- Gráfico de Projetos -->
+                <!-- Grafico de Projetos -->
                 <div class="col-lg-6">
                     <div class="analitico-card p-4">
                         <h5 class="fw-bold mb-4"><i class="bi bi-bar-chart me-2"></i>Projetos por Categoria</h5>
@@ -104,28 +219,28 @@
                 </div>
             </div>
 
-            <!-- Próximos Prazos Globais -->
-            <div class="analitico-card p-4">
-                <h5 class="fw-bold mb-3"><i class="bi bi-calendar-check me-2"></i>Alertas de Prazos Próximos (Críticos)</h5>
+            <!-- Proximos Prazos Globais -->
+            <div class="analitico-card p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-calendar-check me-2"></i>Alertas de Prazos Proximos (Criticos)</h5>
                 <div class="table-responsive">
                     <table class="table table-hover align-middle">
                         <thead>
                             <tr class="text-muted small">
                                 <th>TAREFA</th>
                                 <th>VENCIMENTO</th>
-                                <th>RESPONSÁVEL</th>
+                                <th>RESPONSAVEL</th>
                                 <th>STATUS</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="t : ${stats.prazosProximos()}">
+                            <tr th:each="t : ${stats != null ? stats.prazosProximos() : {}}">
                                 <td th:text="${t.titulo}" class="fw-bold">Tarefa</td>
                                 <td th:text="${#temporals.format(t.dataVencimento, 'dd/MM/yyyy')}" th:classappend="${t.atrasada} ? 'text-danger fw-bold' : ''">Data</td>
                                 <td th:text="${t.responsavelNomeOuTraco}">-</td>
                                 <td><span th:class="'badge ' + ${t.statusCssClass}" th:text="${t.statusDescricao}">Status</span></td>
                             </tr>
-                            <tr th:if="${#lists.isEmpty(stats.prazosProximos())}">
-                                <td colspan="4" class="text-center py-3 text-muted">Sem prazos críticos pendentes.</td>
+                            <tr th:if="${stats == null or #lists.isEmpty(stats.prazosProximos())}">
+                                <td colspan="4" class="text-center py-3 text-muted">Sem prazos criticos pendentes.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -133,22 +248,106 @@
             </div>
         </div>
 
-        <!-- 2. SEÇÃO PARA COLABORADORES (WIDGET PERSONALIZADO) -->
+        <!-- 2. SECAO PARA ATENDENTES -->
+        <div sec:authorize="hasRole('ATENDENTE')">
+            <h5 class="fw-bold mb-3"><i class="bi bi-headset me-2"></i>Meu Painel de Atendimento</h5>
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="analitico-card p-3 text-center">
+                        <i class="bi bi-inbox fs-1 text-primary"></i>
+                        <div class="fs-2 fw-bold" th:text="${ticketStats != null ? ticketStats.meusAtribuidos : 0}">0</div>
+                        <small class="text-muted">Chamados na minha fila</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="analitico-card p-3 text-center">
+                        <i class="bi bi-clock-history fs-1 text-warning"></i>
+                        <div class="fs-2 fw-bold text-warning" th:text="${ticketStats != null ? ticketStats.meusAtrasados : 0}">0</div>
+                        <small class="text-muted">Chamados com SLA vencido</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="analitico-card p-3 text-center">
+                        <i class="bi bi-check-circle fs-1 text-success"></i>
+                        <div class="fs-2 fw-bold text-success" th:text="${ticketStats != null ? ticketStats.meusResolvidosHoje : 0}">0</div>
+                        <small class="text-muted">Resolvidos hoje</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="analitico-card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-ticket-detailed me-2"></i>Chamados Aguardando Atendimento</h5>
+                    <a th:href="@{/tickets}" class="btn btn-sm btn-primary">Ver Todos</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead>
+                            <tr class="text-muted small">
+                                <th>ID</th>
+                                <th>TITULO</th>
+                                <th>PRIORIDADE</th>
+                                <th>CATEGORIA</th>
+                                <th>TEMPO</th>
+                                <th>ACAO</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="ticket : ${ticketsFila != null ? ticketsFila : {}}" th:class="'ticket-card prioridade-' + ${#strings.toLowerCase(ticket.prioridade)}">
+                                <td th:text="'#' + ${ticket.id}">#0</td>
+                                <td th:text="${ticket.titulo}">Titulo</td>
+                                <td>
+                                    <span class="badge" th:classappend="${
+                                        ticket.prioridade == 'CRITICA' ? 'bg-danger' :
+                                        ticket.prioridade == 'ALTA' ? 'bg-warning text-dark' :
+                                        ticket.prioridade == 'MEDIA' ? 'bg-info text-dark' : 'bg-secondary'
+                                    }" th:text="${ticket.prioridade}">Prioridade</span>
+                                </td>
+                                <td th:text="${ticket.categoria}">Categoria</td>
+                                <td th:text="${ticket.tempoDecorrido}">0h</td>
+                                <td>
+                                    <a th:href="@{/tickets/detalhar/{id}(id=${ticket.id})}" class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-eye"></i> Ver
+                                    </a>
+                                </td>
+                            </tr>
+                            <tr th:if="${ticketsFila == null or #lists.isEmpty(ticketsFila)}">
+                                <td colspan="6" class="text-center py-4 text-muted">
+                                    <i class="bi bi-check-circle fs-1 text-success mb-2 d-block"></i>
+                                    Nenhum chamado aguardando atendimento. Excelente trabalho!
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. SECAO PARA COLABORADORES (WIDGET PERSONALIZADO) -->
         <div sec:authorize="hasRole('COLABORADOR')">
             <div class="row g-4">
                 <div class="col-md-4">
                     <div class="analitico-card p-4 text-center">
                         <i class="bi bi-list-task fs-1 text-primary"></i>
-                        <h4 class="mt-3 fw-bold">Minhas Pendências</h4>
-                        <div class="display-3 fw-bold" th:text="${stats.minhasTarefasPendentes()}">0</div>
-                        <p class="text-muted">Tarefas aguardando sua ação.</p>
-                        <a href="/tarefas" class="btn btn-outline-primary w-100">Ver Minha Lista</a>
+                        <h4 class="mt-3 fw-bold">Minhas Pendencias</h4>
+                        <div class="display-3 fw-bold" th:text="${stats != null ? stats.minhasTarefasPendentes() : 0}">0</div>
+                        <p class="text-muted">Tarefas aguardando sua acao.</p>
+                        <a th:href="@{/tarefas}" class="btn btn-outline-primary w-100">Ver Minha Lista</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="analitico-card p-4 text-center">
+                        <i class="bi bi-ticket-detailed fs-1 text-info"></i>
+                        <h4 class="mt-3 fw-bold">Meus Chamados</h4>
+                        <div class="display-3 fw-bold" th:text="${ticketStats != null ? ticketStats.meusAbertos : 0}">0</div>
+                        <p class="text-muted">Chamados abertos por voce.</p>
+                        <a th:href="@{/tickets/meus}" class="btn btn-outline-info w-100">Ver Chamados</a>
                     </div>
                 </div>
                 <div class="col-md-8">
                     <div class="analitico-card p-4">
-                        <h5 class="fw-bold mb-4"><i class="bi bi-alarm me-2"></i>Meus Prazos Próximos</h5>
-                        <div th:each="t : ${stats.meusPrazosProximos()}" class="deadline-item" th:classappend="${t.atrasada} ? 'deadline-atrasada' : ''">
+                        <h5 class="fw-bold mb-4"><i class="bi bi-alarm me-2"></i>Meus Prazos Proximos</h5>
+                        <div th:each="t : ${stats != null ? stats.meusPrazosProximos() : {}}" class="deadline-item" th:classappend="${t.atrasada} ? 'deadline-atrasada' : ''">
                             <div class="d-flex justify-content-between align-items-center">
                                 <div>
                                     <span class="fw-bold d-block" th:text="${t.titulo}">Tarefa</span>
@@ -160,9 +359,9 @@
                                 </div>
                             </div>
                         </div>
-                        <div th:if="${#lists.isEmpty(stats.meusPrazosProximos())}" class="text-center py-5">
+                        <div th:if="${stats == null or #lists.isEmpty(stats.meusPrazosProximos())}" class="text-center py-5">
                             <i class="bi bi-emoji-smile fs-1 text-muted"></i>
-                            <p class="text-muted mt-2">Tudo em dia! Você não tem prazos para os próximos dias.</p>
+                            <p class="text-muted mt-2">Tudo em dia! Voce nao tem prazos para os proximos dias.</p>
                         </div>
                     </div>
                 </div>
@@ -172,14 +371,16 @@
 
     <div th:replace="~{common/footer :: footer}"></div>
 
-    <!-- Scripts de Inicialização do Dashboard -->
+    <!-- Scripts de Inicializacao do Dashboard -->
     <script th:inline="javascript">
         /* Dados injetados do DTO para o Chart.js */
         window.dashboardData = {
-            distribuicaoTarefas: /*[[${stats.distribuicaoTarefas()}]]*/ {},
-            projetosPorStatus: /*[[${stats.projetosPorStatus()}]]*/ {}
+            distribuicaoTarefas: /*[[${stats != null ? stats.distribuicaoTarefas() : {}}]]*/ {},
+            projetosPorStatus: /*[[${stats != null ? stats.projetosPorStatus() : {}}]]*/ {},
+            ticketsPorStatus: /*[[${ticketStats != null ? ticketStats.porStatus : {}}]]*/ {},
+            ticketsPorPrioridade: /*[[${ticketStats != null ? ticketStats.porPrioridade : {}}]]*/ {}
         };
     </script>
-    <script src="/js/dashboard.js"></script>
+    <script th:src="@{/js/dashboard.js}"></script>
 </body>
 </html>
