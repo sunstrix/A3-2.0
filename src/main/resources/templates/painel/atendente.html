@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/main}">
+<head>
+    <title>Painel do Atendente</title>
+</head>
+<body>
+    <section layout:fragment="content">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                <h2 class="fw-bold mb-0"><i class="bi bi-speedometer2 me-2 text-primary"></i>Painel do Atendente</h2>
+                <a th:href="@{/tickets/abrir}" class="btn btn-primary shadow-sm">
+                    <i class="bi bi-plus-circle me-2"></i> Novo Chamado
+                </a>
+            </div>
+
+            <!-- Cartoes de Metricas (SLA e Status) -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 bg-primary text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase fw-bold mb-1 opacity-75 small">Abertos</h6>
+                                    <h2 class="mb-0 fw-bold" th:text="${totalAbertos != null ? totalAbertos : 0}">0</h2>
+                                </div>
+                                <i class="bi bi-envelope-paper-fill fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 bg-warning text-dark">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase fw-bold mb-1 opacity-75 small">Em Andamento</h6>
+                                    <h2 class="mb-0 fw-bold" th:text="${totalEmAndamento != null ? totalEmAndamento : 0}">0</h2>
+                                </div>
+                                <i class="bi bi-hourglass-split fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 bg-success text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase fw-bold mb-1 opacity-75 small">Resolvidos (Hoje)</h6>
+                                    <h2 class="mb-0 fw-bold" th:text="${totalResolvidosHoje != null ? totalResolvidosHoje : 0}">0</h2>
+                                </div>
+                                <i class="bi bi-check-circle-fill fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-xl-3">
+                    <div class="card border-0 shadow-sm h-100 bg-danger text-white">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <h6 class="text-uppercase fw-bold mb-1 opacity-75 small">Urgentes / SLA Estourado</h6>
+                                    <h2 class="mb-0 fw-bold" th:text="${totalUrgentes != null ? totalUrgentes : 0}">0</h2>
+                                </div>
+                                <i class="bi bi-exclamation-octagon-fill fs-1 opacity-50"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fila de Atendimento Global -->
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center flex-wrap gap-2">
+                    <h5 class="mb-0 fw-bold"><i class="bi bi-list-task me-2"></i> Fila de Atendimento Global</h5>
+                    <a th:href="@{/tickets}" class="btn btn-sm btn-outline-primary">Ver Todos os Chamados</a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-4">ID</th>
+                                    <th>Título e Categoria</th>
+                                    <th>Solicitante</th>
+                                    <th>Prioridade</th>
+                                    <th>Status</th>
+                                    <th>Aberto em</th>
+                                    <th class="text-end pe-4">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Estado Vazio -->
+                                <tr th:if="${filaAtendimento == null or filaAtendimento.isEmpty()}">
+                                    <td colspan="7" class="text-center text-muted py-5 bg-light">
+                                        <i class="bi bi-emoji-smile fs-1 d-block mb-2 text-success"></i>
+                                        <h5 class="fw-bold">Tudo em dia!</h5>
+                                        <p class="mb-0">Não há chamados pendentes na fila de atendimento no momento.</p>
+                                    </td>
+                                </tr>
+                                
+                                <!-- Listagem de Tickets -->
+                                <tr th:each="ticket : ${filaAtendimento}">
+                                    <td class="ps-4 fw-bold text-muted" th:text="'#' + ${ticket.id}">#1</td>
+                                    <td>
+                                        <a th:href="@{/tickets/detalhar/{id}(id=${ticket.id})}" class="text-decoration-none fw-bold text-dark d-block" th:text="${ticket.titulo}">Título do Chamado</a>
+                                        <small class="text-muted" th:text="${ticket.categoria != null ? ticket.categoria : 'Sem categoria'}">Categoria</small>
+                                    </td>
+                                    <td th:text="${ticket.solicitante.nome}">Nome do Solicitante</td>
+                                    <td>
+                                        <span th:switch="${ticket.prioridade}" class="badge fw-normal px-2 py-1">
+                                            <span th:case="'BAIXA'" class="badge bg-info text-dark">Baixa</span>
+                                            <span th:case="'MEDIA'" class="badge bg-warning text-dark">Média</span>
+                                            <span th:case="'ALTA'" class="badge text-white" style="background-color: #fd7e14;">Alta</span>
+                                            <span th:case="'URGENTE'" class="badge bg-danger">Urgente</span>
+                                            <span th:case="*" class="badge bg-secondary" th:text="${ticket.prioridade}">Prioridade</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span th:switch="${ticket.status}" class="badge fw-normal px-2 py-1">
+                                            <span th:case="'ABERTO'" class="badge bg-primary">Aberto</span>
+                                            <span th:case="'EM_ANDAMENTO'" class="badge bg-warning text-dark">Em Andamento</span>
+                                            <span th:case="*" class="badge bg-secondary" th:text="${ticket.status}">Status</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="d-block" th:text="${#temporals.format(ticket.dataCriacao, 'dd/MM/yyyy')}">Data</span>
+                                        <small class="text-muted" th:text="${#temporals.format(ticket.dataCriacao, 'HH:mm')}">Hora</small>
+                                    </td>
+                                    <td class="text-end pe-4">
+                                        <a th:href="@{/tickets/detalhar/{id}(id=${ticket.id})}" class="btn btn-sm btn-outline-primary" title="Assumir ou Visualizar">
+                                            <i class="bi bi-eye-fill me-1"></i> Atender
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>
