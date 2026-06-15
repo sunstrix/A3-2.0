@@ -5,55 +5,168 @@
 </head>
 <body>
 
-    <!-- Fragmento da Navbar Global - Refatorado para Dark Mode e Relatórios -->
-    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark shadow-sm mb-3" 
+    <!-- Fragmento da Navbar Global -->
+    <nav th:fragment="navbar" class="navbar navbar-expand-lg navbar-dark shadow-sm sticky-top" 
          style="background-color: var(--bg-primary); border-bottom: 1px solid var(--border-color);">
-        <div class="container">
-            <a class="navbar-brand fw-bold" href="/menu" style="color: var(--primary);">
-                <i class="bi bi-kanban-fill me-1"></i> A3 2.0
+        <div class="container-fluid">
+            <!-- Brand -->
+            <a class="navbar-brand fw-bold d-flex align-items-center gap-2" th:href="@{/menu}" style="color: var(--primary);">
+                <i class="bi bi-headset fs-4"></i>
+                <span class="d-none d-sm-inline">A3 2.0</span>
             </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+            
+            <!-- Toggler -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Alternar navegacao">
                 <span class="navbar-toggler-icon"></span>
             </button>
+            
             <div class="collapse navbar-collapse" id="navbarContent">
+                <!-- Menu Principal -->
                 <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                    <li class="nav-item">
-                        <a class="nav-link" th:classappend="${activePage == 'equipes' ? 'active' : ''}" href="/equipes">Equipes</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:classappend="${activePage == 'projetos' ? 'active' : ''}" href="/projetos">Projetos</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:classappend="${activePage == 'tarefas' ? 'active' : ''}" href="/tarefas">Tarefas</a>
-                    </li>
                     
-                    <!-- ✅ Link para Usuários (apenas ADMINISTRADOR) -->
-                    <li class="nav-item" sec:authorize="hasRole('ADMINISTRADOR')">
-                        <a class="nav-link" th:classappend="${activePage == 'usuarios' ? 'active' : ''}" href="/usuarios">Usuários</a>
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'menu' ? 'active' : ''}" 
+                           th:href="@{/menu}">
+                            <i class="bi bi-speedometer2"></i> <span class="d-lg-none d-xl-inline">Inicio</span>
+                        </a>
                     </li>
 
-                    <!-- ✅ NOVO: Link para Relatórios (ADMINISTRADOR e GERENTE) -->
-                    <li class="nav-item" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE')">
-                        <a class="nav-link" th:classappend="${activePage == 'relatorios' ? 'active' : ''}" href="/relatorios">Relatórios</a>
+                    <!-- Secao: Gestao -->
+                    <li class="nav-item mx-2 d-none d-lg-block align-self-center">
+                        <span class="nav-link py-0 text-white-50" style="font-size: 0.8rem;">|</span>
                     </li>
-                    
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'equipes' ? 'active' : ''}" 
+                           th:href="@{/equipes}">
+                            <i class="bi bi-people-fill"></i> Equipes
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'projetos' ? 'active' : ''}" 
+                           th:href="@{/projetos}">
+                            <i class="bi bi-folder-fill"></i> Projetos
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'tarefas' ? 'active' : ''}" 
+                           th:href="@{/tarefas}">
+                            <i class="bi bi-kanban-fill"></i> Tarefas
+                        </a>
+                    </li>
+
+                    <!-- Secao: Help Desk -->
+                    <li class="nav-item mx-2 d-none d-lg-block align-self-center">
+                        <span class="nav-link py-0 text-white-50" style="font-size: 0.8rem;">|</span>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'tickets' ? 'active' : ''}" 
+                           th:href="@{/tickets/meus}">
+                            <i class="bi bi-ticket-detailed"></i> Chamados
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE', 'ATENDENTE')">
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'painel' ? 'active' : ''}" 
+                           th:href="@{/painel/atendente}">
+                            <i class="bi bi-headset"></i> Painel
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'baseconhecimento' ? 'active' : ''}" 
+                           th:href="@{/base-conhecimento}">
+                            <i class="bi bi-book-half"></i> Base de Conhecimento
+                        </a>
+                    </li>
+
+                    <!-- Secao: Administrativa -->
+                    <li class="nav-item mx-2 d-none d-lg-block align-self-center" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE')">
+                        <span class="nav-link py-0 text-white-50" style="font-size: 0.8rem;">|</span>
+                    </li>
                     <li class="nav-item" sec:authorize="hasRole('ADMINISTRADOR')">
-                        <a class="nav-link" th:classappend="${activePage == 'configuracoes' ? 'active' : ''}" href="/configuracoes">Configurações</a>
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'usuarios' ? 'active' : ''}" 
+                           th:href="@{/usuarios}">
+                            <i class="bi bi-person-gear"></i> Usuarios
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE')">
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'relatorios' ? 'active' : ''}" 
+                           th:href="@{/relatorios}">
+                            <i class="bi bi-graph-up"></i> Relatorios
+                        </a>
+                    </li>
+                    <li class="nav-item" sec:authorize="hasRole('ADMINISTRADOR')">
+                        <a class="nav-link d-flex align-items-center gap-1" 
+                           th:classappend="${activePage == 'configuracoes' ? 'active' : ''}" 
+                           th:href="@{/configuracoes}">
+                            <i class="bi bi-gear-fill"></i> Configuracoes
+                        </a>
                     </li>
                 </ul>
-                <div class="d-flex align-items-center gap-3">
-                    <!-- Identificação do Usuário Logado -->
-                    <div class="d-none d-md-block text-end">
-                        <small class="text-muted d-block" style="font-size: 0.7rem; line-height: 1;">Logado como</small>
-                        <span class="fw-semibold small text-light" sec:authentication="name">Usuário</span>
-                    </div>
 
-                    <form th:action="@{/logout}" method="post" class="m-0">
-                        <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center">
-                            <i class="bi bi-box-arrow-right me-1"></i> Sair
-                        </button>
-                    </form>
-                </div>
+                <!-- Menu do Usuario -->
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    <!-- Notificacoes (placeholder para futuro) -->
+                    <li class="nav-item me-2 d-none d-md-block" sec:authorize="isAuthenticated()">
+                        <a class="nav-link position-relative" href="#" title="Notificacoes">
+                            <i class="bi bi-bell fs-5"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger d-none">
+                                0
+                            </span>
+                        </a>
+                    </li>
+
+                    <!-- Dropdown do Usuario -->
+                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center gap-2 py-1" 
+                           href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <!-- Avatar com iniciais -->
+                            <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center" 
+                                 style="width: 32px; height: 32px; border-radius: 50%; font-size: 0.75rem; font-weight: 600;">
+                                <span th:if="${usuarioLogado != null}" th:text="${usuarioLogado.iniciais}">U</span>
+                                <span th:unless="${usuarioLogado != null}">U</span>
+                            </div>
+                            <div class="d-none d-lg-block text-start lh-1">
+                                <span class="fw-semibold small" sec:authentication="name">Usuario</span>
+                                <small class="d-block text-white-50" style="font-size: 0.65rem;" 
+                                       th:if="${usuarioLogado != null}" th:text="${usuarioLogado.perfil?.descricao}">Perfil</small>
+                            </div>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm border-0 mt-2" aria-labelledby="userDropdown">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" th:href="@{/perfil}">
+                                    <i class="bi bi-person-circle text-primary"></i> Meu Perfil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2" th:href="@{/tickets/meus}">
+                                    <i class="bi bi-ticket-detailed text-info"></i> Meus Chamados
+                                </a>
+                            </li>
+                            <li sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE', 'ATENDENTE')">
+                                <a class="dropdown-item d-flex align-items-center gap-2" th:href="@{/painel/atendente}">
+                                    <i class="bi bi-headset text-success"></i> Painel do Atendente
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="m-0">
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2 text-danger">
+                                        <i class="bi bi-box-arrow-right"></i> Sair do Sistema
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
             </div>
         </div>
     </nav>
