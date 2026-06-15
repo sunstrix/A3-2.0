@@ -1,23 +1,118 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
 </head>
 <body>
 
-    <!-- Fragmento do Rodapé (Refatorado para Dark Mode) -->
-    <footer th:fragment="footer" class="mt-5 py-4 text-center" 
+    <!-- Fragmento do Rodape -->
+    <footer th:fragment="footer" class="mt-auto py-4" 
             style="background-color: var(--bg-primary); border-top: 1px solid var(--border-color); color: var(--text-secondary);">
         <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-md-start">
-                    <span class="fw-bold" style="color: var(--primary);">A3 2.0</span> &copy; <span th:text="${#dates.year(#dates.createNow())}">2026</span>
-                    <span class="mx-2" style="color: var(--border-color);">|</span>
-                    <small>Sistema de Gestão de Projetos</small>
+            <div class="row gy-3">
+                <!-- Coluna: Marca e Copyright -->
+                <div class="col-lg-4 col-md-6">
+                    <div class="d-flex align-items-center gap-2 mb-2">
+                        <i class="bi bi-headset fs-4" style="color: var(--primary);"></i>
+                        <span class="fw-bold fs-5" style="color: var(--primary);">A3 2.0</span>
+                    </div>
+                    <p class="small mb-2">Sistema integrado de Help Desk e Gestao de Projetos.</p>
+                    <p class="small mb-0">
+                        &copy; <span th:text="${#dates.year(#dates.createNow())}">2026</span> A3 2.0. 
+                        Todos os direitos reservados.
+                    </p>
                 </div>
-                <div class="col-md-6 text-md-end mt-2 mt-md-0">
-                    <span class="badge" style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);">v2.0.0</span>
-                    <span class="ms-2 small">Desenvolvido com Spring Boot & Thymeleaf</span>
+
+                <!-- Coluna: Links Rapidos -->
+                <div class="col-lg-4 col-md-6">
+                    <h6 class="fw-bold mb-3" style="color: var(--text-primary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Links Rapidos
+                    </h6>
+                    <div class="row">
+                        <div class="col-6">
+                            <ul class="list-unstyled small mb-0">
+                                <li class="mb-1">
+                                    <a th:href="@{/menu}" class="text-decoration-none" style="color: var(--text-secondary);">
+                                        <i class="bi bi-chevron-right small"></i> Dashboard
+                                    </a>
+                                </li>
+                                <li class="mb-1">
+                                    <a th:href="@{/tickets/meus}" class="text-decoration-none" style="color: var(--text-secondary);">
+                                        <i class="bi bi-chevron-right small"></i> Meus Chamados
+                                    </a>
+                                </li>
+                                <li class="mb-1">
+                                    <a th:href="@{/base-conhecimento}" class="text-decoration-none" style="color: var(--text-secondary);">
+                                        <i class="bi bi-chevron-right small"></i> Base de Conhecimento
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-6">
+                            <ul class="list-unstyled small mb-0">
+                                <li class="mb-1" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE', 'ATENDENTE')">
+                                    <a th:href="@{/painel/atendente}" class="text-decoration-none" style="color: var(--text-secondary);">
+                                        <i class="bi bi-chevron-right small"></i> Painel do Atendente
+                                    </a>
+                                </li>
+                                <li class="mb-1" sec:authorize="hasAnyRole('ADMINISTRADOR', 'GERENTE')">
+                                    <a th:href="@{/relatorios}" class="text-decoration-none" style="color: var(--text-secondary);">
+                                        <i class="bi bi-chevron-right small"></i> Relatorios
+                                    </a>
+                                </li>
+                                <li class="mb-1">
+                                    <a th:href="@{/configuracoes}" class="text-decoration-none" style="color: var(--text-secondary);">
+                                        <i class="bi bi-chevron-right small"></i> Configuracoes
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna: Suporte e Status -->
+                <div class="col-lg-4 col-md-12">
+                    <h6 class="fw-bold mb-3" style="color: var(--text-primary); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em;">
+                        Suporte e Sistema
+                    </h6>
+                    <div class="small">
+                        <p class="mb-1 d-flex align-items-center gap-2">
+                            <i class="bi bi-envelope" style="color: var(--primary);"></i>
+                            <span>suporte@projetoA3.com</span>
+                        </p>
+                        <p class="mb-2 d-flex align-items-center gap-2">
+                            <i class="bi bi-telephone" style="color: var(--primary);"></i>
+                            <span>(11) 4000-1234</span>
+                        </p>
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <span class="badge rounded-pill bg-success">Online</span>
+                            <span class="badge" style="background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color);">
+                                v2.0.0
+                            </span>
+                        </div>
+                        <p class="mb-0 text-white-50" style="font-size: 0.7rem;">
+                            Desenvolvido com Java 21, Spring Boot 3.2 e Thymeleaf
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Linha inferior -->
+            <div class="row mt-3 pt-3" style="border-top: 1px solid var(--border-color);">
+                <div class="col-md-6 text-center text-md-start">
+                    <small class="text-white-50" style="font-size: 0.7rem;">
+                        Ambiente: <span th:text="${@environment.getActiveProfiles()[0] ?: 'default'}">dev</span>
+                        | Banco: SQLite
+                    </small>
+                </div>
+                <div class="col-md-6 text-center text-md-end">
+                    <small class="text-white-50" style="font-size: 0.7rem;">
+                        <a th:href="@{/base-conhecimento}" class="text-decoration-none text-white-50">Ajuda</a>
+                        <span class="mx-1">|</span>
+                        <a href="#" class="text-decoration-none text-white-50">Termos de Uso</a>
+                        <span class="mx-1">|</span>
+                        <a href="#" class="text-decoration-none text-white-50">Privacidade</a>
+                    </small>
                 </div>
             </div>
         </div>
