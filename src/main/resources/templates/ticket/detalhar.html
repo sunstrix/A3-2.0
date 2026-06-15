@@ -1,87 +1,228 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
       xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
       layout:decorate="~{layout/main}">
 <head>
-    <title>Detalhes do Chamado</title>
+    <title th:text="'Ticket #' + ${ticket.id} + ' - ' + ${ticket.titulo}">Detalhes do Chamado</title>
+    <style>
+        .timeline-item { position: relative; padding-left: 2rem; border-left: 2px solid var(--border-color); margin-left: 1rem; }
+        .timeline-item::before { content: ''; position: absolute; left: -0.4rem; top: 0.5rem; width: 0.75rem; height: 0.75rem; border-radius: 50%; background: var(--primary); border: 2px solid white; }
+        .timeline-item:last-child { border-left: 2px solid transparent; }
+        .timeline-item.nota-interna::before { background: var(--warning); }
+        .anexo-badge { display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.25rem 0.5rem; border-radius: 0.375rem; background: var(--bg-tertiary); border: 1px solid var(--border-color); font-size: 0.8rem; margin-right: 0.25rem; margin-bottom: 0.25rem; }
+        .anexo-badge i { font-size: 0.9rem; }
+        .sla-alert { border-left: 4px solid; }
+        .sla-ok { border-left-color: #198754; background: rgba(25, 135, 84, 0.1); }
+        .sla-warning { border-left-color: #ffc107; background: rgba(255, 193, 7, 0.1); }
+        .sla-danger { border-left-color: #dc3545; background: rgba(220, 53, 69, 0.1); }
+        .star-rating { font-size: 1.5rem; color: #ffc107; cursor: pointer; }
+        .star-rating .bi-star { color: var(--border-color); }
+    </style>
 </head>
 <body>
     <section layout:fragment="content">
         <div class="container mb-5">
             <!-- Cabecalho do Ticket -->
-            <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+            <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap gap-2">
                 <div>
-                    <h2 class="fw-bold mb-1" th:text="${ticket.titulo}">Título do Chamado</h2>
-                    <p class="text-muted mb-0">
-                        Ticket <strong th:text="'#' + ${ticket.id}">#1</strong> 
-                        aberto por <strong th:text="${ticket.solicitante.nome}">Solicitante</strong> 
+                    <div class="d-flex align-items-center gap-2 mb-1">
+                        <h2 class="fw-bold mb-0" th:text="${ticket.titulo}">Titulo do Chamado</h2>
+                        <span th:switch="${ticket.status}" class="badge">
+                            <span th:case="'ABERTO'" class="badge bg-primary">Aberto</span>
+                            <span th:case="'EM_ANDAMENTO'" class="badge bg-warning text-dark">Em Andamento</span>
+                            <span th:case="'AGUARDANDO_USUARIO'" class="badge bg-info text-dark">Aguardando Usuario</span>
+                            <span th:case="'RESOLVIDO'" class="badge bg-success">Resolvido</span>
+                            <span th:case="'FECHADO'" class="badge bg-secondary">Encerrado</span>
+                            <span th:case="'REABERTO'" class="badge bg-dark">Reaberto</span>
+                            <span th:case="*" class="badge bg-dark" th:text="${ticket.status}">Status</span>
+                        </span>
+                    </div>
+                    <p class="text-muted mb-0 small">
+                        <span th:text="'Ticket #' + ${ticket.id}">#1</span> 
+                        | Aberto por <strong th:text="${ticket.solicitante.nome}">Solicitante</strong> 
                         em <span th:text="${#temporals.format(ticket.dataCriacao, 'dd/MM/yyyy HH:mm')}">01/01/2026</span>
+                        | Tempo decorrido: <strong th:text="${ticket.tempoDecorrido}">0h</strong>
                     </p>
                 </div>
-                <a th:href="@{/tickets/meus}" class="btn btn-outline-secondary">
-                    <i class="bi bi-arrow-left"></i> Voltar
+                <a th:href="@{/tickets/meus}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Voltar
                 </a>
             </div>
 
+            <!-- Alerta de SLA -->
+            <div th:if="${ticket.slaVencimento != null}" 
+                 th:class="'alert sla-alert mb-4 d-flex align-items-center ' + 
+                    (${ticket.slaAtrasado} ? 'sla-danger' : 
+                     (${ticket.slaCumprido} ? 'sla-ok' : 
+                     (${#temporals.createNow().plusHours(2).isAfter(ticket.slaVencimento)} ? 'sla-warning' : 'sla-ok')))">
+                <i class="bi bi-clock-history me-2 flex-shrink-0 fs-4"></i>
+                <div>
+                    <strong>SLA:</strong>
+                    <span th:if="${ticket.slaAtrasado}" class="text-danger fw-bold">ATRASADO! Prazo maximo era <span th:text="${#temporals.format(ticket.slaVencimento, 'dd/MM/yyyy HH:mm')}">data</span></span>
+                    <span th:if="${ticket.slaCumprido}" class="text-success fw-bold">Cumprido no prazo</span>
+                    <span th:if="${!ticket.slaAtrasado and !ticket.slaCumprido and #temporals.createNow().plusHours(2).isAfter(ticket.slaVencimento)}" class="text-warning fw-bold">
+                        Proximo do vencimento! Prazo: <span th:text="${#temporals.format(ticket.slaVencimento, 'dd/MM/yyyy HH:mm')}">data</span>
+                    </span>
+                    <span th:if="${!ticket.slaAtrasado and !ticket.slaCumprido and !#temporals.createNow().plusHours(2).isAfter(ticket.slaVencimento)}">
+                        Prazo maximo: <span th:text="${#temporals.format(ticket.slaVencimento, 'dd/MM/yyyy HH:mm')}">data</span>
+                    </span>
+                </div>
+            </div>
+
             <div class="row g-4">
-                <!-- Coluna Principal: Descricao e Timeline -->
+                <!-- Coluna Principal: Descricao, Anexos e Timeline -->
                 <div class="col-lg-8">
                     <!-- Card de Descricao -->
                     <div class="card shadow-sm border-0 mb-4">
                         <div class="card-body">
-                            <h5 class="card-title fw-bold border-bottom pb-2 mb-3">Descrição do Problema</h5>
-                            <p class="card-text text-dark" style="white-space: pre-wrap;" th:text="${ticket.descricao}">
-                                Descrição detalhada do problema relatado pelo usuário...
-                            </p>
+                            <h5 class="card-title fw-bold border-bottom pb-2 mb-3">
+                                <i class="bi bi-file-text me-2"></i>Descricao do Problema
+                            </h5>
+                            <p class="card-text" style="white-space: pre-wrap;" th:text="${ticket.descricao}">Descricao...</p>
+                        </div>
+                    </div>
+
+                    <!-- Anexos do Ticket -->
+                    <div class="card shadow-sm border-0 mb-4" th:if="${ticket.anexos != null and !ticket.anexos.isEmpty()}">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold border-bottom pb-2 mb-3">
+                                <i class="bi bi-paperclip me-2"></i>Anexos do Chamado
+                            </h5>
+                            <div class="d-flex flex-wrap">
+                                <a th:each="anexo : ${ticket.anexos}" 
+                                   th:href="@{/uploads/tickets/{id}/{nome}(id=${ticket.id}, nome=${anexo})}" 
+                                   target="_blank"
+                                   class="anexo-badge text-decoration-none">
+                                    <i class="bi bi-file-earmark"></i>
+                                    <span th:text="${anexo}">arquivo</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resolucao (visivel quando resolvido/encerrado) -->
+                    <div class="card shadow-sm border-0 mb-4" th:if="${ticket.resolucao != null and !ticket.resolucao.isEmpty()}">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold border-bottom pb-2 mb-3 text-success">
+                                <i class="bi bi-check-circle-fill me-2"></i>Solucao Aplicada
+                            </h5>
+                            <p class="card-text" style="white-space: pre-wrap;" th:text="${ticket.resolucao}">Resolucao...</p>
+                            <div class="small text-muted mt-2" th:if="${ticket.dataResolucao != null}">
+                                Resolvido em: <span th:text="${#temporals.format(ticket.dataResolucao, 'dd/MM/yyyy HH:mm')}">data</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Avaliacao do Solicitante -->
+                    <div class="card shadow-sm border-0 mb-4" th:if="${ticket.status == 'FECHADO' or ticket.status == 'RESOLVIDO'}">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold border-bottom pb-2 mb-3">
+                                <i class="bi bi-star-fill me-2 text-warning"></i>Avaliacao do Atendimento
+                            </h5>
+                            
+                            <!-- Exibe avaliacao existente -->
+                            <div th:if="${ticket.avaliacaoSolicitante != null}">
+                                <div class="star-rating mb-2">
+                                    <i th:each="i : ${#numbers.sequence(1, 5)}" 
+                                       th:class="'bi ' + (${i <= ticket.avaliacaoSolicitante} ? 'bi-star-fill' : 'bi-star')"></i>
+                                </div>
+                                <p class="text-muted fst-italic" th:if="${ticket.feedbackSolicitante != null}" th:text="'&quot;' + ${ticket.feedbackSolicitante} + '&quot;'">Feedback...</p>
+                            </div>
+                            
+                            <!-- Formulario de avaliacao (apenas solicitante) -->
+                            <div th:if="${isSolicitante and ticket.avaliacaoSolicitante == null}">
+                                <p class="text-muted mb-2">Como foi o atendimento deste chamado?</p>
+                                <form th:action="@{/tickets/{id}/avaliar(id=${ticket.id})}" method="post" class="mb-2">
+                                    <div class="star-rating mb-2" id="star-rating-input">
+                                        <button type="button" class="btn btn-link p-0 border-0" onclick="setRating(1)" aria-label="1 estrela"><i class="bi bi-star" data-value="1"></i></button>
+                                        <button type="button" class="btn btn-link p-0 border-0" onclick="setRating(2)" aria-label="2 estrelas"><i class="bi bi-star" data-value="2"></i></button>
+                                        <button type="button" class="btn btn-link p-0 border-0" onclick="setRating(3)" aria-label="3 estrelas"><i class="bi bi-star" data-value="3"></i></button>
+                                        <button type="button" class="btn btn-link p-0 border-0" onclick="setRating(4)" aria-label="4 estrelas"><i class="bi bi-star" data-value="4"></i></button>
+                                        <button type="button" class="btn btn-link p-0 border-0" onclick="setRating(5)" aria-label="5 estrelas"><i class="bi bi-star" data-value="5"></i></button>
+                                    </div>
+                                    <input type="hidden" name="avaliacao" id="avaliacao-input" value="0">
+                                    <div class="mb-2">
+                                        <textarea name="feedback" class="form-control" rows="2" placeholder="Deixe um comentario sobre o atendimento (opcional)"></textarea>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-primary">Enviar Avaliacao</button>
+                                </form>
+                            </div>
                         </div>
                     </div>
 
                     <!-- Historico de Interacoes (Timeline) -->
-                    <h5 class="fw-bold mb-3"><i class="bi bi-chat-left-text-fill me-2"></i>Histórico de Interações</h5>
+                    <h5 class="fw-bold mb-3"><i class="bi bi-chat-left-text-fill me-2"></i>Historico de Interacoes</h5>
                     
-                    <div class="timeline" th:if="${!historico.isEmpty()}">
-                        <div th:each="comentario : ${historico}" class="mb-4">
+                    <div class="mb-4" th:if="${!historico.isEmpty()}">
+                        <div th:each="comentario, iterStat : ${historico}" class="timeline-item mb-4" 
+                             th:classappend="${comentario.notaInterna} ? 'nota-interna' : ''">
                             <div class="card shadow-sm border-0" 
                                  th:classappend="${comentario.notaInterna} ? 'border-warning border-start border-4 bg-warning bg-opacity-10' : ''">
                                 <div class="card-body">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
                                         <div class="d-flex align-items-center">
-                                            <i class="bi bi-person-circle fs-4 me-2 text-primary"></i>
-                                            <strong th:text="${comentario.autor.nome}">Autor</strong>
-                                            <span th:if="${comentario.notaInterna}" class="badge bg-warning text-dark ms-2">
-                                                <i class="bi bi-lock-fill"></i> Nota Interna
-                                            </span>
+                                            <div class="avatar-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 32px; height: 32px; border-radius: 50%; font-size: 0.75rem; font-weight: 600;">
+                                                <span th:text="${comentario.autor.iniciais}">U</span>
+                                            </div>
+                                            <div>
+                                                <strong th:text="${comentario.autor.nome}">Autor</strong>
+                                                <span th:if="${comentario.notaInterna}" class="badge bg-warning text-dark ms-2">
+                                                    <i class="bi bi-lock-fill"></i> Nota Interna
+                                                </span>
+                                            </div>
                                         </div>
                                         <small class="text-muted" th:text="${#temporals.format(comentario.dataCriacao, 'dd/MM/yyyy HH:mm')}">Data</small>
                                     </div>
-                                    <hr class="my-2">
-                                    <p class="mb-0" style="white-space: pre-wrap;" th:text="${comentario.texto}">Texto do comentário...</p>
+                                    <p class="mb-2" style="white-space: pre-wrap;" th:text="${comentario.texto}">Texto...</p>
+                                    
+                                    <!-- Anexos do comentario -->
+                                    <div class="d-flex flex-wrap mt-2" th:if="${comentario.anexos != null and !comentario.anexos.isEmpty()}">
+                                        <a th:each="anexo : ${comentario.anexos}" 
+                                           th:href="@{/uploads/tickets/comentarios/{id}/{nome}(id=${comentario.id}, nome=${anexo})}" 
+                                           target="_blank"
+                                           class="anexo-badge text-decoration-none">
+                                            <i class="bi bi-file-earmark"></i>
+                                            <span th:text="${anexo}">arquivo</span>
+                                        </a>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div th:if="${historico.isEmpty()}" class="alert alert-light text-center text-muted border-0 shadow-sm">
-                        Nenhuma interação registrada neste chamado ainda.
+                        <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                        Nenhuma interacao registrada neste chamado ainda.
                     </div>
 
                     <!-- Formulario de Novo Comentario -->
                     <div class="card shadow-sm border-0 mt-4" th:if="${ticket.status != 'FECHADO'}">
                         <div class="card-body">
-                            <h5 class="card-title fw-bold mb-3">Adicionar Resposta</h5>
-                            <form th:action="@{/tickets/{id}/comentar(id=${ticket.id})}" method="post">
+                            <h5 class="card-title fw-bold mb-3"><i class="bi bi-reply-fill me-2"></i>Adicionar Resposta</h5>
+                            <form th:action="@{/tickets/{id}/comentar(id=${ticket.id})}" method="post" enctype="multipart/form-data">
                                 <div class="mb-3">
-                                    <textarea class="form-control" name="texto" rows="4" placeholder="Escreva sua resposta ou atualização sobre o chamado..." required></textarea>
+                                    <textarea class="form-control" name="texto" rows="4" 
+                                              placeholder="Escreva sua resposta ou atualizacao sobre o chamado..." 
+                                              required></textarea>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label small text-muted">
+                                        <i class="bi bi-paperclip me-1"></i> Anexar arquivos (opcional)
+                                    </label>
+                                    <input type="file" class="form-control form-control-sm" name="arquivos" multiple 
+                                           accept=".jpg,.jpeg,.png,.pdf,.doc,.docx,.xls,.xlsx,.txt,.zip">
                                 </div>
                                 
                                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                                    <!-- Checkbox de Nota Interna (Apenas para Atendentes/Admins) -->
                                     <div th:if="${isAtendenteOuAdmin}" class="form-check">
                                         <input class="form-check-input" type="checkbox" name="notaInterna" value="true" id="checkNotaInterna">
-                                        <label class="form-check-label text-muted" for="checkNotaInterna">
-                                            <i class="bi bi-lock-fill"></i> Marcar como Nota Interna (Invisível para o cliente)
+                                        <label class="form-check-label text-muted small" for="checkNotaInterna">
+                                            <i class="bi bi-lock-fill"></i> Nota Interna (visivel apenas para equipe)
                                         </label>
                                     </div>
-                                    <div th:unless="${isAtendenteOuAdmin}"></div> <!-- Espaco vazio para alinhar o botao a direita -->
+                                    <div th:unless="${isAtendenteOuAdmin}"></div>
                                     
                                     <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-send-fill me-2"></i> Enviar Resposta
@@ -91,7 +232,14 @@
                         </div>
                     </div>
                     <div th:if="${ticket.status == 'FECHADO'}" class="alert alert-secondary text-center mt-4">
-                        <i class="bi bi-lock-fill me-2"></i> Este chamado está <strong>Fechado</strong> e não aceita novas interações.
+                        <i class="bi bi-lock-fill me-2"></i> Este chamado esta <strong>Encerrado</strong> e nao aceita novas interacoes.
+                        <div class="mt-2" th:if="${isSolicitante}">
+                            <form th:action="@{/tickets/{id}/reabrir(id=${ticket.id})}" method="post" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reabrir Chamado
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
 
@@ -99,29 +247,17 @@
                 <div class="col-lg-4">
                     <div class="card shadow-sm border-0 sticky-top" style="top: 80px;">
                         <div class="card-body">
-                            <h5 class="card-title fw-bold border-bottom pb-2 mb-3">Detalhes</h5>
+                            <h5 class="card-title fw-bold border-bottom pb-2 mb-3"><i class="bi bi-info-circle me-2"></i>Detalhes</h5>
                             
-                            <!-- Status -->
-                            <div class="mb-3">
-                                <small class="text-muted text-uppercase fw-bold d-block">Status</small>
-                                <span th:switch="${ticket.status}" class="badge fs-6 fw-normal px-3 py-2">
-                                    <span th:case="'ABERTO'" class="badge bg-primary fs-6 fw-normal px-3 py-2">Aberto</span>
-                                    <span th:case="'EM_ANDAMENTO'" class="badge bg-warning text-dark fs-6 fw-normal px-3 py-2">Em Andamento</span>
-                                    <span th:case="'RESOLVIDO'" class="badge bg-success fs-6 fw-normal px-3 py-2">Resolvido</span>
-                                    <span th:case="'FECHADO'" class="badge bg-secondary fs-6 fw-normal px-3 py-2">Fechado</span>
-                                    <span th:case="*" class="badge bg-dark fs-6 fw-normal px-3 py-2" th:text="${ticket.status}">Status</span>
-                                </span>
-                            </div>
-
                             <!-- Prioridade -->
                             <div class="mb-3">
                                 <small class="text-muted text-uppercase fw-bold d-block">Prioridade</small>
-                                <span th:switch="${ticket.prioridade}" class="badge fs-6 fw-normal px-3 py-2">
-                                    <span th:case="'BAIXA'" class="badge bg-info text-dark fs-6 fw-normal px-3 py-2">Baixa</span>
-                                    <span th:case="'MEDIA'" class="badge bg-warning text-dark fs-6 fw-normal px-3 py-2">Média</span>
-                                    <span th:case="'ALTA'" class="badge bg-orange fs-6 fw-normal px-3 py-2" style="background-color: #fd7e14;">Alta</span>
-                                    <span th:case="'URGENTE'" class="badge bg-danger fs-6 fw-normal px-3 py-2">Urgente</span>
-                                    <span th:case="*" class="badge bg-dark fs-6 fw-normal px-3 py-2" th:text="${ticket.prioridade}">Prioridade</span>
+                                <span th:switch="${ticket.prioridade}" class="badge">
+                                    <span th:case="'BAIXA'" class="badge bg-info text-dark">Baixa</span>
+                                    <span th:case="'MEDIA'" class="badge bg-warning text-dark">Media</span>
+                                    <span th:case="'ALTA'" class="badge bg-orange text-white" style="background-color: #fd7e14;">Alta</span>
+                                    <span th:case="'CRITICA'" class="badge bg-danger">Critica</span>
+                                    <span th:case="*" class="badge bg-dark" th:text="${ticket.prioridade}">Prioridade</span>
                                 </span>
                             </div>
 
@@ -131,57 +267,101 @@
                                 <span class="text-dark" th:text="${ticket.categoria}">Categoria</span>
                             </div>
 
+                            <!-- Origem -->
+                            <div class="mb-3" th:if="${ticket.origem != null and !ticket.origem.isEmpty()}">
+                                <small class="text-muted text-uppercase fw-bold d-block">Origem</small>
+                                <span class="text-dark">
+                                    <i class="bi bi-globe" th:if="${ticket.origem == 'WEB'}"></i>
+                                    <i class="bi bi-envelope" th:if="${ticket.origem == 'EMAIL'}"></i>
+                                    <i class="bi bi-telephone" th:if="${ticket.origem == 'TELEFONE'}"></i>
+                                    <i class="bi bi-person-walking" th:if="${ticket.origem == 'PRESENCIAL'}"></i>
+                                    <span th:text="${ticket.origem}">WEB</span>
+                                </span>
+                            </div>
+
                             <hr>
 
                             <!-- Atendente -->
                             <div class="mb-3">
-                                <small class="text-muted text-uppercase fw-bold d-block">Atendente Responsável</small>
-                                <span th:if="${ticket.atendente != null}" class="text-dark d-flex align-items-center">
-                                    <i class="bi bi-headset me-2 text-primary"></i> <span th:text="${ticket.atendente.nome}">Atendente</span>
-                                </span>
-                                <span th:unless="${ticket.atendente != null}" class="text-muted fst-italic">Aguardando atribuição...</span>
+                                <small class="text-muted text-uppercase fw-bold d-block">Atendente Responsavel</small>
+                                <div th:if="${ticket.atendente != null}" class="d-flex align-items-center">
+                                    <div class="avatar-circle bg-success text-white d-flex align-items-center justify-content-center me-2" 
+                                         style="width: 28px; height: 28px; border-radius: 50%; font-size: 0.7rem; font-weight: 600;">
+                                        <span th:text="${ticket.atendente.iniciais}">A</span>
+                                    </div>
+                                    <span th:text="${ticket.atendente.nome}">Atendente</span>
+                                </div>
+                                <div th:unless="${ticket.atendente != null}">
+                                    <span class="text-muted fst-italic">Aguardando atribuicao...</span>
+                                    <!-- Auto-atribuicao para atendentes -->
+                                    <form th:if="${isAtendenteOuAdmin and ticket.status == 'ABERTO'}" 
+                                          th:action="@{/tickets/{id}/atribuir-me(id=${ticket.id})}" 
+                                          method="post" class="mt-1">
+                                        <button type="submit" class="btn btn-sm btn-outline-primary w-100">
+                                            <i class="bi bi-person-check me-1"></i> Atribuir a mim
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
 
                             <!-- Datas -->
-                            <div class="mb-3">
-                                <small class="text-muted text-uppercase fw-bold d-block">Última Atualização</small>
-                                <span class="text-dark" th:text="${#temporals.format(ticket.dataAtualizacao, 'dd/MM/yyyy HH:mm')}">Data</span>
+                            <div class="mb-2">
+                                <small class="text-muted text-uppercase fw-bold d-block">Ultima Atualizacao</small>
+                                <span class="text-dark small" th:text="${#temporals.format(ticket.dataAtualizacao, 'dd/MM/yyyy HH:mm')}">Data</span>
                             </div>
-                            
+                            <div class="mb-2" th:if="${ticket.dataResolucao != null}">
+                                <small class="text-muted text-uppercase fw-bold d-block">Data de Resolucao</small>
+                                <span class="text-dark small" th:text="${#temporals.format(ticket.dataResolucao, 'dd/MM/yyyy HH:mm')}">Data</span>
+                            </div>
                             <div class="mb-3" th:if="${ticket.dataFechamento != null}">
-                                <small class="text-muted text-uppercase fw-bold d-block">Data de Fechamento</small>
-                                <span class="text-dark" th:text="${#temporals.format(ticket.dataFechamento, 'dd/MM/yyyy HH:mm')}">Data</span>
+                                <small class="text-muted text-uppercase fw-bold d-block">Data de Encerramento</small>
+                                <span class="text-dark small" th:text="${#temporals.format(ticket.dataFechamento, 'dd/MM/yyyy HH:mm')}">Data</span>
                             </div>
 
                             <hr>
 
                             <!-- Botoes de Acao Rapida (Apenas para Atendentes/Admins) -->
-                            <div th:if="${isAtendenteOuAdmin && ticket.status != 'FECHADO'}">
-                                <h6 class="fw-bold text-muted text-uppercase small mb-2">Ações Rápidas</h6>
+                            <div th:if="${isAtendenteOuAdmin and ticket.status != 'FECHADO'}">
+                                <h6 class="fw-bold text-muted text-uppercase small mb-2">Acoes Rapidas</h6>
                                 
-                                <form th:action="@{/tickets/{id}/status(id=${ticket.id})}" method="post" class="d-grid gap-2">
-                                    <input type="hidden" name="novoStatus" value="EM_ANDAMENTO" th:if="${ticket.status == 'ABERTO'}">
-                                    <button type="submit" class="btn btn-outline-warning btn-sm" th:if="${ticket.status == 'ABERTO'}">
-                                        <i class="bi bi-play-fill"></i> Iniciar Atendimento
-                                    </button>
+                                <div class="d-grid gap-2">
+                                    <form th:if="${ticket.status == 'ABERTO'}" 
+                                          th:action="@{/tickets/{id}/status(id=${ticket.id})}" method="post">
+                                        <input type="hidden" name="novoStatus" value="EM_ANDAMENTO">
+                                        <button type="submit" class="btn btn-outline-warning btn-sm w-100">
+                                            <i class="bi bi-play-fill me-1"></i> Iniciar Atendimento
+                                        </button>
+                                    </form>
                                     
-                                    <input type="hidden" name="novoStatus" value="RESOLVIDO">
-                                    <button type="submit" class="btn btn-outline-success btn-sm" th:if="${ticket.status != 'RESOLVIDO'}">
-                                        <i class="bi bi-check-circle"></i> Marcar como Resolvido
-                                    </button>
+                                    <form th:if="${ticket.status == 'EM_ANDAMENTO' or ticket.status == 'REABERTO'}" 
+                                          th:action="@{/tickets/{id}/status(id=${ticket.id})}" method="post">
+                                        <input type="hidden" name="novoStatus" value="AGUARDANDO_USUARIO">
+                                        <button type="submit" class="btn btn-outline-info btn-sm w-100">
+                                            <i class="bi bi-pause-fill me-1"></i> Aguardar Usuario
+                                        </button>
+                                    </form>
                                     
-                                    <input type="hidden" name="novoStatus" value="FECHADO">
-                                    <button type="submit" class="btn btn-outline-secondary btn-sm">
-                                        <i class="bi bi-lock"></i> Encerrar Chamado
-                                    </button>
-                                </form>
+                                    <form th:action="@{/tickets/{id}/status(id=${ticket.id})}" method="post">
+                                        <input type="hidden" name="novoStatus" value="RESOLVIDO">
+                                        <button type="submit" class="btn btn-outline-success btn-sm w-100">
+                                            <i class="bi bi-check-circle me-1"></i> Marcar como Resolvido
+                                        </button>
+                                    </form>
+                                    
+                                    <form th:action="@{/tickets/{id}/status(id=${ticket.id})}" method="post">
+                                        <input type="hidden" name="novoStatus" value="FECHADO">
+                                        <button type="submit" class="btn btn-outline-secondary btn-sm w-100">
+                                            <i class="bi bi-lock me-1"></i> Encerrar Chamado
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                             
-                            <div th:if="${!isAtendenteOuAdmin && ticket.status == 'RESOLVIDO'}" class="mt-3">
-                                <form th:action="@{/tickets/{id}/status(id=${ticket.id})}" method="post">
-                                    <input type="hidden" name="novoStatus" value="ABERTO">
+                            <!-- Reabertura pelo solicitante -->
+                            <div th:if="${isSolicitante and (ticket.status == 'FECHADO' or ticket.status == 'RESOLVIDO')}" class="mt-3">
+                                <form th:action="@{/tickets/{id}/reabrir(id=${ticket.id})}" method="post">
                                     <button type="submit" class="btn btn-outline-primary w-100">
-                                        <i class="bi bi-arrow-counterclockwise"></i> Reabrir Chamado
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reabrir Chamado
                                     </button>
                                 </form>
                             </div>
@@ -190,6 +370,20 @@
                 </div>
             </div>
         </div>
+
+        <script>
+            function setRating(valor) {
+                document.getElementById('avaliacao-input').value = valor;
+                var stars = document.querySelectorAll('#star-rating-input i');
+                stars.forEach(function(star, index) {
+                    if (index < valor) {
+                        star.className = 'bi bi-star-fill';
+                    } else {
+                        star.className = 'bi bi-star';
+                    }
+                });
+            }
+        </script>
     </section>
 </body>
 </html>
