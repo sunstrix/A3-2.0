@@ -1,6 +1,10 @@
 package br.com.projetoA3.config;
 
 import br.com.projetoA3.service.CustomUserDetailsService;
+import br.com.projetoA3.service.UsuarioService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -9,19 +13,24 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 
+import java.io.IOException;
+import java.time.LocalDateTime;
+
 /**
- * Configuração do Spring Security para Spring Boot 3.x / Spring Security 6.x
+ * Configuracao do Spring Security para Spring Boot 3.x / Spring Security 6.x
  * 
- * ✅ BUG 1 FIX: Autorização de /usuarios/** apenas para ADMINISTRADOR
- * ✅ BUG 2 FIX: Autorização de /relatorios/** para ADMINISTRADOR e GERENTE
+ * ATENCAO: Usa NoOpPasswordEncoder (senhas em texto puro) apenas para
+ * fins academicos/demonstracao. Em producao, SEMPRE use BCrypt ou similar.
  * 
- * ⚠️ ATENÇÃO: Usa NoOpPasswordEncoder (senhas em texto puro) apenas para
- * fins acadêmicos/demonstração. Em produção, SEMPRE use BCrypt ou similar.
+ * Expandido com rotas do Help Desk, perfil ATENDENTE e atualizacao de ultimo acesso.
  */
 @Configuration
 @EnableWebSecurity
@@ -29,44 +38,57 @@ import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
 public class SecurityConfig {
 
     private final CustomUserDetailsService userDetailsService;
+    private final UsuarioService usuarioService;
 
-    public SecurityConfig(CustomUserDetailsService userDetailsService) {
+    public SecurityConfig(CustomUserDetailsService userDetailsService, UsuarioService usuarioService) {
         this.userDetailsService = userDetailsService;
+        this.usuarioService = usuarioService;
     }
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        // Configuração do Handler de CSRF para Spring Security 6
-        // Isso garante que o token seja injetado como atributo da requisição para o Thymeleaf
+        // Configuracao do Handler de CSRF para Spring Security 6
         CsrfTokenRequestAttributeHandler requestHandler = new CsrfTokenRequestAttributeHandler();
         requestHandler.setCsrfRequestAttributeName("_csrf");
 
         return http
             // ==========================================
-            // AUTORIZAÇÃO DE REQUISIÇÕES
+            // AUTORIZACAO DE REQUISICOES
             // ==========================================
             .authorizeHttpRequests(auth -> auth
-                // Recursos estáticos públicos (CSS, JS, imagens)
-                .requestMatchers("/css/**", "/js/**", "/img/**", "/webjars/**").permitAll()
+                // Recursos estaticos publicos (CSS, JS, imagens, uploads)
+                .requestMatchers("/css/**", "/js/**", "/img/**", "/webjars/**", "/uploads/**").permitAll()
                 
-                // Páginas de autenticação públicas
+                // Paginas de autenticacao publicas
                 .requestMatchers("/login", "/registro", "/erro/**").permitAll()
                 
-                // ✅ BUG 1 FIX: Área de Usuários restrita ao ADMINISTRADOR
+                // Area de Usuarios restrita ao ADMINISTRADOR
                 .requestMatchers("/usuarios/**").hasRole("ADMINISTRADOR")
                 
-                // ✅ BUG 2 FIX: Relatórios disponíveis para ADMINISTRADOR e GERENTE
+                // Relatorios disponiveis para ADMINISTRADOR e GERENTE
                 .requestMatchers("/relatorios/**").hasAnyRole("ADMINISTRADOR", "GERENTE")
                 
-                // Área de configurações restrita ao ADMINISTRADOR
+                // Area de configuracoes restrita ao ADMINISTRADOR
                 .requestMatchers("/configuracoes/**").hasRole("ADMINISTRADOR")
                 
-                // Demais endpoints exigem autenticação
+                // Painel do atendente - acesso para atendentes, gerentes e admins
+                .requestMatchers("/painel/atendente").hasAnyRole("ADMINISTRADOR", "GERENTE", "ATENDENTE")
+                
+                // Rotas de tickets - atendentes podem ver todos, colaboradores apenas os proprios
+                .requestMatchers("/tickets", "/tickets/atribuidos", "/tickets/*/atribuir", "/tickets/*/atribuir-me", "/tickets/*/status").hasAnyRole("ADMINISTRADOR", "GERENTE", "ATENDENTE")
+                .requestMatchers("/tickets/meus", "/tickets/abrir", "/tickets/detalhar/**", "/tickets/*/comentar").authenticated()
+                
+                // Base de conhecimento - publica para leitura, restrita para edicao
+                .requestMatchers("/base-conhecimento/admin/**").hasAnyRole("ADMINISTRADOR", "GERENTE", "ATENDENTE")
+                .requestMatchers("/base-conhecimento").permitAll()
+                .requestMatchers("/base-conhecimento/detalhar/**").permitAll()
+                
+                // Demais endpoints exigem autenticacao
                 .anyRequest().authenticated()
             )
             
             // ==========================================
-            // FORMULÁRIO DE LOGIN PERSONALIZADO
+            // FORMULARIO DE LOGIN PERSONALIZADO
             // ==========================================
             .formLogin(form -> form
                 .loginPage("/login")
@@ -75,6 +97,7 @@ public class SecurityConfig {
                 .failureUrl("/login?error=true")
                 .usernameParameter("login")
                 .passwordParameter("senha")
+                .successHandler(atualizarUltimoAcessoHandler())
                 .permitAll()
             )
             
@@ -90,7 +113,7 @@ public class SecurityConfig {
             )
             
             // ==========================================
-            // GERENCIAMENTO DE SESSÃO
+            // GERENCIAMENTO DE SESSAO
             // ==========================================
             .sessionManagement(session -> session
                 .maximumSessions(1)
@@ -99,14 +122,14 @@ public class SecurityConfig {
             )
             
             // ==========================================
-            // PROTEÇÃO CSRF
+            // PROTECAO CSRF
             // ==========================================
             .csrf(csrf -> csrf
                 .csrfTokenRequestHandler(requestHandler)
             )
             
             // ==========================================
-            // HEADERS DE SEGURANÇA
+            // HEADERS DE SEGURANCA
             // ==========================================
             .headers(headers -> headers
                 .frameOptions(frame -> frame.deny())
@@ -132,8 +155,34 @@ public class SecurityConfig {
     }
 
     /**
-     * ⚠️ NoOpPasswordEncoder - NÃO usar em produção!
-     * Aceita senhas em texto puro para facilitar testes acadêmicos.
+     * Handler que atualiza o campo ultimoAcesso do usuario no banco de dados
+     * apos um login bem-sucedido.
+     */
+    @Bean
+    public AuthenticationSuccessHandler atualizarUltimoAcessoHandler() {
+        return new AuthenticationSuccessHandler() {
+            @Override
+            public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
+                                              Authentication authentication) throws IOException, ServletException {
+                if (authentication.getPrincipal() instanceof UserDetails) {
+                    String username = ((UserDetails) authentication.getPrincipal()).getUsername();
+                    try {
+                        usuarioService.findByLogin(username).ifPresent(usuario -> {
+                            usuario.setUltimoAcesso(LocalDateTime.now());
+                            usuarioService.save(usuario);
+                        });
+                    } catch (Exception e) {
+                        // Nao bloqueia o login se falhar a atualizacao do ultimo acesso
+                    }
+                }
+                response.sendRedirect("/menu");
+            }
+        };
+    }
+
+    /**
+     * ATENCAO: NoOpPasswordEncoder - NAO usar em producao!
+     * Aceita senhas em texto puro para facilitar testes academicos.
      */
     @Bean
     @SuppressWarnings("deprecation")
