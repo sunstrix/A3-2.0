@@ -9,25 +9,26 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Inicializador de dados do sistema.
  * 
- * Cria usuários padrão na primeira execução com senhas em TEXTO PURO.
+ * Cria usuarios padrao na primeira execucao com senhas em TEXTO PURO.
  * 
- * ⚠️ ATENÇÃO: Isso só funciona porque o SecurityConfig foi configurado
- * para usar NoOpPasswordEncoder. Em um ambiente de produção real, você
+ * ATENCAO: Isso so funciona porque o SecurityConfig foi configurado
+ * para usar NoOpPasswordEncoder. Em um ambiente de producao real, voce
  * DEVERIA injetar o PasswordEncoder e usar encoder.encode(senha).
  * 
- * Para recriar os usuários do zero, delete o arquivo do banco SQLite
- * (pasta ./data/) antes de iniciar a aplicação.
+ * Para recriar os usuarios do zero, delete o arquivo do banco SQLite
+ * (pasta ./data/) antes de iniciar a aplicacao.
  */
 @Configuration
 public class DataInitializer {
 
     /**
-     * Cria usuários de teste na inicialização do sistema.
+     * Cria usuarios de teste na inicializacao do sistema.
      * 
-     * Usuários criados:
+     * Usuarios criados:
      * - admin / admin123 (Perfil: ADMINISTRADOR)
      * - gerente / gerente123 (Perfil: GERENTE)
      * - colaborador / colab123 (Perfil: COLABORADOR)
+     * - atendente / atendente123 (Perfil: ATENDENTE)
      */
     @Bean
     public CommandLineRunner initUsuarios(UsuarioRepository usuarioRepository) {
@@ -37,7 +38,7 @@ public class DataInitializer {
                 "Administrador",
                 "admin",
                 "admin@projetoA3.com",
-                "00000000000",  // CPF sem formatação (11 dígitos)
+                "00000000000",  // CPF sem formatacao (11 digitos)
                 "Administrador do Sistema",
                 Usuario.Perfil.ADMINISTRADOR,
                 "admin123"       // Senha em texto puro
@@ -56,7 +57,7 @@ public class DataInitializer {
 
             criarUsuarioSeNaoExistir(
                 usuarioRepository, 
-                "João Colaborador",
+                "Joao Colaborador",
                 "colaborador",
                 "colaborador@projetoA3.com",
                 "22222222222",
@@ -65,19 +66,31 @@ public class DataInitializer {
                 "colab123"
             );
 
+            criarUsuarioSeNaoExistir(
+                usuarioRepository, 
+                "Maria Atendente",
+                "atendente",
+                "atendente@projetoA3.com",
+                "33333333333",
+                "Analista de Suporte",
+                Usuario.Perfil.ATENDENTE,
+                "atendente123"
+            );
+
             System.out.println("========================================");
-            System.out.println("✅ Usuários de teste criados/verificados!");
+            System.out.println("Usuarios de teste criados/verificados!");
             System.out.println("========================================");
-            System.out.println("👤 ADMIN:        login=admin        | senha=admin123");
-            System.out.println("👔 GERENTE:      login=gerente      | senha=gerente123");
-            System.out.println("👷 COLABORADOR:  login=colaborador  | senha=colab123");
+            System.out.println("ADMIN:        login=admin        | senha=admin123");
+            System.out.println("GERENTE:      login=gerente      | senha=gerente123");
+            System.out.println("COLABORADOR:  login=colaborador  | senha=colab123");
+            System.out.println("ATENDENTE:    login=atendente    | senha=atendente123");
             System.out.println("========================================");
         };
     }
 
     /**
-     * Cria um usuário apenas se ele ainda não existir no banco.
-     * A senha é salva em texto puro (compatível com NoOpPasswordEncoder).
+     * Cria um usuario apenas se ele ainda nao existir no banco.
+     * A senha e salva em texto puro (compativel com NoOpPasswordEncoder).
      */
     private void criarUsuarioSeNaoExistir(UsuarioRepository repository,
                                            String nome,
@@ -87,7 +100,7 @@ public class DataInitializer {
                                            String cargo,
                                            Usuario.Perfil perfil,
                                            String senhaPlana) {
-        // Verifica se já existe um usuário com esse login
+        // Verifica se ja existe um usuario com esse login
         if (repository.findByLogin(login).isEmpty()) {
             Usuario usuario = new Usuario();
             usuario.setNome(nome);
@@ -97,14 +110,15 @@ public class DataInitializer {
             usuario.setCargo(cargo);
             usuario.setPerfil(perfil);
             usuario.setAtivo(true);
+            usuario.setNotificacoesEmail(true);
             
-            // ✅ Salva a senha em texto puro (sem hash)
+            // Salva a senha em texto puro (sem hash)
             usuario.setSenha(senhaPlana);
             
             repository.save(usuario);
-            System.out.println("✅ Usuário criado: " + login + " (" + perfil + ")");
+            System.out.println("[OK] Usuario criado: " + login + " (" + perfil + ")");
         } else {
-            System.out.println("ℹ️  Usuário já existe: " + login);
+            System.out.println("[INFO] Usuario ja existe: " + login);
         }
     }
 }
