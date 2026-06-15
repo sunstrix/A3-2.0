@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bem-vindo ao A3-2.0 Help Desk</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f7f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; -webkit-font-smoothing: antialiased;">
+    
+    <!-- Container Principal -->
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f7f6; padding: 40px 0;">
+        <tr>
+            <td align="center">
+                
+                <!-- Cartao de Conteudo -->
+                <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); max-width: 100%;">
+                    
+                    <!-- Header -->
+                    <tr>
+                        <td align="center" style="background-color: #0d6efd; padding: 30px 20px;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: bold; letter-spacing: 1px;">A3-2.0 Help Desk</h1>
+                            <p style="margin: 5px 0 0; color: #e9ecef; font-size: 14px;">Gestão de Projetos e Suporte</p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Corpo do E-mail -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="margin: 0 0 20px; color: #212529; font-size: 22px;">
+                                Olá, <span th:text="${nome}">Usuário</span>! 👋
+                            </h2>
+                            
+                            <p style="margin: 0 0 15px; color: #495057; font-size: 16px; line-height: 1.6;">
+                                Seja muito bem-vindo(a) ao <strong>A3-2.0</strong>. Sua conta foi criada com sucesso e você já pode começar a utilizar nossa plataforma para gerenciar projetos, acompanhar tarefas no quadro Kanban e abrir chamados de suporte.
+                            </p>
+                            
+                            <p style="margin: 0 0 25px; color: #495057; font-size: 16px; line-height: 1.6;">
+                                Seus dados de acesso são:
+                            </p>
+                            
+                            <!-- Box de Credenciais -->
+                            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f8f9fa; border-left: 4px solid #0d6efd; border-radius: 4px; margin-bottom: 30px;">
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="margin: 0 0 10px; color: #6c757d; font-size: 14px; font-weight: bold; text-transform: uppercase;">Seu E-mail de Acesso:</p>
+                                        <p style="margin: 0; color: #212529; font-size: 18px; font-weight: bold;" th:text="${email}">usuario@empresa.com</p>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <!-- Botao de Ação -->
+                            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin: 0 auto;">
+                                <tr>
+                                    <td align="center" style="border-radius: 6px; background-color: #198754;">
+                                        <a href="http://localhost:8080/login" target="_blank" style="display: inline-block; padding: 14px 30px; color: #ffffff; font-size: 16px; font-weight: bold; text-decoration: none; border-radius: 6px;">
+                                            Acessar o Sistema
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 30px 0 0; color: #6c757d; font-size: 14px; line-height: 1.5; text-align: center;">
+                                Se você não solicitou a criação desta conta, por favor, ignore este e-mail ou entre em contato com o administrador do sistema.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td align="center" style="background-color: #e9ecef; padding: 20px; border-top: 1px solid #dee2e6;">
+                            <p style="margin: 0; color: #6c757d; font-size: 12px;">
+                                &copy; 2026 A3-2.0 Help Desk. Todos os direitos reservados.<br>
+                                Esta é uma mensagem automática, por favor não responda a este e-mail.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                </table>
+                <!-- Fim do Cartao -->
+                
+            </td>
+        </tr>
+    </table>
+</body>
+</html>
